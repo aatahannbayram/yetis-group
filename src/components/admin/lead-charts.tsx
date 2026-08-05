@@ -1,0 +1,166 @@
+"use client";
+
+import { useId } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+const BRAND_GREEN = "#008a43";
+const BRAND_GREEN_LIGHT = "#a3edc3";
+const CHANNEL_COLORS = ["#00693e", "#008a43", "#30a369", "#6fdda0"];
+
+/** Diagonal-stripe texture for de-emphasized/lost data — a muted alternative
+ * to a flat gray fill, matching the Sphere UI reference's hatch-pattern bars. */
+function HatchPatternDefs({ id }: { id: string }) {
+  return (
+    <defs>
+      <pattern id={id} patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+        <rect width="6" height="6" fill="var(--neutral-100)" />
+        <line x1="0" y1="0" x2="0" y2="6" stroke="var(--neutral-300)" strokeWidth="2" />
+      </pattern>
+    </defs>
+  );
+}
+
+export function StageFunnelChart({
+  data,
+}: {
+  data: { stage: string; label: string; count: number }[];
+}) {
+  const hatchId = useId();
+
+  return (
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+          <HatchPatternDefs id={hatchId} />
+          <CartesianGrid strokeDasharray="4 6" stroke="#e6e1d6" vertical={false} />
+          <XAxis
+            dataKey="label"
+            tick={{ fill: "#6b6255", fontSize: 11 }}
+            axisLine={{ stroke: "#e6e1d6" }}
+            tickLine={false}
+            interval={0}
+            angle={-20}
+            textAnchor="end"
+            height={50}
+          />
+          <YAxis
+            allowDecimals={false}
+            tick={{ fill: "#6b6255", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            width={28}
+          />
+          <Tooltip
+            cursor={{ fill: "#f2efe8" }}
+            contentStyle={{
+              borderRadius: 12,
+              border: "1px solid #e6e1d6",
+              background: "#ffffff",
+              boxShadow: "0 8px 24px rgb(33 28 22 / 0.08)",
+              fontSize: 12,
+            }}
+          />
+          <Bar dataKey="count" name="Bayi Adayı" radius={[20, 20, 20, 20]} maxBarSize={28}>
+            {data.map((entry) => (
+              <Cell
+                key={entry.stage}
+                fill={entry.stage === "KAYBEDILDI" ? `url(#${hatchId})` : BRAND_GREEN}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function ChannelDistributionChart({
+  data,
+}: {
+  data: { label: string; count: number }[];
+}) {
+  const filtered = data.filter((d) => d.count > 0);
+
+  if (filtered.length === 0) {
+    return (
+      <div className="flex h-64 items-center justify-center text-body-sm text-neutral-400">
+        Henüz veri yok
+      </div>
+    );
+  }
+
+  const total = filtered.reduce((sum, entry) => sum + entry.count, 0);
+
+  return (
+    <div className="flex items-center gap-5">
+      <ul className="flex flex-1 flex-col gap-2.5">
+        {filtered.map((entry, index) => (
+          <li
+            key={entry.label}
+            className="flex items-center justify-between gap-3 border-b border-border pb-2"
+          >
+            <span className="flex items-center gap-2 text-body-sm text-foreground">
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: CHANNEL_COLORS[index % CHANNEL_COLORS.length] }}
+                aria-hidden
+              />
+              {entry.label}
+            </span>
+            <span className="tabular-nums text-body-sm font-semibold text-foreground">
+              {entry.count}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="relative size-40 shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={filtered}
+              dataKey="count"
+              nameKey="label"
+              innerRadius={52}
+              outerRadius={78}
+              paddingAngle={4}
+              cornerRadius={8}
+              strokeWidth={0}
+            >
+              {filtered.map((entry, index) => (
+                <Cell key={entry.label} fill={CHANNEL_COLORS[index % CHANNEL_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              contentStyle={{
+                borderRadius: 12,
+                border: "1px solid #e6e1d6",
+                background: "#ffffff",
+                boxShadow: "0 8px 24px rgb(33 28 22 / 0.08)",
+                fontSize: 12,
+              }}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="tabular-nums text-h3 leading-h3 font-bold text-foreground">
+            {total}
+          </span>
+          <span className="text-caption text-muted-foreground">Toplam</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export { BRAND_GREEN, BRAND_GREEN_LIGHT };

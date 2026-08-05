@@ -1,0 +1,237 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* shadcn semantic tokens — mapped onto our warm brand palette, not the library's
+   default gray/oklch theme (CLAUDE.md forbids a generic gray admin look). */
+:root {
+  --background: var(--surface-canvas);
+  --foreground: var(--neutral-900);
+  --card: var(--surface-card);
+  --card-foreground: var(--neutral-900);
+  --popover: var(--surface-card);
+  --popover-foreground: var(--neutral-900);
+  --primary: var(--brand-700);
+  --primary-foreground: #ffffff;
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--neutral-900);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-700);
+  --destructive: var(--danger-fg);
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  --ring: var(--brand-500);
+  --radius: var(--radius-md);
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
+
+  --chart-1: var(--brand-500);
+  --chart-2: var(--info-fg);
+  --chart-3: var(--warning-fg);
+  --chart-4: var(--brand-800);
+  --chart-5: var(--neutral-500);
+
+  --sidebar: var(--surface-card);
+  --sidebar-foreground: var(--neutral-900);
+  --sidebar-primary: var(--brand-700);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-50);
+  --sidebar-accent-foreground: var(--brand-700);
+  --sidebar-border: var(--neutral-200);
+  --sidebar-ring: var(--brand-500);
+}
+
+/* Admin shell — light theme by default; dark is opt-in via the theme toggle
+   (data-theme="dark"), Sphere UI-style dark canvas with white floating cards.
+   Brand green is kept instead of a generic accent color in both modes.
+   Scoped to .admin-shell only; the store always stays on the light warm canvas. */
+.admin-shell[data-theme="dark"] {
+  --background: var(--neutral-900);
+  --foreground: var(--neutral-50);
+  --muted: var(--neutral-800);
+  --muted-foreground: var(--neutral-400);
+  --border: var(--neutral-800);
+  --input: var(--neutral-800);
+
+  --sidebar: var(--neutral-900);
+  --sidebar-foreground: var(--neutral-400);
+  --sidebar-primary: var(--brand-500);
+  --sidebar-primary-foreground: var(--neutral-900);
+  --sidebar-accent: var(--brand-600);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: var(--neutral-800);
+  --sidebar-ring: var(--brand-500);
+}
+
+/* White "card" surfaces (Card component, raw bg-card containers, popovers/
+   dialogs/sheets/selects — all bg-popover) always stay light internally, even
+   when the page canvas is dark: reset the token scope back to light values so
+   nested shadcn primitives (Table headers, Select triggers, muted captions)
+   that read --foreground/--muted-foreground don't inherit the dark page tokens. */
+.admin-shell[data-theme="dark"] [data-slot="card"],
+.admin-shell[data-theme="dark"] .bg-card,
+.admin-shell[data-theme="dark"] [data-slot="sheet-content"],
+.admin-shell[data-theme="dark"] [data-slot="dialog-content"],
+.admin-shell[data-theme="dark"] [data-slot="dropdown-menu-content"],
+.admin-shell[data-theme="dark"] [data-slot="select-content"] {
+  --foreground: var(--neutral-900);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--neutral-600);
+  --border: var(--neutral-200);
+  --input: var(--neutral-200);
+  /* Redefining the custom properties above only affects elements that
+     re-read them explicitly (e.g. text-foreground). Plain inherited text
+     (table cells, select values with no color class of their own) inherits
+     the *computed* color from further up the tree, so it must be set here
+     too for that inheritance chain to pick up the corrected value. */
+  color: var(--foreground);
+}
+
+@theme inline {
+  --color-canvas: var(--surface-canvas);
+  --color-card: var(--surface-card);
+  --color-sunken: var(--surface-sunken);
+
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-neutral-50: var(--neutral-50);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  --color-neutral-500: var(--neutral-500);
+  --color-neutral-600: var(--neutral-600);
+  --color-neutral-700: var(--neutral-700);
+  --color-neutral-800: var(--neutral-800);
+  --color-neutral-900: var(--neutral-900);
+
+  --color-success-fg: var(--success-fg);
+  --color-success-bg: var(--success-bg);
+  --color-warning-fg: var(--warning-fg);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-bg: var(--danger-bg);
+  --color-info-fg: var(--info-fg);
+  --color-info-bg: var(--info-bg);
+
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-sans);
+
+  --text-display: var(--text-display);
+  --leading-display: var(--leading-display);
+  --text-h1: var(--text-h1);
+  --leading-h1: var(--leading-h1);
+  --text-h2: var(--text-h2);
+  --leading-h2: var(--leading-h2);
+  --text-h3: var(--text-h3);
+  --leading-h3: var(--leading-h3);
+  --text-h4: var(--text-h4);
+  --leading-h4: var(--leading-h4);
+  --text-body-lg: var(--text-body-lg);
+  --leading-body-lg: var(--leading-body-lg);
+  --text-body: var(--text-body);
+  --leading-body: var(--leading-body);
+  --text-body-sm: var(--text-body-sm);
+  --leading-body-sm: var(--leading-body-sm);
+  --text-caption: var(--text-caption);
+  --leading-caption: var(--leading-caption);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+body {
+  background: var(--surface-canvas);
+  color: var(--neutral-900);
+  font-family: var(--font-sans);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scroll-reveal: toggled by the Reveal client component via data-reveal. */
+[data-reveal="false"] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+[data-reveal] {
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-reveal="true"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal="false"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

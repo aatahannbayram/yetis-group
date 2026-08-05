@@ -1,0 +1,239 @@
+// Yetiş Grup — Prisma schema
+// M0 scope: auth tables only. Dealer/order/ledger models land in M2–M7
+// per the milestone sequence in CLAUDE.md — do not add them ahead of schedule.
+// Exceptions explicitly requested ahead of schedule: Lead (CRM, pre-M2) and
+// Product/CartItem (browsing + local cart preview, pre-M1/M5). No real order
+// submission yet — that still requires the M4 order FSM and credit-limit check.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---- better-auth core tables (email/password now, WhatsApp OTP plugin later) ----
+
+// STAFF = Yetiş çalışanı (admin panel erişimi), DEALER = bayi/müşteri hesabı
+// (mağaza + kendi fiyat listesi). Tam rol matrisi (Yetkili/Satın Alma/Muhasebe/
+// Depo vb.) CLAUDE.md'nin M2 policy modülü kapsamında gelecek — bu, sadece
+// admin panelini bayilerden ayırmak için gereken minimum ayrım.
+enum UserAccountType {
+  STAFF
+  DEALER
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  phoneNumber   String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // better-auth additionalFields'a eklenmez — ticari/yetki verisi kimlik
+  // katmanına karıştırılmaz, infra/db üzerinden doğrudan okunur.
+  accountType UserAccountType @default(DEALER)
+  priceListId String?
+  priceList   PriceList?      @relation(fields: [priceListId], references: [id])
+
+  sessions Session[]
+  accounts Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+// ---- CRM: bayi adayı (dealer lead) pipeline ----
+
+enum LeadChannel {
+  MARKET
+  SARKUTERI
+  HORECA
+  ARA_TOPTANCI
+}
+
+enum LeadStage {
+  YENI
+  ILETISIMDE
+  NUMUNE_TEKLIF
+  MUZAKERE
+  KAZANILDI
+  KAYBEDILDI
+}
+
+model Lead {
+  id                 String      @id @default(cuid())
+  companyName        String
+  contactName        String
+  phone              String
+  city               String
+  channel            LeadChannel
+  stage              LeadStage   @default(YENI)
+  estimatedMonthlyKg Decimal?    @db.Decimal(10, 3)
+  note               String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  activities LeadActivity[]
+
+  @@map("lead")
+}
+
+enum LeadActivityType {
+  ARAMA
+  NOT
+  TEKLIF
+  TESLIMAT
+  DURUM_DEGISIKLIGI
+}
+
+// Bir bayi adayının teklif → teslimat arası tüm geçmişi (akıbet takibi).
+model LeadActivity {
+  id        String           @id @default(cuid())
+  leadId    String
+  lead      Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type      LeadActivityType
+  note      String
+  createdAt DateTime         @default(now())
+
+  @@map("lead_activity")
+}
+
+// ---- Katalog (fiyat/iskonto motoru ve gerçek sipariş M3/M4'te gelecek) ----
+
+model Product {
+  id                 String   @id @default(cuid())
+  sku                String   @unique
+  name               String
+  slug               String   @unique
+  category           String
+  description        String   @default("")
+  imageUrl           String?
+  unitLabel          String
+  kgPerUnit          Decimal  @db.Decimal(10, 3)
+  pricePerUnitKurus  Int
+  vatRateBasisPoints Int      @default(100)
+  active             Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  priceListItems PriceListItem[]
+  lots           Lot[]
+
+  @@map("product")
+}
+
+// ---- M1: lot & stok hareketi ----
+// Bakiye alanı yok — mevcut stok her zaman StockMovement'lardan türetilir
+// (cari ledger ile aynı append-only ilke). Sevkiyat FEFO ile önerilir;
+// SKT'si geçmiş lot asla sevk edilemez (bkz. domain/inventory).
+
+model Lot {
+  id             String   @id @default(cuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  lotNumber      String
+  expirationDate DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  movements StockMovement[]
+
+  @@unique([productId, lotNumber])
+  @@map("lot")
+}
+
+enum StockMovementType {
+  GIRIS
+  CIKIS
+}
+
+model StockMovement {
+  id         String            @id @default(cuid())
+  lotId      String
+  lot        Lot               @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  type       StockMovementType
+  quantityKg Decimal           @db.Decimal(10, 3)
+  note       String?
+  createdAt  DateTime          @default(now())
+
+  @@map("stock_movement")
+}
+
+// Hesap bazlı fiyat listesi — M3'ün tam kademeli iskonto motorunun küçük,
+// dürüst bir ön-sürümü: liste + ürün başına düz fiyat, kademeli kural yok.
+model PriceList {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items PriceListItem[]
+  users User[]
+
+  @@map("price_list")
+}
+
+model PriceListItem {
+  id          String    @id @default(cuid())
+  priceListId String
+  priceList   PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceKurus  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([priceListId, productId])
+  @@map("price_list_item")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}

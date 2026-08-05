@@ -61,6 +61,13 @@
     "@next/swc-linux-x64-musl": "16.3.0",
     "@next/swc-wasm-nodejs": "16.3.0"
   },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": ["current", "linux"],
+      "cpu": ["current", "x64"],
+      "libc": ["current", "musl", "glibc"]
+    }
+  },
   "packageManager": "pnpm@9.15.9",
   "devEngines": {
     "packageManager": {

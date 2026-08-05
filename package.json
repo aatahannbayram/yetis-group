@@ -57,5 +57,12 @@
     "typescript": "^5",
     "vitest": "^4.1.10"
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@9.15.9",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "9.15.9",
+      "onFail": "warn"
+    }
+  }
 }

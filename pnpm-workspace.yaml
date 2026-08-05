@@ -3,18 +3,6 @@ packages:
 
 minimumReleaseAge: 0
 
-supportedArchitectures:
-  os:
-    - current
-    - linux
-  cpu:
-    - current
-    - x64
-  libc:
-    - current
-    - musl
-    - glibc
-
 allowBuilds:
   '@prisma/engines': true
   esbuild: false

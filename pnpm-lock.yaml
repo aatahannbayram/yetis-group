@@ -75,9 +75,6 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     optionalDependencies:
-      '@next/swc-linux-x64-musl':
-        specifier: 16.3.0
-        version: 16.3.0
       '@next/swc-wasm-nodejs':
         specifier: 16.3.0
         version: 16.3.0

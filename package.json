@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/prepare-swc-wasm.mjs",
     "build": "next build",
     "start": "next start -p $PORT",
     "lint": "eslint",
@@ -58,15 +58,7 @@
     "vitest": "^4.1.10"
   },
   "optionalDependencies": {
-    "@next/swc-linux-x64-musl": "16.3.0",
     "@next/swc-wasm-nodejs": "16.3.0"
-  },
-  "pnpm": {
-    "supportedArchitectures": {
-      "os": ["current", "linux"],
-      "cpu": ["current", "x64"],
-      "libc": ["current", "musl", "glibc"]
-    }
   },
   "packageManager": "pnpm@9.15.9",
   "devEngines": {

@@ -5,6 +5,6 @@ minimumReleaseAge: 0
 
 allowBuilds:
   '@prisma/engines': true
-  esbuild: true
+  esbuild: false
   prisma: true
   unrs-resolver: true

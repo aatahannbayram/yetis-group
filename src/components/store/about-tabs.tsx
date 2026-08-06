@@ -27,25 +27,27 @@ export function AboutTabs({
 
   const content = (
     <div className={visual ? "flex flex-1 flex-col" : undefined}>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActive(tab.id)}
             className={cn(
-              "mkt-pill mkt-label shrink-0 px-4 py-2 transition-colors",
+              "mkt-pill shrink-0 px-3.5 py-2.5 text-[13px] font-semibold tracking-[-0.01em] transition-colors sm:px-4 sm:text-[14px]",
               tab.id === active
                 ? "bg-mkt-accent text-mkt-accent-ink"
-                : "bg-mkt-card-muted text-mkt-ink-muted hover:text-mkt-ink",
+                : "bg-mkt-card-muted text-mkt-ink hover:text-mkt-green-text",
             )}
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <h2 className="mkt-h2 mt-6 max-w-2xl text-balance text-mkt-ink md:mt-8">{current.title}</h2>
-      <p className="mkt-body mt-4 max-w-xl md:mt-5">{current.body}</p>
+      <h2 className="mkt-h2 mt-5 max-w-2xl text-balance text-mkt-ink md:mt-8">{current.title}</h2>
+      <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-mkt-ink-muted md:mt-5 md:text-base">
+        {current.body}
+      </p>
     </div>
   );
 

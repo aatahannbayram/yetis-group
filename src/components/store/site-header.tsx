@@ -35,16 +35,31 @@ export async function SiteHeader({
     >
       <div
         className={cn(
-          "mx-auto flex h-[5rem] items-center justify-between gap-4 px-5 md:px-8 lg:px-10",
+          "mx-auto flex h-14 items-center justify-between gap-3 px-4 sm:gap-4 sm:px-5 md:h-16 md:px-8 lg:h-[5rem] lg:px-10",
+          "pt-[env(safe-area-inset-top)]",
           !isOverlay && "border-b border-[color:var(--mkt-border)] bg-mkt-slab/90 backdrop-blur",
         )}
       >
         {/* Wordmark already includes brand mark — do not stack BrandMark beside it */}
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex min-w-0 shrink items-center">
           {isOverlay ? (
-            <Logo variant="dark" size="xl" className="brightness-0 invert" />
+            <>
+              <Logo
+                variant="dark"
+                size="md"
+                className="brightness-0 invert md:hidden"
+              />
+              <Logo
+                variant="dark"
+                size="xl"
+                className="hidden brightness-0 invert md:block"
+              />
+            </>
           ) : (
-            <Logo size="xl" />
+            <>
+              <Logo size="md" className="md:hidden" />
+              <Logo size="xl" className="hidden md:block" />
+            </>
           )}
         </Link>
 
@@ -73,8 +88,8 @@ export async function SiteHeader({
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <div className={cn(isOverlay && "[&_button]:text-white")}>
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <div className={cn(isOverlay && "[&_button]:text-white [&_button]:hover:bg-white/15")}>
             <CartTriggerButton />
           </div>
           {session ? (

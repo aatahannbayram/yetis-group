@@ -170,7 +170,7 @@ export default function StoreHomePage() {
             </PillCta>
             <Link
               href="/hakkimizda"
-              className="mkt-pill mkt-label inline-flex h-11 w-full items-center justify-center gap-2 border border-[color:var(--mkt-border)] px-5 text-mkt-ink hover:bg-mkt-card-muted sm:w-auto"
+              className="mkt-pill inline-flex h-12 w-full items-center justify-center gap-2 border border-[color:var(--mkt-border)] px-5 text-[14px] font-semibold text-mkt-ink hover:bg-mkt-card-muted sm:h-11 sm:w-auto"
             >
               Hakkımızda
               <ArrowUpRight className="size-3.5" aria-hidden />

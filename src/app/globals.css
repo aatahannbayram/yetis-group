@@ -254,8 +254,9 @@ body {
 /* Canvas gutter + inset slabs */
 .mkt-canvas {
   background: var(--mkt-canvas);
-  padding-inline: 12px;
-  padding-block: 12px;
+  padding-inline: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+  padding-block: max(10px, env(safe-area-inset-top));
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
   overflow-x: clip;
 }
 @media (min-width: 768px) {
@@ -297,8 +298,14 @@ body {
 }
 
 .mkt-pad {
-  padding-inline: 1.25rem;
-  padding-block: 2rem;
+  padding-inline: 1.125rem;
+  padding-block: 1.75rem;
+}
+@media (min-width: 640px) {
+  .mkt-pad {
+    padding-inline: 1.5rem;
+    padding-block: 2.25rem;
+  }
 }
 @media (min-width: 768px) {
   .mkt-pad {

@@ -22,7 +22,7 @@ export type AnalyticsIds = {
   metaPixelId?: string;
 };
 
-let loaded = { gtm: false, ga4: false, meta: false };
+const loaded = { gtm: false, ga4: false, meta: false };
 
 function pushDataLayer(...args: unknown[]) {
   window.dataLayer = window.dataLayer ?? [];

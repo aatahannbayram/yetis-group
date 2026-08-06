@@ -117,7 +117,15 @@ async function promoteLeadToDealerTx(tx: Tx, leadId: string, actorId: string | n
     stage: lead.stage as LeadStage,
   });
 
-  if (plan.action === "noop") return plan.dealerId;
+  if (plan.action === "noop" || plan.action === "activate") {
+    if (plan.action === "activate") {
+      await tx.dealer.update({
+        where: { id: plan.dealerId },
+        data: { status: "AKTIF" },
+      });
+    }
+    return plan.dealerId;
+  }
 
   const dealer = await tx.dealer.create({
     data: {

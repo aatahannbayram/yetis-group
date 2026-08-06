@@ -20,9 +20,12 @@ const links = [
   { href: "/urunler", label: "Ürünler" },
   { href: "/haberler", label: "Haberler" },
   { href: "/tarifler", label: "Tarifler" },
-  { href: "/#hakkimizda", label: "Hakkımızda" },
+  { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },
 ];
+
+const linkClass =
+  "flex min-h-[3.25rem] items-center rounded-xl px-4 text-[17px] font-semibold tracking-[-0.015em] text-neutral-950 transition-colors hover:bg-[var(--brand-50)] hover:text-[var(--mkt-green-text)] active:bg-[var(--brand-100)]";
 
 export function MobileNav({
   isLoggedIn,
@@ -48,59 +51,86 @@ export function MobileNav({
           variant="ghost"
           size="icon"
           aria-label="Menüyü aç"
-          className={cn("md:hidden", overlay && "text-white hover:bg-white/10 hover:text-white")}
+          className={cn(
+            "size-11 md:hidden",
+            overlay
+              ? "bg-black/35 text-white shadow-sm backdrop-blur-md hover:bg-black/50 hover:text-white"
+              : "text-neutral-950 hover:bg-neutral-100",
+          )}
         >
-          <Menu />
+          <Menu className="size-6" strokeWidth={2.5} />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-4/5 border-none bg-mkt-slab sm:max-w-xs">
-        <SheetHeader>
+      <SheetContent
+        side="left"
+        overlayClassName="bg-black/50 backdrop-blur-[2px]"
+        className={cn(
+          "w-[min(100%,20.5rem)] gap-0 border-r border-neutral-200 bg-white p-0 text-base text-neutral-900 shadow-2xl",
+          "sm:max-w-sm",
+        )}
+      >
+        <SheetHeader className="border-b border-neutral-100 px-5 py-5 text-left">
           <SheetTitle className="sr-only">Menü</SheetTitle>
           <Logo size="lg" />
+          <p className="mt-2 text-[13px] leading-snug text-neutral-500">
+            Bayi kataloğu ve sipariş
+          </p>
         </SheetHeader>
-        <nav className="flex flex-col gap-2 px-4 pt-2">
-          {links.map((link) => (
-            <SheetClose key={link.href} asChild>
-              <Link
-                href={link.href}
-                className="mkt-pill mkt-label bg-mkt-card-muted px-4 py-3 text-mkt-ink hover:bg-mkt-accent hover:text-mkt-accent-ink"
-              >
-                {link.label}
-              </Link>
-            </SheetClose>
-          ))}
 
-          {isStaff ? (
-            <SheetClose asChild>
-              <Link
-                href="/admin"
-                className="mkt-pill mkt-label bg-mkt-card-muted px-4 py-3 text-mkt-ink hover:bg-mkt-accent hover:text-mkt-accent-ink"
-              >
-                Yönetim Paneli
-              </Link>
-            </SheetClose>
-          ) : null}
+        <nav className="flex flex-1 flex-col px-3 py-4" aria-label="Mobil menü">
+          <ul className="flex flex-col gap-1">
+            {links.map((link) => (
+              <li key={link.href}>
+                <SheetClose asChild>
+                  <Link href={link.href} className={linkClass}>
+                    {link.label}
+                  </Link>
+                </SheetClose>
+              </li>
+            ))}
+            {isStaff ? (
+              <li>
+                <SheetClose asChild>
+                  <Link href="/admin" className={linkClass}>
+                    Yönetim Paneli
+                  </Link>
+                </SheetClose>
+              </li>
+            ) : null}
+          </ul>
 
-          {isLoggedIn ? (
-            <SheetClose asChild>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="mkt-pill mkt-label mt-2 border border-[color:var(--mkt-border)] px-4 py-3 text-center text-mkt-ink hover:bg-mkt-card-muted"
-              >
-                Çıkış Yap
-              </button>
-            </SheetClose>
-          ) : (
-            <SheetClose asChild>
-              <Link
-                href="/auth"
-                className="mkt-pill mkt-label mt-2 bg-mkt-accent px-4 py-3 text-center text-mkt-accent-ink hover:brightness-105"
-              >
-                Bayi Girişi
-              </Link>
-            </SheetClose>
-          )}
+          <div className="mt-auto space-y-2 border-t border-neutral-100 px-1 pt-4 pb-2">
+            {isLoggedIn ? (
+              <SheetClose asChild>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="flex min-h-[3.25rem] w-full items-center justify-center rounded-xl border border-neutral-200 text-[16px] font-semibold text-neutral-900 hover:bg-neutral-50"
+                >
+                  Çıkış Yap
+                </button>
+              </SheetClose>
+            ) : (
+              <>
+                <SheetClose asChild>
+                  <Link
+                    href="/auth?tab=uye"
+                    className="flex min-h-[3.25rem] w-full items-center justify-center rounded-xl border border-neutral-200 text-[16px] font-semibold text-neutral-900 hover:bg-neutral-50"
+                  >
+                    Üye ol
+                  </Link>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Link
+                    href="/auth"
+                    className="flex min-h-[3.25rem] w-full items-center justify-center rounded-xl bg-[var(--mkt-accent)] text-[16px] font-semibold text-[var(--mkt-accent-ink)] hover:brightness-105"
+                  >
+                    Bayi Girişi
+                  </Link>
+                </SheetClose>
+              </>
+            )}
+          </div>
         </nav>
       </SheetContent>
     </Sheet>

@@ -1,12 +1,23 @@
 import Link from "next/link";
-import { ArrowRight, Building2, Package, AlertTriangle } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  ChartColumn,
+  Package,
+  AlertTriangle,
+  ShoppingCart,
+  Store,
+} from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { CardLink, PillButton, StatCard } from "@/components/admin/stat-card";
 import { StageFunnelChart, ChannelDistributionChart } from "@/components/admin/lead-charts";
 import { getLeadDashboardData, getLeads } from "@/infra/db/leads";
 import { getInventoryDashboardSummary } from "@/infra/db/inventory";
+import { getAdminAnalyticsSnapshot } from "@/infra/db/admin-analytics";
 import { LEAD_ACTIVITY_TYPE_LABELS, LEAD_CHANNEL_LABELS } from "@/domain/leads";
+import { money } from "@/domain/money";
 import { formatDate } from "@/lib/format/date";
+import { formatMoney } from "@/lib/format/money";
 
 function ChartCard({
   title,
@@ -18,7 +29,7 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-h4 leading-h4 font-semibold text-foreground">{title}</p>
         <CardLink href={href} />
@@ -33,7 +44,13 @@ export default async function AdminDashboardPage() {
     { totalLeads, openLeadsCount, wonLeadsCount, openVolumeKg, stageCounts, channelCounts },
     { totalKg, expiringSoonCount },
     leads,
-  ] = await Promise.all([getLeadDashboardData(), getInventoryDashboardSummary(), getLeads()]);
+    analytics,
+  ] = await Promise.all([
+    getLeadDashboardData(),
+    getInventoryDashboardSummary(),
+    getLeads(),
+    getAdminAnalyticsSnapshot(),
+  ]);
 
   const recentLeads = leads.slice(0, 5);
   const recentActivities = leads
@@ -51,13 +68,13 @@ export default async function AdminDashboardPage() {
     <div className="mx-auto max-w-6xl">
       <AdminPageHeader
         title="Pano"
-        description="Bayi adayı (CRM) ve envanter canlı veriden; sipariş ve cari verileri girildikçe aşağısı dolacak."
+        description="CRM, envanter ve B2B sepet canlı. Sipariş / cari verileri M4–M7 ile buraya bağlanacak."
         actions={
           <>
-            <PillButton href="/admin/bayi-adaylari">Bayi Adaylarını Gör</PillButton>
-            <PillButton href="/admin/urunler" variant="secondary">
-              Envanteri Gör
+            <PillButton href="/admin/analytics" variant="secondary">
+              Analytics
             </PillButton>
+            <PillButton href="/admin/bayi-adaylari">Bayi adayları</PillButton>
           </>
         }
       />
@@ -79,7 +96,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Toplam Stok"
           value={Math.round(totalKg.toNumber())}
@@ -91,6 +108,38 @@ export default async function AdminDashboardPage() {
           value={expiringSoonCount}
           warn={expiringSoonCount > 0}
           href="/admin/urunler"
+        />
+        <StatCard
+          label="Açık Sepet"
+          value={analytics.b2b.cartsWithLines}
+          href="/admin/b2b/sepetler"
+        />
+        <StatCard
+          label="Aktif Bayi"
+          value={analytics.dealers.active}
+          href="/admin/bayiler"
+        />
+      </div>
+
+      {/* Quick actions — mobile-friendly */}
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <QuickLink
+          href="/admin/b2b/katalog"
+          icon={Store}
+          title="B2B Katalog"
+          body="Bayi ürün yüzeyi · düzenle / önizle"
+        />
+        <QuickLink
+          href="/admin/b2b/sepetler"
+          icon={ShoppingCart}
+          title="Açık Sepetler"
+          body={`${analytics.b2b.cartsWithLines} sepet · ${formatMoney(money(analytics.b2b.openCartValueKurus))}`}
+        />
+        <QuickLink
+          href="/admin/analytics"
+          icon={ChartColumn}
+          title="Analytics"
+          body="CRM, katalog, içerik ve sepet özeti"
         />
       </div>
 
@@ -192,5 +241,32 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function QuickLink({
+  href,
+  icon: Icon,
+  title,
+  body,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex items-start gap-3 rounded-3xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50/40 sm:p-5"
+    >
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 transition-colors group-hover:bg-brand-100">
+        <Icon className="size-4" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <p className="text-body-sm font-semibold text-foreground">{title}</p>
+        <p className="mt-0.5 text-caption text-muted-foreground">{body}</p>
+      </div>
+    </Link>
   );
 }

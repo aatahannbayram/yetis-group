@@ -18,6 +18,8 @@ Phone: ${SITE.phoneDisplay}
 - News / guides: ${absoluteUrl("/haberler")}
 - Recipes: ${absoluteUrl("/tarifler")}
 - Dealer login: ${absoluteUrl("/auth")}
+- About: ${absoluteUrl("/hakkimizda")}
+- Contact: ${absoluteUrl("/iletisim")}
 - Cookie policy: ${absoluteUrl("/yasal/cerez-politikasi")}
 
 ## Positioning

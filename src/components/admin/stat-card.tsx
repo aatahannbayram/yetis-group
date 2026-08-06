@@ -70,18 +70,20 @@ export function PillButton({
   href,
   children,
   variant = "primary",
+  className,
 }: {
   href: string;
   children: React.ReactNode;
   variant?: "primary" | "secondary";
+  className?: string;
 }) {
   return (
     <Link
       href={href}
       className={
         variant === "primary"
-          ? "rounded-full bg-brand-700 px-4 py-2.5 text-body-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-800"
-          : "rounded-full border border-border bg-card px-4 py-2.5 text-body-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          ? `inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-700 px-4 py-2.5 text-body-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-800 sm:w-auto ${className ?? ""}`
+          : `inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-border bg-card px-4 py-2.5 text-body-sm font-semibold text-foreground transition-colors hover:bg-muted sm:w-auto ${className ?? ""}`
       }
     >
       {children}

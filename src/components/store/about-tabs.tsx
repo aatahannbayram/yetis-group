@@ -60,6 +60,7 @@ export function AboutTabs({
           src={current.image}
           alt=""
           fill
+          quality={70}
           className="object-cover transition-opacity duration-500"
           sizes="(min-width: 768px) 28vw, 90vw"
         />

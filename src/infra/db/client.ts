@@ -27,8 +27,17 @@ function createPrismaClient() {
   return new PrismaClient({ adapter: new PrismaPg(pool) });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
-
-if (env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+function getPrisma(): PrismaClient {
+  const existing = globalForPrisma.prisma;
+  // After `prisma generate`, HMR can keep a stale client without new delegates.
+  if (existing && typeof (existing as { leadFieldDefinition?: unknown }).leadFieldDefinition !== "undefined") {
+    return existing;
+  }
+  const client = createPrismaClient();
+  if (env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+  }
+  return client;
 }
+
+export const prisma = getPrisma();

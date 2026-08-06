@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, LogOut, Mail, Search, User } from "lucide-react";
+import { Bell, LogOut, Search, Store, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import {
   DropdownMenu,
@@ -24,6 +25,37 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/admin/theme-toggle";
 import { authClient } from "@/infra/auth/client";
 
+const SECTION_LABELS: Record<string, string> = {
+  "/admin": "Pano",
+  "/admin/analytics": "Analytics",
+  "/admin/bayi-adaylari": "Bayi Adayları",
+  "/admin/crm-alanlari": "CRM Alanları",
+  "/admin/bayiler": "Bayiler",
+  "/admin/b2b/katalog": "B2B Katalog",
+  "/admin/b2b/sepetler": "Açık Sepetler",
+  "/admin/urunler": "Ürün Yönetimi",
+  "/admin/kategoriler": "Kategoriler",
+  "/admin/nitelikler": "Nitelikler",
+  "/admin/fiyat-listeleri": "Fiyat Listeleri",
+  "/admin/icerikler": "Haberler",
+  "/admin/tarifler": "Tarifler",
+  "/admin/seo": "SEO / AEO",
+  "/admin/kullanicilar": "Kullanıcılar",
+  "/admin/siparisler": "Siparişler",
+  "/admin/cari": "Cari",
+  "/admin/sevkiyat": "Sevkiyat",
+  "/admin/whatsapp": "WhatsApp",
+  "/admin/ayarlar": "Ayarlar",
+};
+
+function sectionFromPath(pathname: string) {
+  if (SECTION_LABELS[pathname]) return SECTION_LABELS[pathname];
+  const match = Object.keys(SECTION_LABELS)
+    .filter((k) => k !== "/admin" && pathname.startsWith(k))
+    .sort((a, b) => b.length - a.length)[0];
+  return match ? SECTION_LABELS[match] : "Yönetim";
+}
+
 function initials(name: string) {
   return name
     .split(" ")
@@ -36,13 +68,13 @@ function initials(name: string) {
 export function AdminTopbar({
   userName,
   userEmail,
-  section = "Pano",
 }: {
   userName: string;
   userEmail: string;
-  section?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const section = sectionFromPath(pathname);
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -51,13 +83,22 @@ export function AdminTopbar({
   }
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border px-4">
-      <SidebarTrigger className="text-muted-foreground hover:bg-muted hover:text-foreground" />
-      <Separator orientation="vertical" className="h-5" />
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage className="text-foreground">{section}</BreadcrumbPage>
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:h-16 md:gap-3 md:px-4">
+      <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" />
+      <Separator orientation="vertical" className="hidden h-5 sm:block" />
+
+      <Breadcrumb className="min-w-0 flex-1">
+        <BreadcrumbList className="flex-nowrap">
+          <BreadcrumbItem className="hidden sm:inline-flex">
+            <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+              Panel
+            </Link>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden sm:block" />
+          <BreadcrumbItem className="min-w-0">
+            <BreadcrumbPage className="truncate font-semibold text-foreground">
+              {section}
+            </BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -65,8 +106,10 @@ export function AdminTopbar({
       <Button
         variant="outline"
         size="sm"
-        className="ml-auto h-9 w-56 justify-start gap-2 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-        onClick={() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
+        className="hidden h-9 w-44 justify-start gap-2 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground lg:flex lg:w-56"
+        onClick={() =>
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))
+        }
       >
         <Search className="size-3.5" aria-hidden />
         Ara...
@@ -75,16 +118,31 @@ export function AdminTopbar({
         </kbd>
       </Button>
 
-      <Link
-        href="/admin/whatsapp"
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        aria-label="Mesajlar"
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-10 shrink-0 text-muted-foreground lg:hidden"
+        aria-label="Ara"
+        onClick={() =>
+          document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))
+        }
       >
-        <Mail className="size-4" aria-hidden />
+        <Search className="size-4" aria-hidden />
+      </Button>
+
+      <Link
+        href="/urunler"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
+        aria-label="Mağazayı aç"
+      >
+        <Store className="size-4" aria-hidden />
       </Link>
+
       <button
         type="button"
-        className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-9"
         aria-label="Bildirimler"
       >
         <Bell className="size-4" aria-hidden />
@@ -96,27 +154,40 @@ export function AdminTopbar({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="flex items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-muted"
+            className="flex items-center gap-2 rounded-full py-1 pr-1 pl-1 transition-colors hover:bg-muted md:pr-2"
           >
             <Avatar className="size-8">
               <AvatarFallback className="bg-brand-600 text-white">
                 {initials(userName) || <User className="size-4" />}
               </AvatarFallback>
             </Avatar>
-            <span className="hidden text-left sm:block">
-              <span className="block text-body-sm leading-body-sm font-semibold text-foreground">
+            <span className="hidden text-left md:block">
+              <span className="block max-w-[9rem] truncate text-body-sm leading-body-sm font-semibold text-foreground">
                 {userName}
               </span>
-              <span className="block text-caption text-muted-foreground">{userEmail}</span>
+              <span className="block max-w-[9rem] truncate text-caption text-muted-foreground">
+                {userEmail}
+              </span>
             </span>
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="font-normal">
             <p className="text-body-sm leading-body-sm font-medium text-neutral-900">
               {userName}
             </p>
+            <p className="truncate text-caption text-muted-foreground">{userEmail}</p>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/urunler" target="_blank" rel="noopener noreferrer">
+              <Store />
+              Mağazayı aç
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/admin/ayarlar">Ayarlar</Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} variant="destructive">
             <LogOut />

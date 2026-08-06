@@ -4,8 +4,10 @@ import { cn } from "@/lib/utils";
 
 const siteLinks = [
   { href: "/urunler", label: "Ürünler" },
+  { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/haberler", label: "Haberler" },
   { href: "/tarifler", label: "Tarifler" },
+  { href: "/iletisim", label: "İletişim" },
   { href: "/auth", label: "Bayi Girişi" },
 ];
 

@@ -62,6 +62,22 @@ export function faqPageJsonLd(faqs: { question: string; answer: string }[]) {
   };
 }
 
+export function websiteJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE.name,
+    url: getSiteUrl(),
+    description: SITE.description,
+    inLanguage: "tr-TR",
+    publisher: {
+      "@type": "Organization",
+      name: SITE.name,
+      logo: absoluteUrl("/brand/logo-light.png"),
+    },
+  };
+}
+
 export function JsonLdScript({ data }: { data: object | object[] }) {
   const payload = Array.isArray(data) ? data : [data];
   return (

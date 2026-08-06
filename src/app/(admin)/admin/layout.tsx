@@ -30,9 +30,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminShell>
         <SidebarProvider>
           <AdminSidebar openLeadsCount={openLeadsCount} />
-          <SidebarInset className="bg-background">
+          <SidebarInset className="min-w-0 bg-background">
             <AdminTopbar userName={session.user.name} userEmail={session.user.email} />
-            <main className="flex-1 p-6">{children}</main>
+            <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:p-6">{children}</main>
           </SidebarInset>
           <CommandPalette />
         </SidebarProvider>

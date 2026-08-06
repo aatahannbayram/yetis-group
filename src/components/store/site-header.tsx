@@ -12,7 +12,7 @@ const nav = [
   { href: "/urunler", label: "Ürünler" },
   { href: "/haberler", label: "Haberler" },
   { href: "/tarifler", label: "Tarifler" },
-  { href: "/#hakkimizda", label: "Hakkımızda" },
+  { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/iletisim", label: "İletişim" },
 ];
 
@@ -50,17 +50,22 @@ export async function SiteHeader({
 
         <nav
           className={cn(
-            "mkt-label hidden items-center gap-8 md:flex",
-            isOverlay ? "text-white/90" : "text-mkt-ink-muted",
+            "hidden items-center gap-7 lg:gap-9 md:flex",
+            isOverlay
+              ? "text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.45)]"
+              : "text-mkt-ink",
           )}
+          aria-label="Ana menü"
         >
           {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                "transition-opacity hover:opacity-100",
-                isOverlay ? "hover:text-white" : "hover:text-mkt-ink",
+                "text-[15px] font-semibold tracking-[-0.01em] transition-colors lg:text-[16px]",
+                isOverlay
+                  ? "text-white hover:text-white/85"
+                  : "text-mkt-ink hover:text-mkt-green-text",
               )}
             >
               {item.label}
@@ -75,12 +80,25 @@ export async function SiteHeader({
           {session ? (
             <StoreUserMenu userName={session.user.name} isStaff={isStaff} />
           ) : (
-            <Link
-              href="/auth"
-              className="mkt-pill mkt-label hidden bg-mkt-accent px-5 py-2.5 text-mkt-accent-ink hover:brightness-105 sm:inline-flex"
-            >
-              Bayi Girişi
-            </Link>
+            <div className="hidden items-center gap-2 sm:flex">
+              <Link
+                href="/auth?tab=uye"
+                className={cn(
+                  "mkt-pill inline-flex items-center justify-center px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em]",
+                  isOverlay
+                    ? "bg-white text-[#0a0a0a] shadow-sm hover:bg-white/92"
+                    : "border border-[color:var(--mkt-border)] bg-white text-mkt-ink hover:bg-mkt-card-muted",
+                )}
+              >
+                Üye ol
+              </Link>
+              <Link
+                href="/auth"
+                className="mkt-pill bg-mkt-accent px-5 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-mkt-accent-ink hover:brightness-105"
+              >
+                Bayi Girişi
+              </Link>
+            </div>
           )}
           <MobileNav isLoggedIn={!!session} isStaff={isStaff} overlay={isOverlay} />
         </div>

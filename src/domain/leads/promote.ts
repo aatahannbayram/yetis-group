@@ -11,6 +11,7 @@ export type PromoteLeadInput = {
 
 export type PromoteLeadPlan =
   | { action: "noop"; dealerId: string }
+  | { action: "activate"; dealerId: string }
   | {
       action: "create";
       dealerType: "BAYI" | "HORECA" | "ZINCIR" | "ARA_TOPTANCI";
@@ -26,11 +27,12 @@ export class PromoteLeadError extends Error {
 }
 
 export function planPromoteLeadToDealer(input: PromoteLeadInput): PromoteLeadPlan {
-  if (input.alreadyConvertedDealerId) {
-    return { action: "noop", dealerId: input.alreadyConvertedDealerId };
-  }
   if (input.stage !== "KAZANILDI") {
     throw new PromoteLeadError("Yalnızca KAZANILDI aşamasındaki lead Dealer'a terfi eder.");
+  }
+  if (input.alreadyConvertedDealerId) {
+    // Self-serve signup may already have created a BASVURU dealer.
+    return { action: "activate", dealerId: input.alreadyConvertedDealerId };
   }
 
   const dealerType =

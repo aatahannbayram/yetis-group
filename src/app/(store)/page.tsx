@@ -4,8 +4,8 @@ import {
   ArrowUpRight,
   ClipboardList,
   Leaf,
+  MessageCircle,
   MessageCircleMore,
-  Package,
   Snowflake,
   Truck,
 } from "lucide-react";
@@ -15,302 +15,287 @@ import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { AboutTabs } from "@/components/store/about-tabs";
 import { Reveal } from "@/components/store/reveal";
+import { HomeHero } from "@/components/store/home-hero";
+import { HomeFaq } from "@/components/store/home-faq";
+import { StoreCountUp } from "@/components/store/store-count-up";
 import {
   JsonLdScript,
   faqPageJsonLd,
   localBusinessJsonLd,
   organizationJsonLd,
+  websiteJsonLd,
 } from "@/lib/seo/json-ld";
 import type { Metadata } from "next";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: SITE.name,
-  description: SITE.description,
+  title: "Toptan yöresel gıda | Bayi sipariş platformu",
+  description:
+    "Market, şarküteri, HORECA ve ara toptancılara toptan yöresel gıda. Onaylı bayi hesabıyla katalog, net fiyat listesi ve sipariş.",
   path: "/",
   image: "/hero-dairy.jpg",
 });
 
 const homeFaqs = [
   {
-    question: "Yetiş Grup kimlere satış yapar?",
+    question: "Kimlere satıyorsunuz?",
     answer:
-      "Market, şarküteri, HORECA ve ara toptancılara B2B satış yaparız. Tüketiciye perakende pazaryeri değiliz; onaylı bayi hesabı ile katalog, fiyat listesi ve sipariş açılır.",
+      "Market, şarküteri, otel–restoran–kafe ve ara toptancıya. Son tüketiciye açık pazar değiliz; onaylı bayi hesabı gerekir.",
+    icon: "building" as const,
   },
   {
-    question: "Toptan yöresel gıda tedarikçisi olarak ne sunarsınız?",
+    question: "Ne alırım, nasıl güvenirim?",
     answer:
-      "Yöresel ve kırsal ürün kataloğu, soğuk zincir/lot-SKT takibi, kredi limiti kontrollü sepet, FEFO sevkiyat ve WhatsApp bildirimlerini tek platformda birleştiririz.",
+      "Peynir, yoğurt, süt, tereyağı ve daha fazlası. Listenizdeki fiyat net; SKT ve lot görünür. Soğuk giden ürün soğuk gider — SKT’si geçen sevk edilmez.",
+    icon: "package" as const,
   },
   {
     question: "Bayilik nasıl alınır?",
     answer:
-      "Satış ekibimize başvurursunuz; ticari değerlendirme ve onay sonrası kullanıcı hesabı, fiyat listesi ve varsa kredi limiti tanımlanır. Süreç detayı /haberler altında bayilik rehberinde anlatılır.",
+      "Üye ol veya iletişim formunu doldur. Ekip inceler, onaylar; sonra fiyat listeniz açılır ve sipariş verebilirsiniz.",
+    icon: "shield" as const,
   },
 ];
 
 const aboutTabs = [
   {
     id: "hikaye",
-    label: "Hikâyemiz",
-    title: "Yöresel ve kırsal ürünlerde güvenilir çözüm ortağınız.",
-    body: "Yetiş Grup; market, şarküteri, HORECA ve ara toptancılara temiz gıda tedarik eder. Üretici hikâyesini, soğuk zinciri ve şeffaf fiyatı tek platformda birleştiririz.",
+    label: "Hikâye",
+    title: "Çiftlikten tezgâha, arada güven.",
+    body: "Üreticinin hikâyesini ve sizin raftaki ihtiyacınızı aynı yerde buluşturuyoruz. Temiz gıda, net fiyat, düzenli teslimat.",
   },
   {
-    id: "vizyon",
-    label: "Vizyon",
-    title: "Temiz gıdaya erişimi her işletme için kolaylaştırmak.",
-    body: "Katalog, sipariş, cari ve WhatsApp bildirimlerini tek akışta topluyoruz. Böylece bayi ilişkisi kağıt ve telefon trafiğinden kurtulur.",
+    id: "nasil",
+    label: "Nasıl çalışır",
+    title: "Başvur, onaylan, sipariş ver.",
+    body: "Hesap açılır, ekip inceler. Onaydan sonra katalog ve fiyat listeniz görünür; sepet ve limit de orada.",
   },
   {
-    id: "misyon",
-    label: "Misyon",
-    title: "Kaliteyi, izlenebilirliği ve adil fiyatı aynı masaya koymak.",
-    body: "Lot ve SKT takibi, FEFO sevkiyat ve fiyat snapshot ile geçmiş siparişler bozulmaz. Güven, fire maliyetinden daha değerlidir.",
+    id: "neden",
+    label: "Neden Yetiş",
+    title: "SKT’si geçen gitmez, fiyatın listende kalır.",
+    body: "Lot takibi, soğuk zincir ve sipariş anındaki fiyat kaydı. Geçmiş siparişiniz sonradan değişmez.",
   },
 ];
 
-const stats = [
-  { kind: "image" as const, src: "/products/beyaz-peynir.jpg", alt: "Beyaz peynir üretimi" },
-  { kind: "stat" as const, value: "20+", label: "Yıllık tecrübe", accent: false },
-  { kind: "image" as const, src: "/products/kasar.jpg", alt: "Kaşar peyniri" },
-  { kind: "stat" as const, value: "%98", label: "Zamanında sevkiyat", accent: true },
-];
-
-const capabilities = [
+const capabilities: Array<{
+  icon: typeof ClipboardList;
+  title: string;
+  description: string;
+  image: string;
+}> = [
   {
     icon: ClipboardList,
-    title: "B2B sipariş",
-    description: "Katalog, hızlı sipariş ve kredi limiti kontrollü sepet.",
-    image: "/products/kasar.jpg",
+    title: "Sipariş",
+    description: "Katalogdan sepete; limit dolunca sistem uyarır.",
+    image: "/products/beyaz-peynir.jpg",
   },
   {
     icon: Snowflake,
     title: "Soğuk zincir",
-    description: "SKT ve lot takibi; süresi geçen ürün sevk edilmez.",
-    image: "/products/sut.jpg",
+    description: "SKT ve lot görünür. Süresi geçen ürün yola çıkmaz.",
+    image: "/scenes/cold-chain.jpg",
   },
   {
     icon: Truck,
-    title: "Sevkiyat",
-    description: "FEFO önerisi ve operasyon paneliyle net teslimat.",
-    image: "/products/tulum.jpg",
+    title: "Teslimat",
+    description: "Önce yakını biten lot seçilir; teslimat günü netleşir.",
+    image: "/scenes/truck-close.jpg",
   },
   {
     icon: MessageCircleMore,
-    title: "WhatsApp",
-    description: "Sipariş ve sevkiyat bildirimleri işletme hattından.",
-    image: "/products/yogurt.jpg",
+    title: "WhatsApp haber",
+    description: "Sipariş ve sevkiyat güncellemeleri işletme hattından gelir.",
+    image: "/scenes/whatsapp-desk.jpg",
   },
 ];
 
 const productsPreview = [
-  { src: "/products/beyaz-peynir.jpg", name: "Beyaz Peynir", tag: "Şarküteri" },
   { src: "/products/kasar.jpg", name: "Kaşar", tag: "Olgun" },
   { src: "/products/yogurt.jpg", name: "Yoğurt", tag: "Günlük" },
   { src: "/products/tereyagi.jpg", name: "Tereyağı", tag: "Kırsal" },
+  { src: "/products/sut.jpg", name: "Süt", tag: "Taze" },
 ];
 
 const processTabs = [
   {
     id: "tedarik",
     label: "Tedarik",
-    title: "Üreticiden işletmeye şeffaf zincir.",
-    body: "Üretici kaydı, lot ve kalite kontrolü ile ürün Platform’a girer. Bayi yalnızca onaylı kataloğu görür.",
-    image: "/products/beyaz-peynir.jpg",
+    title: "Ürün önce kontrol edilir, sonra katalogda görünür.",
+    body: "Üreticiden gelen her parti kayda girer. Siz yalnızca onaylı listeyi görürsünüz.",
+    image: "/products/tulum.jpg",
   },
   {
     id: "siparis",
     label: "Sipariş",
-    title: "Fiyat listesi ve limit tek ekranda.",
-    body: "Bayi sepete ekler; kademe ve kampanya kuralları uygulanır. Onayda fiyat snapshot alınır.",
-    image: "/products/lor.jpg",
+    title: "Fiyat ve limit tek ekranda.",
+    body: "Sepete ekleyin; kademe ve kampanya otomatik uygulanır. Onayda o anki fiyat kilitlenir.",
+    image: "/scenes/warehouse.jpg",
   },
   {
     id: "sevkiyat",
     label: "Sevkiyat",
-    title: "SKT’ye saygılı lojistik.",
-    body: "FEFO ile lot seçilir; WhatsApp ile durum bildirilir. Cari hareket siparişle birlikte izlenir.",
-    image: "/products/tereyagi.jpg",
+    title: "Önce yakını biten gider.",
+    body: "Uygun lot seçilir, yola çıkar; durum WhatsApp’tan düşer. Cari hareket de aynı siparişle izlenir.",
+    image: "/scenes/delivery.jpg",
   },
 ];
 
 export default function StoreHomePage() {
   return (
     <Canvas>
-      <JsonLdScript data={[organizationJsonLd(), localBusinessJsonLd(), faqPageJsonLd(homeFaqs)]} />
-      <Slab className="relative min-h-[72vh] overflow-hidden md:min-h-[85vh]">
-        <Image
-          src="/hero-dairy.jpg"
-          alt="Yetiş Grup — yöresel ve kırsal ürünler"
-          fill
-          priority
-          className="object-cover object-center"
-          sizes="100vw"
-        />
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/30"
-        />
+      <JsonLdScript
+        data={[
+          websiteJsonLd(),
+          organizationJsonLd(),
+          localBusinessJsonLd(),
+          faqPageJsonLd(homeFaqs.map(({ question, answer }) => ({ question, answer }))),
+        ]}
+      />
 
-        <SiteHeader variant="overlay" />
-
-        <div className="relative z-10 flex min-h-[72vh] flex-col justify-end px-5 pb-8 md:min-h-[85vh] md:px-10 md:pb-14 lg:px-14">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.7fr)] lg:items-end lg:gap-8">
-            <Reveal>
-              <span className="mkt-pill mkt-label inline-flex bg-white/15 px-4 py-1.5 text-white backdrop-blur-md">
-                Yöresel &amp; kırsal gıda
-              </span>
-              <h1 className="mkt-display mt-4 max-w-2xl text-balance text-white md:mt-5">
-                Temiz gıdaya eriş, sağlıklı yetiş.
-              </h1>
-              <div className="mt-6 md:mt-8">
-                <PillCta href="/auth" className="w-full justify-center sm:w-auto">
-                  Bayi Girişi
-                </PillCta>
-              </div>
-            </Reveal>
-
-            <Reveal delay={120}>
-              <div className="rounded-[1.25rem] border border-white/25 bg-white/12 p-5 text-white shadow-lg backdrop-blur-xl md:p-7">
-                <p className="mkt-label text-white/70">Misyonumuz</p>
-                <p className="mt-3 text-[1rem] leading-snug font-medium tracking-[-0.01em] md:text-[1.05rem]">
-                  Marketten HORECA&apos;ya, üretici hikâyesini ve güvenilir tedariki tek platformda
-                  buluşturmak.
-                </p>
-              </div>
-            </Reveal>
-          </div>
+      <Slab className="relative overflow-hidden !p-0">
+        <div className="absolute inset-x-0 top-0 z-20">
+          <SiteHeader variant="overlay" />
         </div>
+        <HomeHero />
       </Slab>
 
       <Slab id="hakkimizda" className="mkt-pad">
         <Reveal>
           <AboutTabs tabs={aboutTabs} />
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <PillCta href="/urunler" variant="secondary" showArrow={false} className="w-full justify-center sm:w-auto">
               Kataloğu İncele
             </PillCta>
+            <Link
+              href="/hakkimizda"
+              className="mkt-pill mkt-label inline-flex h-11 w-full items-center justify-center gap-2 border border-[color:var(--mkt-border)] px-5 text-mkt-ink hover:bg-mkt-card-muted sm:w-auto"
+            >
+              Hakkımızda
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </Link>
           </div>
         </Reveal>
 
         <div className="mt-10 grid grid-cols-2 gap-2.5 sm:gap-3 md:mt-14 md:grid-cols-4 md:gap-4">
-          {stats.map((item, i) => (
-            <Reveal key={i} delay={i * 70}>
-              {item.kind === "image" ? (
-                <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
-                  <Image
-                    src={item.src}
-                    alt={item.alt}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 768px) 22vw, 45vw"
-                  />
-                </div>
-              ) : (
-                <div
-                  className={
-                    item.accent
-                      ? "relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-accent p-4 text-mkt-accent-ink md:rounded-[1.25rem] md:p-6"
-                      : "relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-card-muted p-4 text-mkt-ink md:rounded-[1.25rem] md:p-6"
-                  }
-                >
-                  <span className="ml-auto flex size-8 items-center justify-center rounded-full bg-mkt-accent-ink text-white md:size-9">
-                    <ArrowUpRight className="size-3.5 md:size-4" aria-hidden />
-                  </span>
-                  <div>
-                    <p className="mkt-stat text-[1.75rem] md:text-[inherit]">{item.value}</p>
-                    <p className="mkt-label mt-2 opacity-80 md:mt-3">{item.label}</p>
-                  </div>
-                </div>
-              )}
-            </Reveal>
-          ))}
+          <Reveal delay={0}>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
+              <Image
+                src="/products/lor.jpg"
+                alt="Lor peyniri"
+                fill
+                quality={70}
+                className="object-cover"
+                sizes="(min-width: 768px) 22vw, 45vw"
+              />
+            </div>
+          </Reveal>
+          <Reveal delay={70}>
+            <div className="relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-card-muted p-4 text-mkt-ink md:rounded-[1.25rem] md:p-6">
+              <span className="ml-auto flex size-8 items-center justify-center rounded-full bg-mkt-accent-ink text-white md:size-9">
+                <ArrowUpRight className="size-3.5 md:size-4" aria-hidden />
+              </span>
+              <div>
+                <p className="mkt-stat text-[1.75rem] md:text-[inherit]">
+                  <StoreCountUp value={20} suffix="+" />
+                </p>
+                <p className="mkt-label mt-2 opacity-80 md:mt-3">Yıllık tecrübe</p>
+              </div>
+            </div>
+          </Reveal>
+          <Reveal delay={140}>
+            <div className="relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[1rem] bg-[var(--brand-700)] p-4 text-white md:rounded-[1.25rem] md:p-6">
+              <Leaf className="absolute top-4 right-4 size-8 opacity-20" aria-hidden />
+              <p className="mkt-label text-white/70">Üreticiden</p>
+              <p className="mt-2 text-[1.15rem] font-medium tracking-[-0.02em]">Tezgâha güvenli zincir</p>
+            </div>
+          </Reveal>
+          <Reveal delay={210}>
+            <div className="relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-accent p-4 text-mkt-accent-ink md:rounded-[1.25rem] md:p-6">
+              <span className="ml-auto flex size-8 items-center justify-center rounded-full bg-mkt-accent-ink text-white md:size-9">
+                <ArrowUpRight className="size-3.5 md:size-4" aria-hidden />
+              </span>
+              <div>
+                <p className="mkt-stat text-[1.75rem] md:text-[inherit]">
+                  <StoreCountUp value={98} suffix="%" />
+                </p>
+                <p className="mkt-label mt-2 opacity-80 md:mt-3">Zamanında sevkiyat</p>
+              </div>
+            </div>
+          </Reveal>
         </div>
       </Slab>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         <Slab className="mkt-pad relative overflow-hidden !py-8 md:!py-10">
-          <div className="relative z-10 max-w-lg">
+          <Reveal>
             <span className="mkt-pill mkt-label inline-flex border border-[color:var(--mkt-border)] px-3 py-1.5 text-mkt-ink-muted">
               Ne sunuyoruz
             </span>
             <h2 className="mkt-h2 mt-5 text-balance text-mkt-ink">
-              Tedarikten sepete, tek{" "}
-              <span className="rounded-md bg-[#E8E0F5] px-1.5">B2B</span> akış.
+              Katalogdan sepete,{" "}
+              <span className="rounded-md bg-[var(--brand-100)] px-1.5 text-mkt-green-text">tek yerden</span>{" "}
+              sipariş.
             </h2>
-            <p className="mkt-body mt-4">
-              Katalog, fiyat listesi, kredi limiti ve WhatsApp bildirimi aynı platformda.
+            <p className="mkt-body mt-4 max-w-md">
+              Fiyat listeniz, sepetiniz ve destek hattınız aynı platformda. Kağıt-fax yok.
             </p>
             <div className="mt-8">
-              <PillCta href="/#cozumler" variant="secondary" showArrow={false} className="w-full justify-center sm:w-auto">
-                Çözümleri Gör
+              <PillCta
+                href="/#cozumler"
+                variant="secondary"
+                showArrow={false}
+                className="w-full justify-center sm:w-auto"
+              >
+                Neler var?
               </PillCta>
             </div>
-          </div>
-          <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-3">
-            {[
-              { src: "/products/beyaz-peynir.jpg", alt: "Beyaz peynir" },
-              { src: "/products/kasar.jpg", alt: "Kaşar" },
-              { src: "/products/yogurt.jpg", alt: "Yoğurt" },
-            ].map((img) => (
-              <div
-                key={img.src}
-                className="relative aspect-[3/4] overflow-hidden rounded-[1rem]"
-              >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 12vw, 30vw"
-                />
-              </div>
-            ))}
-          </div>
+          </Reveal>
+          <Reveal delay={100}>
+            <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-[1.25rem]">
+              <Image
+                src="/scenes/offer-board.jpg"
+                alt="Peynir tahtası — yöresel ürünler"
+                fill
+                quality={70}
+                className="object-cover"
+                sizes="(min-width: 1024px) 40vw, 90vw"
+              />
+            </div>
+          </Reveal>
         </Slab>
 
         <Slab className="mkt-pad !py-8 md:!py-10">
-          <AboutTabs tabs={processTabs} visual />
+          <Reveal>
+            <AboutTabs tabs={processTabs} visual />
+          </Reveal>
         </Slab>
       </div>
 
       <Slab id="cozumler" className="mkt-pad">
         <Reveal>
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-2">
-                <Leaf className="size-4 text-mkt-green-text" aria-hidden />
-                <p className="mkt-label text-mkt-green-text">Çözümler</p>
-              </div>
-              <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
-                Araçlarla kanıtlanan çözüm ortaklığı.
-              </h2>
-              <p className="mkt-body mt-4">
-                Slogan yetmez. Sipariş, stok ve iletişim araçları bayi operasyonunu hızlandırır.
-              </p>
+          <div className="max-w-xl">
+            <div className="flex items-center gap-2">
+              <Leaf className="size-4 text-mkt-green-text" aria-hidden />
+              <p className="mkt-label text-mkt-green-text">İşinizi kolaylaştıranlar</p>
             </div>
-            <div className="relative hidden h-28 w-44 shrink-0 overflow-hidden rounded-[1.25rem] sm:block lg:h-32 lg:w-52">
-              <Image
-                src="/hero-dairy.jpg"
-                alt=""
-                fill
-                className="object-cover"
-                sizes="208px"
-              />
-            </div>
+            <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
+              Sipariş, soğuk zincir, teslimat, haber.
+            </h2>
+            <p className="mkt-body mt-4">Hepsi bayi hesabınızda. Telefonda not tutmaya gerek yok.</p>
           </div>
         </Reveal>
         <div className="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mt-12 lg:grid-cols-4">
           {capabilities.map((item, i) => (
             <Reveal key={item.title} delay={i * 70}>
-              <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-mkt-card-muted">
+              <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-mkt-card-muted transition-transform duration-300 hover:-translate-y-0.5">
                 <div className="relative aspect-[5/4] overflow-hidden">
                   <Image
                     src={item.image}
                     alt=""
                     fill
+                    quality={70}
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
                     sizes="(min-width: 1024px) 22vw, 50vw"
                   />
@@ -322,7 +307,9 @@ export default function StoreHomePage() {
                   <h3 className="text-[1.1rem] font-medium tracking-[-0.015em] text-mkt-ink">
                     {item.title}
                   </h3>
-                  <p className="mkt-body mt-2 text-[13px]">{item.description}</p>
+                  <p className="mt-2 text-[13px] leading-relaxed text-mkt-ink-muted">
+                    {item.description}
+                  </p>
                 </div>
               </div>
             </Reveal>
@@ -330,7 +317,6 @@ export default function StoreHomePage() {
         </div>
       </Slab>
 
-      {/* Product preview with watermark */}
       <Slab className="relative overflow-hidden">
         <div className="mkt-pad relative">
           <p
@@ -341,9 +327,8 @@ export default function StoreHomePage() {
           </p>
           <Reveal>
             <p className="mkt-label text-mkt-green-text">Katalog</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-mkt-ink">
-              Rafınızı dolduran yöresel seçki.
-            </h2>
+            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-mkt-ink">Rafta işinize yarayanlar.</h2>
+            <p className="mkt-body mt-3 max-w-md">Teneke, dilim, günlük… İhtiyaca göre seçin.</p>
           </Reveal>
           <div className="mkt-rail relative mt-8 md:mt-12">
             {productsPreview.map((product, i) => (
@@ -354,6 +339,7 @@ export default function StoreHomePage() {
                       src={product.src}
                       alt={product.name}
                       fill
+                      quality={70}
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                       sizes="(min-width: 768px) 20vw, 42vw"
                     />
@@ -376,65 +362,177 @@ export default function StoreHomePage() {
         </div>
       </Slab>
 
-      {/* Connect row */}
-      <Slab className="px-4 py-4 sm:px-6 sm:py-6 md:px-10">
-        <div className="flex flex-col gap-4 rounded-[1.25rem] bg-mkt-card-muted p-4 sm:flex-row sm:items-center sm:justify-between sm:rounded-full sm:px-6 sm:py-4 md:px-8">
-          <div className="flex items-start gap-3 sm:items-center">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-mkt-accent text-mkt-accent-ink">
-              <Package className="size-4" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <p className="mkt-label text-mkt-ink">Bağlantıda kalın</p>
-              <p className="mkt-body mt-0.5 text-[13px]">
-                Sipariş ve destek için satış ekibimiz hazır.
-              </p>
+      <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(48,163,105,0.22),transparent_50%)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-mkt-accent/10 blur-3xl"
+        />
+        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12 lg:py-16">
+          <Reveal>
+            <p className="mkt-label text-mkt-accent">Destek</p>
+            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">Takıldığın yerde yaz.</h2>
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
+              Sipariş, numune veya bayilik — satış ekibi cevaplar. Formu doldur, ya da doğrudan ara.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <PillCta href="/iletisim" className="w-full justify-center sm:w-auto">
+                İletişime geç
+              </PillCta>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-[13px] text-white/55">
+                <a
+                  href={`https://wa.me/${SITE.phone.replace("+", "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
+                >
+                  <MessageCircle className="size-3.5 text-mkt-accent" aria-hidden />
+                  WhatsApp
+                </a>
+                <a
+                  href={`tel:${SITE.phone}`}
+                  className="tabular-nums transition-colors hover:text-white"
+                >
+                  {SITE.phoneDisplay}
+                </a>
+              </div>
             </div>
-          </div>
-          <a
-            href="mailto:info@yetisgrup.com"
-            className="mkt-pill mkt-label inline-flex w-full shrink-0 items-center justify-center bg-mkt-accent-ink px-5 py-3 text-white sm:w-auto sm:py-2.5"
-          >
-            info@yetisgrup.com
-          </a>
+          </Reveal>
+
+          <Reveal delay={80}>
+            <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              {[
+                {
+                  href: "/iletisim?konu=bayilik",
+                  title: "Bayilik",
+                  body: "Başvuru ve fiyat listesi",
+                },
+                {
+                  href: "/iletisim?konu=numune",
+                  title: "Numune",
+                  body: "Ürün denemesi talebi",
+                },
+                {
+                  href: "/iletisim?konu=horeca",
+                  title: "HORECA",
+                  body: "Mutfak / otel tedarik",
+                },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
+                  >
+                    <span>
+                      <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">
+                        {item.title}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-white/45">{item.body}</span>
+                    </span>
+                    <ArrowUpRight className="size-4 shrink-0 text-white/40 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-mkt-accent" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
       </Slab>
 
       <Slab className="mkt-pad">
         <Reveal>
-          <p className="mkt-label text-mkt-green-text">Sık sorulanlar</p>
+          <p className="mkt-label text-mkt-green-text">Merak edilenler</p>
           <h2 className="mkt-h2 mt-3 max-w-xl text-balance text-mkt-ink">
-            Bayiler için net cevaplar.
+            Bayiler soruyor, biz net cevaplıyoruz.
           </h2>
         </Reveal>
-        <div className="mt-8 grid gap-3 md:grid-cols-3 md:gap-4">
-          {homeFaqs.map((faq) => (
-            <div key={faq.question} className="rounded-[1.25rem] bg-mkt-card-muted p-5 md:p-6">
-              <h3 className="text-[1.05rem] font-medium tracking-[-0.015em] text-mkt-ink">
-                {faq.question}
-              </h3>
-              <p className="mkt-body mt-3 text-[13px]">{faq.answer}</p>
-            </div>
-          ))}
+        <div className="mt-8 md:mt-10">
+          <HomeFaq
+            items={homeFaqs}
+            imageSrc="/scenes/kitchen.jpg"
+            imageAlt="Profesyonel mutfak — HORECA tedarik"
+          />
         </div>
       </Slab>
 
-      <Slab className="mkt-pad">
-        <div className="flex flex-col gap-6 sm:gap-8 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-xl">
-            <h2 className="mkt-h2 text-balance text-mkt-ink">Bayi hesabınla siparişe başla.</h2>
-            <p className="mkt-body mt-3 sm:mt-4">
-              Hesabın yoksa satış ekibimizle iletişime geç; onay sonrası fiyat listesi ve limit
-              tanımlanır.
+      <Slab className="relative overflow-hidden !bg-[#0c1812] text-white">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(48,163,105,0.2),transparent_55%)]"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-20 bottom-0 size-80 rounded-full bg-mkt-accent/10 blur-3xl"
+        />
+        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12 lg:py-16">
+          <Reveal>
+            <p className="mkt-label text-mkt-accent">Bayi hesabı</p>
+            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
+              Hesabın hazırsa siparişe geç.
+            </h2>
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
+              Yoksa iki dakikada üye ol. Onaydan sonra fiyat listen açılır; takıldığın yerde iletişim
+              formundan yazman yeterli.
             </p>
-          </div>
-          <PillCta
-            href="/auth"
-            variant="secondary"
-            showArrow={false}
-            className="w-full justify-center sm:w-auto"
-          >
-            İletişime Geç
-          </PillCta>
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-white/55">
+              <li className="inline-flex items-center gap-1.5">
+                <Snowflake className="size-3.5 text-mkt-accent" aria-hidden />
+                SKT kontrolü
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <ClipboardList className="size-3.5 text-mkt-accent" aria-hidden />
+                Net fiyat listesi
+              </li>
+              <li className="inline-flex items-center gap-1.5">
+                <MessageCircleMore className="size-3.5 text-mkt-accent" aria-hidden />
+                WhatsApp takip
+              </li>
+            </ul>
+            <div className="mt-8">
+              <PillCta href="/auth" className="w-full justify-center sm:w-auto">
+                Giriş yap
+              </PillCta>
+            </div>
+          </Reveal>
+
+          <Reveal delay={80}>
+            <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              {[
+                {
+                  href: "/auth?tab=uye",
+                  title: "Üye ol",
+                  body: "Başvuru — onay sonrası liste",
+                },
+                {
+                  href: "/urunler",
+                  title: "Kataloğa bak",
+                  body: "Ürünleri incele",
+                },
+                {
+                  href: "/iletisim",
+                  title: "İletişim",
+                  body: "Satış ekibine yaz",
+                },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
+                  >
+                    <span>
+                      <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">
+                        {item.title}
+                      </span>
+                      <span className="mt-0.5 block text-[12px] text-white/45">{item.body}</span>
+                    </span>
+                    <ArrowUpRight className="size-4 shrink-0 text-white/40 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-mkt-accent" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
       </Slab>
 

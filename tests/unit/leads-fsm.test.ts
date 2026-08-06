@@ -50,7 +50,7 @@ describe("isTransitionAllowed", () => {
 });
 
 describe("planPromoteLeadToDealer", () => {
-  it("is noop when already converted", () => {
+  it("activates existing self-serve dealer when already converted", () => {
     const plan = planPromoteLeadToDealer({
       leadId: "l1",
       companyName: "Test",
@@ -58,7 +58,7 @@ describe("planPromoteLeadToDealer", () => {
       alreadyConvertedDealerId: "d1",
       stage: "KAZANILDI",
     });
-    expect(plan).toEqual({ action: "noop", dealerId: "d1" });
+    expect(plan).toEqual({ action: "activate", dealerId: "d1" });
   });
 
   it("creates HORECA dealer for HORECA channel", () => {

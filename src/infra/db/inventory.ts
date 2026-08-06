@@ -2,7 +2,7 @@ import { prisma } from "@/infra/db/client";
 import { add, compare, kg, subtract, zeroKg, type Kg } from "@/domain/weight";
 import { assertNotExpired, isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
 
-function availableKgFromMovements(movements: { type: string; quantityKg: unknown }[]): Kg {
+export function availableKgFromMovements(movements: { type: string; quantityKg: unknown }[]): Kg {
   return movements.reduce((total, movement) => {
     const quantity = kg(String(movement.quantityKg));
     if (movement.type === "GIRIS") return add(total, quantity);

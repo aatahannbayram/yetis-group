@@ -11,7 +11,7 @@ export async function listDealerBalances() {
       status: true,
       creditLimitKurus: true,
       paymentTermDays: true,
-      ledgerEntries: { select: { type: true, amountKurus: true } },
+      ledgerEntries: { orderBy: { createdAt: "desc" } },
     },
   });
 
@@ -24,30 +24,8 @@ export async function listDealerBalances() {
     paymentTermDays: d.paymentTermDays,
     entryCount: d.ledgerEntries.length,
     balanceKurus: calculateBalance(d.ledgerEntries),
+    entries: d.ledgerEntries,
   }));
-}
-
-export async function getDealerLedger(dealerId: string) {
-  const dealer = await prisma.dealer.findUnique({
-    where: { id: dealerId },
-    select: {
-      id: true,
-      unvan: true,
-      creditLimitKurus: true,
-      paymentTermDays: true,
-      ledgerEntries: { orderBy: { createdAt: "desc" } },
-    },
-  });
-  if (!dealer) return null;
-
-  return {
-    id: dealer.id,
-    unvan: dealer.unvan,
-    creditLimitKurus: dealer.creditLimitKurus,
-    paymentTermDays: dealer.paymentTermDays,
-    balanceKurus: calculateBalance(dealer.ledgerEntries),
-    entries: dealer.ledgerEntries,
-  };
 }
 
 export async function addLedgerEntry(input: {

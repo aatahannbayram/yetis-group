@@ -1,33 +1,28 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { DealerLedgerBoard, type DealerBalanceRow } from "@/components/admin/dealer-ledger-board";
-import { listDealerBalances, getDealerLedger } from "@/infra/db/ledger";
+import { listDealerBalances } from "@/infra/db/ledger";
 
 export default async function AdminLedgerPage() {
   const summaries = await listDealerBalances();
 
-  const rows: DealerBalanceRow[] = await Promise.all(
-    summaries.map(async (d) => {
-      const ledger = await getDealerLedger(d.id);
-      return {
-        id: d.id,
-        unvan: d.unvan,
-        dealerType: d.dealerType,
-        creditLimitKurus: d.creditLimitKurus,
-        paymentTermDays: d.paymentTermDays,
-        entryCount: d.entryCount,
-        balanceKurus: d.balanceKurus,
-        entries: (ledger?.entries ?? []).map((e) => ({
-          id: e.id,
-          type: e.type,
-          amountKurus: e.amountKurus,
-          description: e.description,
-          createdAt: e.createdAt.toISOString(),
-          reversesId: e.reversesId,
-        })),
-      };
-    }),
-  );
+  const rows: DealerBalanceRow[] = summaries.map((d) => ({
+    id: d.id,
+    unvan: d.unvan,
+    dealerType: d.dealerType,
+    creditLimitKurus: d.creditLimitKurus,
+    paymentTermDays: d.paymentTermDays,
+    entryCount: d.entryCount,
+    balanceKurus: d.balanceKurus,
+    entries: d.entries.map((e) => ({
+      id: e.id,
+      type: e.type,
+      amountKurus: e.amountKurus,
+      description: e.description,
+      createdAt: e.createdAt.toISOString(),
+      reversesId: e.reversesId,
+    })),
+  }));
 
   const totalReceivableKurus = rows
     .filter((r) => r.balanceKurus > 0)

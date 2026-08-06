@@ -1,54 +1,68 @@
 import { prisma } from "@/infra/db/client";
-import { getLotsForVariant } from "@/infra/db/inventory";
-import { sortLotsByFefo } from "@/domain/inventory/fefo";
+import { availableKgFromMovements } from "@/infra/db/inventory";
+import { sortLotsByFefo, isLotExpired } from "@/domain/inventory/fefo";
 
 export async function getShippingOverview() {
-  const products = await prisma.product.findMany({
-    where: { active: true },
-    orderBy: { name: "asc" },
+  const lots = await prisma.lot.findMany({
+    where: { variant: { isActive: true, product: { active: true } } },
     include: {
-      primaryCategory: true,
-      variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
+      movements: true,
+      variant: {
+        include: { product: { include: { primaryCategory: true } } },
+      },
     },
+    orderBy: { expirationDate: "asc" },
   });
 
   const now = new Date();
   const soon = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  const rows = [];
-  for (const product of products) {
-    for (const variant of product.variants) {
-      const lots = await getLotsForVariant(variant.id);
-      if (lots.length === 0) continue;
-
-      const fefoOrder = sortLotsByFefo(
-        lots.map((l) => ({ id: l.id, lotNumber: l.lotNumber, expirationDate: l.expirationDate, availableKg: l.availableKg })),
-      );
-      const fefoRank = new Map(fefoOrder.map((l, index) => [l.id, index]));
-
-      rows.push({
-        productId: product.id,
-        productName: product.name,
-        productSlug: product.slug,
-        categoryName: product.primaryCategory.name,
-        variantId: variant.id,
-        sku: variant.sku,
-        packLabel: variant.packSize ?? variant.packagingType,
-        lots: lots.map((l) => ({
-          id: l.id,
-          lotNumber: l.lotNumber,
-          expirationDate: l.expirationDate.toISOString(),
-          availableKg: l.availableKg.toString(),
-          expired: l.expired,
-          expiringSoon: !l.expired && l.expirationDate <= soon,
-          daysUntilExpiry: Math.ceil(
-            (l.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-          ),
-          fefoRank: fefoRank.get(l.id) ?? null,
-        })),
-      });
-    }
+  const byVariant = new Map<string, typeof lots>();
+  for (const lot of lots) {
+    const list = byVariant.get(lot.variantId) ?? [];
+    list.push(lot);
+    byVariant.set(lot.variantId, list);
   }
 
+  const rows = [];
+  for (const [variantId, variantLots] of byVariant) {
+    const variant = variantLots[0]!.variant;
+    const product = variant.product;
+
+    const summarized = variantLots.map((l) => ({
+      id: l.id,
+      lotNumber: l.lotNumber,
+      expirationDate: l.expirationDate,
+      availableKg: availableKgFromMovements(l.movements),
+      expired: isLotExpired(l.expirationDate, now),
+    }));
+
+    const fefoOrder = sortLotsByFefo(summarized, now);
+    const fefoRank = new Map(fefoOrder.map((l, index) => [l.id, index]));
+
+    rows.push({
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      categoryName: product.primaryCategory.name,
+      variantId,
+      sku: variant.sku,
+      packLabel: variant.packSize ?? variant.packagingType,
+      lots: summarized.map((l) => ({
+        id: l.id,
+        lotNumber: l.lotNumber,
+        expirationDate: l.expirationDate.toISOString(),
+        availableKg: l.availableKg.toString(),
+        expired: l.expired,
+        expiringSoon: !l.expired && l.expirationDate <= soon,
+        daysUntilExpiry: Math.ceil(
+          (l.expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        ),
+        fefoRank: fefoRank.get(l.id) ?? null,
+      })),
+    });
+  }
+
+  rows.sort((a, b) => a.productName.localeCompare(b.productName, "tr"));
   return rows;
 }

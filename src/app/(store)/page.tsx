@@ -42,19 +42,16 @@ const homeFaqs = [
     question: "Kimlere satıyorsunuz?",
     answer:
       "Market, şarküteri, otel–restoran–kafe ve ara toptancıya. Son tüketiciye açık pazar değiliz; onaylı bayi hesabı gerekir.",
-    icon: "building" as const,
   },
   {
     question: "Ne alırım, nasıl güvenirim?",
     answer:
       "Peynir, yoğurt, süt, tereyağı ve daha fazlası. Listenizdeki fiyat net; SKT ve lot görünür. Soğuk giden ürün soğuk gider — SKT’si geçen sevk edilmez.",
-    icon: "package" as const,
   },
   {
     question: "Bayilik nasıl alınır?",
     answer:
       "Üye ol veya iletişim formunu doldur. Ekip inceler, onaylar; sonra fiyat listeniz açılır ve sipariş verebilirsiniz.",
-    icon: "shield" as const,
   },
 ];
 
@@ -365,174 +362,161 @@ export default function StoreHomePage() {
       <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(48,163,105,0.22),transparent_50%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(48,163,105,0.18),transparent_55%)]"
         />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-24 -left-16 size-72 rounded-full bg-mkt-accent/10 blur-3xl"
-        />
-        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12 lg:py-16">
+        <div className="mkt-pad relative py-10 md:py-14 lg:py-16">
           <Reveal>
-            <p className="mkt-label text-mkt-accent">Destek</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">Takıldığın yerde yaz.</h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
-              Sipariş, numune veya bayilik — satış ekibi cevaplar. Formu doldur, ya da doğrudan ara.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <PillCta href="/iletisim" className="w-full justify-center sm:w-auto">
-                İletişime geç
-              </PillCta>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-[13px] text-white/55">
-                <a
-                  href={`https://wa.me/${SITE.phone.replace("+", "")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 transition-colors hover:text-white"
-                >
-                  <MessageCircle className="size-3.5 text-mkt-accent" aria-hidden />
-                  WhatsApp
-                </a>
-                <a
-                  href={`tel:${SITE.phone}`}
-                  className="tabular-nums transition-colors hover:text-white"
-                >
-                  {SITE.phoneDisplay}
-                </a>
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+              <div className="max-w-xl">
+                <p className="mkt-label text-mkt-accent">Destek</p>
+                <h2 className="mkt-h2 mt-3 text-balance text-white">Takıldığın yerde yaz.</h2>
+                <p className="mt-3 text-[15px] leading-relaxed text-white/70 md:text-base">
+                  Sipariş, numune veya bayilik — satış ekibi cevaplar. Formu doldur veya doğrudan ara.
+                </p>
+              </div>
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+                <PillCta href="/iletisim" className="w-full justify-center sm:w-auto">
+                  İletişime geç
+                </PillCta>
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[14px] font-medium text-white/75 sm:justify-start">
+                  <a
+                    href={`https://wa.me/${SITE.phone.replace("+", "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 hover:text-white"
+                  >
+                    <MessageCircle className="size-3.5 text-mkt-accent" aria-hidden />
+                    WhatsApp
+                  </a>
+                  <a href={`tel:${SITE.phone}`} className="tabular-nums hover:text-white">
+                    {SITE.phoneDisplay}
+                  </a>
+                </div>
               </div>
             </div>
           </Reveal>
-
-          <Reveal delay={80}>
-            <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <Reveal delay={60}>
+            <div className="mt-8 flex flex-wrap gap-2 border-t border-white/10 pt-8">
               {[
-                {
-                  href: "/iletisim?konu=bayilik",
-                  title: "Bayilik",
-                  body: "Başvuru ve fiyat listesi",
-                },
-                {
-                  href: "/iletisim?konu=numune",
-                  title: "Numune",
-                  body: "Ürün denemesi talebi",
-                },
-                {
-                  href: "/iletisim?konu=horeca",
-                  title: "HORECA",
-                  body: "Mutfak / otel tedarik",
-                },
+                { href: "/iletisim?konu=bayilik", label: "Bayilik" },
+                { href: "/iletisim?konu=numune", label: "Numune" },
+                { href: "/iletisim?konu=horeca", label: "HORECA" },
               ].map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
-                  >
-                    <span>
-                      <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">
-                        {item.title}
-                      </span>
-                      <span className="mt-0.5 block text-[12px] text-white/45">{item.body}</span>
-                    </span>
-                    <ArrowUpRight className="size-4 shrink-0 text-white/40 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-mkt-accent" />
-                  </Link>
-                </li>
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="mkt-pill inline-flex items-center gap-1.5 border border-white/20 bg-white/5 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"
+                >
+                  {item.label}
+                  <ArrowUpRight className="size-3.5 opacity-70" aria-hidden />
+                </Link>
               ))}
-            </ul>
+            </div>
           </Reveal>
         </div>
       </Slab>
 
       <Slab className="mkt-pad">
         <Reveal>
-          <p className="mkt-label text-mkt-green-text">Merak edilenler</p>
-          <h2 className="mkt-h2 mt-3 max-w-xl text-balance text-mkt-ink">
-            Bayiler soruyor, biz net cevaplıyoruz.
-          </h2>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-xl">
+              <p className="mkt-label text-mkt-green-text">Sık sorulanlar</p>
+              <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
+                Bayilikten önce bilmen gerekenler.
+              </h2>
+              <p className="mt-3 text-[15px] leading-relaxed text-mkt-ink-muted">
+                Kimlere sattığımız, ürün güveni ve başvuru adımları — kısa ve net.
+              </p>
+            </div>
+            <Link
+              href="/iletisim"
+              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-mkt-green-text hover:underline"
+            >
+              Başka soru mu var?
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </Link>
+          </div>
         </Reveal>
-        <div className="mt-8 md:mt-10">
-          <HomeFaq
-            items={homeFaqs}
-            imageSrc="/scenes/kitchen.jpg"
-            imageAlt="Profesyonel mutfak — HORECA tedarik"
-          />
+        <div className="mt-7 md:mt-9">
+          <HomeFaq items={homeFaqs} />
         </div>
       </Slab>
 
-      <Slab className="relative overflow-hidden !bg-[#0c1812] text-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(48,163,105,0.2),transparent_55%)]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-20 bottom-0 size-80 rounded-full bg-mkt-accent/10 blur-3xl"
-        />
-        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-12 lg:py-16">
-          <Reveal>
-            <p className="mkt-label text-mkt-accent">Bayi hesabı</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
-              Hesabın hazırsa siparişe geç.
-            </h2>
-            <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/65">
-              Yoksa iki dakikada üye ol. Onaydan sonra fiyat listen açılır; takıldığın yerde iletişim
-              formundan yazman yeterli.
-            </p>
-            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-white/55">
-              <li className="inline-flex items-center gap-1.5">
-                <Snowflake className="size-3.5 text-mkt-accent" aria-hidden />
-                SKT kontrolü
-              </li>
-              <li className="inline-flex items-center gap-1.5">
-                <ClipboardList className="size-3.5 text-mkt-accent" aria-hidden />
-                Net fiyat listesi
-              </li>
-              <li className="inline-flex items-center gap-1.5">
-                <MessageCircleMore className="size-3.5 text-mkt-accent" aria-hidden />
-                WhatsApp takip
-              </li>
-            </ul>
-            <div className="mt-8">
-              <PillCta href="/auth" className="w-full justify-center sm:w-auto">
-                Giriş yap
-              </PillCta>
+      {/* Bayi hesabı — product visual + clear dual CTA (no ghost card stack) */}
+      <Slab className="overflow-hidden !p-0">
+        <div className="grid lg:grid-cols-2">
+          <div className="relative min-h-[220px] sm:min-h-[280px] lg:min-h-full">
+            <Image
+              src="/scenes/how-sales.jpg"
+              alt=""
+              fill
+              quality={70}
+              className="object-cover object-center"
+              sizes="(min-width: 1024px) 50vw, 100vw"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-[#0c1812]/80 via-[#0c1812]/25 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-[#0c1812]/20 lg:to-[#0c1812]/90"
+            />
+            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:hidden">
+              <p className="text-[13px] font-semibold tracking-wide text-mkt-accent uppercase">
+                Bayi hesabı
+              </p>
+              <p className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-white">
+                Onaylı hesap = katalog + fiyat listesi
+              </p>
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal delay={80}>
-            <ul className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              {[
-                {
-                  href: "/auth?tab=uye",
-                  title: "Üye ol",
-                  body: "Başvuru — onay sonrası liste",
-                },
-                {
-                  href: "/urunler",
-                  title: "Kataloğa bak",
-                  body: "Ürünleri incele",
-                },
-                {
-                  href: "/iletisim",
-                  title: "İletişim",
-                  body: "Satış ekibine yaz",
-                },
-              ].map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="group flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3.5 transition-colors hover:border-white/20 hover:bg-white/[0.07]"
-                  >
-                    <span>
-                      <span className="block text-[15px] font-medium tracking-[-0.01em] text-white">
-                        {item.title}
-                      </span>
-                      <span className="mt-0.5 block text-[12px] text-white/45">{item.body}</span>
-                    </span>
-                    <ArrowUpRight className="size-4 shrink-0 text-white/40 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-mkt-accent" />
-                  </Link>
+          <div className="flex flex-col justify-center bg-[#0c1812] px-5 py-10 text-white sm:px-8 sm:py-12 md:px-10 lg:px-12 lg:py-16">
+            <Reveal>
+              <p className="mkt-label hidden text-mkt-accent lg:block">Bayi hesabı</p>
+              <h2 className="mkt-h2 mt-0 max-w-md text-balance text-white lg:mt-3">
+                Hesabın hazırsa siparişe geç.
+              </h2>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
+                Üyelik başvurun incelenir; onaydan sonra fiyat listen açılır. Takıldığın yerde satış
+                ekibine yazman yeterli.
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <PillCta href="/auth" className="w-full justify-center sm:w-auto">
+                  Giriş yap
+                </PillCta>
+                <Link
+                  href="/auth?tab=uye"
+                  className="mkt-pill inline-flex h-12 w-full items-center justify-center bg-white px-6 text-[15px] font-semibold text-[#0a0a0a] hover:bg-white/92 sm:h-[3.25rem] sm:w-auto"
+                >
+                  Üye ol
+                </Link>
+              </div>
+
+              <p className="mt-6 text-[14px] text-white/60">
+                <Link href="/urunler" className="font-semibold text-white underline-offset-2 hover:underline">
+                  Kataloğu incele
+                </Link>
+                <span className="mx-2 text-white/30">·</span>
+                <Link href="/iletisim" className="font-semibold text-white underline-offset-2 hover:underline">
+                  Satışa yaz
+                </Link>
+              </p>
+
+              <ul className="mt-8 grid gap-3 border-t border-white/10 pt-6 text-[13px] text-white/70 sm:grid-cols-3 sm:gap-4">
+                <li className="flex items-center gap-2">
+                  <Snowflake className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
+                  SKT / lot
                 </li>
-              ))}
-            </ul>
-          </Reveal>
+                <li className="flex items-center gap-2">
+                  <ClipboardList className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
+                  Net fiyat
+                </li>
+                <li className="flex items-center gap-2">
+                  <MessageCircleMore className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
+                  WhatsApp
+                </li>
+              </ul>
+            </Reveal>
+          </div>
         </div>
       </Slab>
 

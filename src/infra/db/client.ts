@@ -9,17 +9,17 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  // Neon pooled connections reject startup `options=search_path`.
-  // Qualify via SET on connect; Prisma still maps @@map table names.
+  // search_path is already "public" by default on this connection (verified
+  // directly against Neon) - no post-connect SET needed. A prior version of
+  // this fired `client.query()` on connect without awaiting it, which raced
+  // against Prisma's own query on the same freshly-checked-out client
+  // ("Calling client.query() when the client is already executing a query")
+  // and could stall requests under load.
   const pool =
     globalForPrisma.pgPool ??
     new Pool({
       connectionString: env.DATABASE_URL,
     });
-
-  pool.on("connect", (client) => {
-    void client.query("SET search_path TO public");
-  });
 
   if (env.NODE_ENV !== "production") {
     globalForPrisma.pgPool = pool;

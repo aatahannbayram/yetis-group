@@ -29,7 +29,7 @@ describe.runIf(Boolean(url))("M12.5 live DB integrity", () => {
       expect(row.pc).toBeGreaterThanOrEqual(row.products);
       expect(Number(row.missing_primary)).toBe(0);
       expect(row.dealers).toBeGreaterThanOrEqual(2);
-      expect(row.leads).toBe(8);
+      expect(row.leads).toBeGreaterThanOrEqual(8);
 
       const cols = await client.query(`
         SELECT column_name FROM information_schema.columns

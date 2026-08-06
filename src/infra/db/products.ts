@@ -1,4 +1,6 @@
 import { prisma } from "@/infra/db/client";
+import { slugifyTr } from "@/domain/catalog/slug";
+import type { PackagingType } from "@/generated/prisma";
 
 export async function getProducts(filters?: { categorySlug?: string }) {
   return prisma.product.findMany({
@@ -51,6 +53,83 @@ export async function updateProductDescription(productId: string, description: s
   return prisma.product.update({
     where: { id: productId },
     data: { description },
+  });
+}
+
+export type CreateProductInput = {
+  name: string;
+  description?: string;
+  primaryCategoryId: string;
+  producerId: string;
+  sku?: string;
+  packSize?: string | null;
+  packagingType?: PackagingType;
+  unitFactor: number;
+  pricePerUnitKurus: number;
+  vatRateBasisPoints?: number;
+};
+
+async function uniqueSlug(base: string): Promise<string> {
+  const root = slugifyTr(base) || "urun";
+  let slug = root;
+  let n = 0;
+  while (await prisma.product.findUnique({ where: { slug }, select: { id: true } })) {
+    n += 1;
+    slug = `${root}-${n}`;
+  }
+  return slug;
+}
+
+async function uniqueSku(preferred: string): Promise<string> {
+  const root = preferred.trim().toUpperCase() || `YG-${Date.now().toString(36).toUpperCase()}`;
+  let sku = root;
+  let n = 0;
+  while (await prisma.productVariant.findUnique({ where: { sku }, select: { id: true } })) {
+    n += 1;
+    sku = `${root}-${n}`;
+  }
+  return sku;
+}
+
+/** Creates product + primary category link + default variant. */
+export async function createProduct(input: CreateProductInput) {
+  const name = input.name.trim();
+  if (!name) throw new Error("Ürün adı gerekli");
+  if (!input.primaryCategoryId) throw new Error("Kategori gerekli");
+  if (!input.producerId) throw new Error("Üretici gerekli");
+  if (!Number.isFinite(input.pricePerUnitKurus) || input.pricePerUnitKurus < 0) {
+    throw new Error("Geçerli bir fiyat girin");
+  }
+  if (!Number.isFinite(input.unitFactor) || input.unitFactor <= 0) {
+    throw new Error("Birim katsayısı 0'dan büyük olmalı");
+  }
+
+  const slug = await uniqueSlug(name);
+  const skuBase =
+    input.sku?.trim() ||
+    `YG-${slugifyTr(name).slice(0, 12).toUpperCase() || "SKU"}`;
+  const sku = await uniqueSku(skuBase);
+
+  return prisma.product.create({
+    data: {
+      name,
+      slug,
+      description: input.description?.trim() ?? "",
+      producerId: input.producerId,
+      primaryCategoryId: input.primaryCategoryId,
+      categories: { create: { categoryId: input.primaryCategoryId } },
+      variants: {
+        create: {
+          sku,
+          packagingType: input.packagingType ?? "KOLI",
+          packSize: input.packSize?.trim() || null,
+          unitFactor: input.unitFactor,
+          pricePerUnitKurus: Math.round(input.pricePerUnitKurus),
+          vatRateBasisPoints: input.vatRateBasisPoints ?? 100,
+        },
+      },
+    },
+    include: { variants: true },
   });
 }
 

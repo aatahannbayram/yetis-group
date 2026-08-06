@@ -1,0 +1,740 @@
+{
+  "takenAt": "2026-08-05T23:03:48.594Z",
+  "products": [
+    {
+      "id": "cmsfv7hh60000tovd2ogahdim",
+      "sku": "YG-BP17-TNK",
+      "name": "Beyaz Peynir 17 kg Teneke",
+      "slug": "beyaz-peynir-17kg-teneke",
+      "category": "Beyaz Peynir",
+      "description": "Geleneksel tam yağlı inek sütü beyaz peynir, 17 kg'lık teneke ambalajda. Şarküteri ve toptan satış için standart Yetiş Grup ambalajı.",
+      "imageUrl": "/products/beyaz-peynir.jpg",
+      "unitLabel": "17 kg teneke",
+      "kgPerUnit": "17",
+      "pricePerUnitKurus": 340000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.498Z",
+      "updatedAt": "2026-08-05T09:08:45.498Z"
+    },
+    {
+      "id": "cmsfv7hiv0001tovd4vzxzu83",
+      "sku": "YG-KS01-VAK",
+      "name": "Kaşar Peyniri 1 kg Vakum",
+      "slug": "kasar-peyniri-1kg-vakum",
+      "category": "Kaşar",
+      "description": "Olgunlaştırılmış tam yağlı kaşar peyniri, 1 kg vakumlu paket.",
+      "imageUrl": "/products/kasar.jpg",
+      "unitLabel": "1 kg vakum",
+      "kgPerUnit": "1",
+      "pricePerUnitKurus": 38000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.559Z",
+      "updatedAt": "2026-08-05T09:08:45.559Z"
+    },
+    {
+      "id": "cmsfv7hk40002tovdip1bq3b5",
+      "sku": "YG-KS025-DLM",
+      "name": "Dilimli Kaşar 250 g Paket",
+      "slug": "dilimli-kasar-250g",
+      "category": "Kaşar",
+      "description": "Hazır dilimli kaşar peyniri, 250 g'lık raf ve HORECA paketi.",
+      "imageUrl": "/products/kasar.jpg",
+      "unitLabel": "250 g paket",
+      "kgPerUnit": "0.25",
+      "pricePerUnitKurus": 11000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.604Z",
+      "updatedAt": "2026-08-05T09:08:45.604Z"
+    },
+    {
+      "id": "cmsfv7hle0003tovdx95mw5ph",
+      "sku": "YG-TL08-VAK",
+      "name": "Tulum Peyniri 800 g Vakum",
+      "slug": "tulum-peyniri-800g",
+      "category": "Tulum",
+      "description": "Geleneksel tulum peyniri, 800 g vakumlu paket.",
+      "imageUrl": "/products/tulum.jpg",
+      "unitLabel": "800 g vakum",
+      "kgPerUnit": "0.8",
+      "pricePerUnitKurus": 32000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.650Z",
+      "updatedAt": "2026-08-05T09:08:45.650Z"
+    },
+    {
+      "id": "cmsfv7hmn0004tovd78504fua",
+      "sku": "YG-LR01-STD",
+      "name": "Lor Peyniri 1 kg",
+      "slug": "lor-peyniri-1kg",
+      "category": "Lor",
+      "description": "Taze lor peyniri, 1 kg'lık ambalaj.",
+      "imageUrl": "/products/lor.jpg",
+      "unitLabel": "1 kg",
+      "kgPerUnit": "1",
+      "pricePerUnitKurus": 18000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.695Z",
+      "updatedAt": "2026-08-05T09:08:45.695Z"
+    },
+    {
+      "id": "cmsfv7hqc0005tovdqjtntvya",
+      "sku": "YG-TY01-KOV",
+      "name": "Tereyağı 1 kg Kova",
+      "slug": "tereyagi-1kg-kova",
+      "category": "Tereyağı",
+      "description": "Sade tereyağı, 1 kg'lık kova ambalaj.",
+      "imageUrl": "/products/tereyagi.jpg",
+      "unitLabel": "1 kg kova",
+      "kgPerUnit": "1",
+      "pricePerUnitKurus": 45000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.828Z",
+      "updatedAt": "2026-08-05T09:08:45.828Z"
+    },
+    {
+      "id": "cmsfv7hrs0006tovdfjw8phej",
+      "sku": "YG-YG05-KOV",
+      "name": "Yoğurt 5 kg Kova",
+      "slug": "yogurt-5kg-kova",
+      "category": "Yoğurt",
+      "description": "Tam yağlı süzme yoğurt, 5 kg'lık toptan kova.",
+      "imageUrl": "/products/yogurt.jpg",
+      "unitLabel": "5 kg kova",
+      "kgPerUnit": "5",
+      "pricePerUnitKurus": 25000,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.880Z",
+      "updatedAt": "2026-08-05T09:08:45.880Z"
+    },
+    {
+      "id": "cmsfv7ht10007tovdutp5srmb",
+      "sku": "YG-ST01-LTR",
+      "name": "Süt 1 L",
+      "slug": "sut-1l",
+      "category": "Süt",
+      "description": "Pastörize tam yağlı süt, 1 litrelik ambalaj.",
+      "imageUrl": "/products/sut.jpg",
+      "unitLabel": "1 L",
+      "kgPerUnit": "1",
+      "pricePerUnitKurus": 3500,
+      "vatRateBasisPoints": 100,
+      "active": true,
+      "createdAt": "2026-08-05T09:08:45.925Z",
+      "updatedAt": "2026-08-05T09:08:45.925Z"
+    }
+  ],
+  "lots": [
+    {
+      "id": "cmsfwkahu000093vd9erjxt4d",
+      "productId": "cmsfv7hh60000tovd2ogahdim",
+      "lotNumber": "YG-BP17-TNK-A",
+      "expirationDate": "2026-11-03T09:46:42.537Z",
+      "createdAt": "2026-08-05T09:46:42.594Z",
+      "updatedAt": "2026-08-05T09:46:42.594Z"
+    },
+    {
+      "id": "cmsfwkaob000293vdzhfr6h7b",
+      "productId": "cmsfv7hh60000tovd2ogahdim",
+      "lotNumber": "YG-BP17-TNK-B",
+      "expirationDate": "2026-08-15T09:46:42.784Z",
+      "createdAt": "2026-08-05T09:46:42.827Z",
+      "updatedAt": "2026-08-05T09:46:42.827Z"
+    },
+    {
+      "id": "cmsfwkawq000493vdqx1x00xy",
+      "productId": "cmsfv7hiv0001tovd4vzxzu83",
+      "lotNumber": "YG-KS01-VAK-A",
+      "expirationDate": "2026-11-03T09:46:43.086Z",
+      "createdAt": "2026-08-05T09:46:43.130Z",
+      "updatedAt": "2026-08-05T09:46:43.130Z"
+    },
+    {
+      "id": "cmsfwkb2r000693vdgehk3gtw",
+      "productId": "cmsfv7hiv0001tovd4vzxzu83",
+      "lotNumber": "YG-KS01-VAK-B",
+      "expirationDate": "2026-08-15T09:46:43.304Z",
+      "createdAt": "2026-08-05T09:46:43.347Z",
+      "updatedAt": "2026-08-05T09:46:43.347Z"
+    },
+    {
+      "id": "cmsfwkbb9000893vdssgteag9",
+      "productId": "cmsfv7hk40002tovdip1bq3b5",
+      "lotNumber": "YG-KS025-DLM-A",
+      "expirationDate": "2026-11-03T09:46:43.611Z",
+      "createdAt": "2026-08-05T09:46:43.653Z",
+      "updatedAt": "2026-08-05T09:46:43.653Z"
+    },
+    {
+      "id": "cmsfwkbhc000a93vdugj2qqke",
+      "productId": "cmsfv7hk40002tovdip1bq3b5",
+      "lotNumber": "YG-KS025-DLM-B",
+      "expirationDate": "2026-08-15T09:46:43.827Z",
+      "createdAt": "2026-08-05T09:46:43.872Z",
+      "updatedAt": "2026-08-05T09:46:43.872Z"
+    },
+    {
+      "id": "cmsfwkbon000c93vdvlvhwe7x",
+      "productId": "cmsfv7hle0003tovdx95mw5ph",
+      "lotNumber": "YG-TL08-VAK-A",
+      "expirationDate": "2026-11-03T09:46:44.093Z",
+      "createdAt": "2026-08-05T09:46:44.135Z",
+      "updatedAt": "2026-08-05T09:46:44.135Z"
+    },
+    {
+      "id": "cmsfwkbuw000e93vd84fk487o",
+      "productId": "cmsfv7hle0003tovdx95mw5ph",
+      "lotNumber": "YG-TL08-VAK-B",
+      "expirationDate": "2026-08-15T09:46:44.319Z",
+      "createdAt": "2026-08-05T09:46:44.360Z",
+      "updatedAt": "2026-08-05T09:46:44.360Z"
+    },
+    {
+      "id": "cmsfwkc39000g93vd45av4asr",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "lotNumber": "YG-LR01-STD-A",
+      "expirationDate": "2026-11-03T09:46:44.619Z",
+      "createdAt": "2026-08-05T09:46:44.661Z",
+      "updatedAt": "2026-08-05T09:46:44.661Z"
+    },
+    {
+      "id": "cmsfwkc9a000i93vd2ikvxc07",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "lotNumber": "YG-LR01-STD-B",
+      "expirationDate": "2026-08-15T09:46:44.835Z",
+      "createdAt": "2026-08-05T09:46:44.878Z",
+      "updatedAt": "2026-08-05T09:46:44.878Z"
+    },
+    {
+      "id": "cmsfwkci1000k93vdcytr6vvr",
+      "productId": "cmsfv7hqc0005tovdqjtntvya",
+      "lotNumber": "YG-TY01-KOV-A",
+      "expirationDate": "2026-11-03T09:46:45.146Z",
+      "createdAt": "2026-08-05T09:46:45.193Z",
+      "updatedAt": "2026-08-05T09:46:45.193Z"
+    },
+    {
+      "id": "cmsfwkco3000m93vdn1vnull8",
+      "productId": "cmsfv7hqc0005tovdqjtntvya",
+      "lotNumber": "YG-TY01-KOV-B",
+      "expirationDate": "2026-08-15T09:46:45.369Z",
+      "createdAt": "2026-08-05T09:46:45.412Z",
+      "updatedAt": "2026-08-05T09:46:45.412Z"
+    },
+    {
+      "id": "cmsfwkcwd000o93vd1sl6jlzg",
+      "productId": "cmsfv7hrs0006tovdfjw8phej",
+      "lotNumber": "YG-YG05-KOV-A",
+      "expirationDate": "2026-11-03T09:46:45.667Z",
+      "createdAt": "2026-08-05T09:46:45.709Z",
+      "updatedAt": "2026-08-05T09:46:45.709Z"
+    },
+    {
+      "id": "cmsfwkd2n000q93vdyzlr3xf8",
+      "productId": "cmsfv7hrs0006tovdfjw8phej",
+      "lotNumber": "YG-YG05-KOV-B",
+      "expirationDate": "2026-08-15T09:46:45.893Z",
+      "createdAt": "2026-08-05T09:46:45.935Z",
+      "updatedAt": "2026-08-05T09:46:45.935Z"
+    },
+    {
+      "id": "cmsfwkdb6000s93vdo07o7bdx",
+      "productId": "cmsfv7ht10007tovdutp5srmb",
+      "lotNumber": "YG-ST01-LTR-A",
+      "expirationDate": "2026-11-03T09:46:46.199Z",
+      "createdAt": "2026-08-05T09:46:46.242Z",
+      "updatedAt": "2026-08-05T09:46:46.242Z"
+    },
+    {
+      "id": "cmsfwkdha000u93vdyo1tr4qc",
+      "productId": "cmsfv7ht10007tovdutp5srmb",
+      "lotNumber": "YG-ST01-LTR-B",
+      "expirationDate": "2026-08-15T09:46:46.418Z",
+      "createdAt": "2026-08-05T09:46:46.462Z",
+      "updatedAt": "2026-08-05T09:46:46.462Z"
+    },
+    {
+      "id": "cmsfwkdpp000w93vd2jjincb6",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "lotNumber": "YG-LR01-STD-EXP",
+      "expirationDate": "2026-08-02T09:46:46.719Z",
+      "createdAt": "2026-08-05T09:46:46.765Z",
+      "updatedAt": "2026-08-05T09:46:46.765Z"
+    }
+  ],
+  "movements": [
+    {
+      "id": "cmsfwkaj9000193vd8a2nq252",
+      "lotId": "cmsfwkahu000093vd9erjxt4d",
+      "type": "GIRIS",
+      "quantityKg": "340",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:42.594Z"
+    },
+    {
+      "id": "cmsfwkas0000393vdfq1zxmxi",
+      "lotId": "cmsfwkaob000293vdzhfr6h7b",
+      "type": "GIRIS",
+      "quantityKg": "85",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:42.827Z"
+    },
+    {
+      "id": "cmsfwkaxy000593vdatx8qb4u",
+      "lotId": "cmsfwkawq000493vdqx1x00xy",
+      "type": "GIRIS",
+      "quantityKg": "20",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:43.130Z"
+    },
+    {
+      "id": "cmsfwkb3z000793vdj38dhwcx",
+      "lotId": "cmsfwkb2r000693vdgehk3gtw",
+      "type": "GIRIS",
+      "quantityKg": "5",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:43.347Z"
+    },
+    {
+      "id": "cmsfwkbcg000993vd1phgw00i",
+      "lotId": "cmsfwkbb9000893vdssgteag9",
+      "type": "GIRIS",
+      "quantityKg": "5",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:43.653Z"
+    },
+    {
+      "id": "cmsfwkbih000b93vd879tejep",
+      "lotId": "cmsfwkbhc000a93vdugj2qqke",
+      "type": "GIRIS",
+      "quantityKg": "1.25",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:43.872Z"
+    },
+    {
+      "id": "cmsfwkbq1000d93vd4ewn63zs",
+      "lotId": "cmsfwkbon000c93vdvlvhwe7x",
+      "type": "GIRIS",
+      "quantityKg": "16",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:44.135Z"
+    },
+    {
+      "id": "cmsfwkbw4000f93vdeqhs9sj2",
+      "lotId": "cmsfwkbuw000e93vd84fk487o",
+      "type": "GIRIS",
+      "quantityKg": "4",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:44.360Z"
+    },
+    {
+      "id": "cmsfwkc4j000h93vdmx6qcjg5",
+      "lotId": "cmsfwkc39000g93vd45av4asr",
+      "type": "GIRIS",
+      "quantityKg": "20",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:44.661Z"
+    },
+    {
+      "id": "cmsfwkcah000j93vd4yx6pft2",
+      "lotId": "cmsfwkc9a000i93vd2ikvxc07",
+      "type": "GIRIS",
+      "quantityKg": "5",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:44.878Z"
+    },
+    {
+      "id": "cmsfwkcj9000l93vdpdu9lhcm",
+      "lotId": "cmsfwkci1000k93vdcytr6vvr",
+      "type": "GIRIS",
+      "quantityKg": "20",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:45.193Z"
+    },
+    {
+      "id": "cmsfwkcpc000n93vd4lu01hl3",
+      "lotId": "cmsfwkco3000m93vdn1vnull8",
+      "type": "GIRIS",
+      "quantityKg": "5",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:45.412Z"
+    },
+    {
+      "id": "cmsfwkcxl000p93vd5jmkwatt",
+      "lotId": "cmsfwkcwd000o93vd1sl6jlzg",
+      "type": "GIRIS",
+      "quantityKg": "100",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:45.709Z"
+    },
+    {
+      "id": "cmsfwkd3v000r93vd6lnl02i6",
+      "lotId": "cmsfwkd2n000q93vdyzlr3xf8",
+      "type": "GIRIS",
+      "quantityKg": "25",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:45.935Z"
+    },
+    {
+      "id": "cmsfwkdcd000t93vdjetmoleq",
+      "lotId": "cmsfwkdb6000s93vdo07o7bdx",
+      "type": "GIRIS",
+      "quantityKg": "20",
+      "note": "Üretimden ilk giriş",
+      "createdAt": "2026-08-05T09:46:46.242Z"
+    },
+    {
+      "id": "cmsfwkdii000v93vdu5798q6k",
+      "lotId": "cmsfwkdha000u93vdyo1tr4qc",
+      "type": "GIRIS",
+      "quantityKg": "5",
+      "note": "Önceki parti",
+      "createdAt": "2026-08-05T09:46:46.462Z"
+    },
+    {
+      "id": "cmsfwkdqy000x93vdqn9701o5",
+      "lotId": "cmsfwkdpp000w93vd2jjincb6",
+      "type": "GIRIS",
+      "quantityKg": "4",
+      "note": "Satılamadan kalan parti",
+      "createdAt": "2026-08-05T09:46:46.765Z"
+    }
+  ],
+  "priceListItems": [
+    {
+      "id": "cmsfv7i3s000dtovd4nh7o9ml",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hh60000tovd2ogahdim",
+      "priceKurus": 322000,
+      "createdAt": "2026-08-05T09:08:46.312Z",
+      "updatedAt": "2026-08-05T09:08:46.312Z"
+    },
+    {
+      "id": "cmsfv7i4z000etovdnse64tb8",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hiv0001tovd4vzxzu83",
+      "priceKurus": 38000,
+      "createdAt": "2026-08-05T09:08:46.355Z",
+      "updatedAt": "2026-08-05T09:08:46.355Z"
+    },
+    {
+      "id": "cmsfv7i6e000ftovdct3agdmk",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hiv0001tovd4vzxzu83",
+      "priceKurus": 37200,
+      "createdAt": "2026-08-05T09:08:46.406Z",
+      "updatedAt": "2026-08-05T09:08:46.406Z"
+    },
+    {
+      "id": "cmsfv7i7r000gtovd1fn46nfp",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hiv0001tovd4vzxzu83",
+      "priceKurus": 36000,
+      "createdAt": "2026-08-05T09:08:46.455Z",
+      "updatedAt": "2026-08-05T09:08:46.455Z"
+    },
+    {
+      "id": "cmsfv7i90000htovdbkxxb639",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hk40002tovdip1bq3b5",
+      "priceKurus": 11000,
+      "createdAt": "2026-08-05T09:08:46.500Z",
+      "updatedAt": "2026-08-05T09:08:46.500Z"
+    },
+    {
+      "id": "cmsfv7ia8000itovdatr8zdn5",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hk40002tovdip1bq3b5",
+      "priceKurus": 10600,
+      "createdAt": "2026-08-05T09:08:46.544Z",
+      "updatedAt": "2026-08-05T09:08:46.544Z"
+    },
+    {
+      "id": "cmsfv7ibg000jtovdayld8p1q",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hk40002tovdip1bq3b5",
+      "priceKurus": 10300,
+      "createdAt": "2026-08-05T09:08:46.588Z",
+      "updatedAt": "2026-08-05T09:08:46.588Z"
+    },
+    {
+      "id": "cmsfv7ie1000ltovd3kqawei9",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hle0003tovdx95mw5ph",
+      "priceKurus": 31200,
+      "createdAt": "2026-08-05T09:08:46.681Z",
+      "updatedAt": "2026-08-05T09:08:46.681Z"
+    },
+    {
+      "id": "cmsfv7if8000mtovdnwv561we",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hle0003tovdx95mw5ph",
+      "priceKurus": 30200,
+      "createdAt": "2026-08-05T09:08:46.724Z",
+      "updatedAt": "2026-08-05T09:08:46.724Z"
+    },
+    {
+      "id": "cmsfv7ii9000ntovdqi8d39s5",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "priceKurus": 18000,
+      "createdAt": "2026-08-05T09:08:46.835Z",
+      "updatedAt": "2026-08-05T09:08:46.835Z"
+    },
+    {
+      "id": "cmsfv7iji000otovdcutly3uq",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "priceKurus": 17600,
+      "createdAt": "2026-08-05T09:08:46.878Z",
+      "updatedAt": "2026-08-05T09:08:46.878Z"
+    },
+    {
+      "id": "cmsfv7ikq000ptovd7hbplo3g",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hmn0004tovd78504fua",
+      "priceKurus": 17000,
+      "createdAt": "2026-08-05T09:08:46.922Z",
+      "updatedAt": "2026-08-05T09:08:46.922Z"
+    },
+    {
+      "id": "cmsfv7im1000qtovdcdnq3u94",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hqc0005tovdqjtntvya",
+      "priceKurus": 45000,
+      "createdAt": "2026-08-05T09:08:46.969Z",
+      "updatedAt": "2026-08-05T09:08:46.969Z"
+    },
+    {
+      "id": "cmsfv7in9000rtovd4zhmp4p5",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hqc0005tovdqjtntvya",
+      "priceKurus": 44000,
+      "createdAt": "2026-08-05T09:08:47.013Z",
+      "updatedAt": "2026-08-05T09:08:47.013Z"
+    },
+    {
+      "id": "cmsfv7iog000stovdq80wpmu3",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hqc0005tovdqjtntvya",
+      "priceKurus": 42500,
+      "createdAt": "2026-08-05T09:08:47.056Z",
+      "updatedAt": "2026-08-05T09:08:47.056Z"
+    },
+    {
+      "id": "cmsfv7iq1000ttovdzrvl0zqq",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hrs0006tovdfjw8phej",
+      "priceKurus": 25000,
+      "createdAt": "2026-08-05T09:08:47.113Z",
+      "updatedAt": "2026-08-05T09:08:47.113Z"
+    },
+    {
+      "id": "cmsfv7ira000utovdqi8r87pk",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hrs0006tovdfjw8phej",
+      "priceKurus": 24300,
+      "createdAt": "2026-08-05T09:08:47.158Z",
+      "updatedAt": "2026-08-05T09:08:47.158Z"
+    },
+    {
+      "id": "cmsfv7isi000vtovdxuwddlgq",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7hrs0006tovdfjw8phej",
+      "priceKurus": 23500,
+      "createdAt": "2026-08-05T09:08:47.202Z",
+      "updatedAt": "2026-08-05T09:08:47.202Z"
+    },
+    {
+      "id": "cmsfv7itr000wtovdmwixibhi",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7ht10007tovdutp5srmb",
+      "priceKurus": 3500,
+      "createdAt": "2026-08-05T09:08:47.247Z",
+      "updatedAt": "2026-08-05T09:08:47.247Z"
+    },
+    {
+      "id": "cmsfv7iwx000xtovdbk7mt7d8",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7ht10007tovdutp5srmb",
+      "priceKurus": 3400,
+      "createdAt": "2026-08-05T09:08:47.361Z",
+      "updatedAt": "2026-08-05T09:08:47.361Z"
+    },
+    {
+      "id": "cmsfv7iy5000ytovdhgw7dp29",
+      "priceListId": "cmsfv7hxm000atovd78x5qsea",
+      "productId": "cmsfv7ht10007tovdutp5srmb",
+      "priceKurus": 3300,
+      "createdAt": "2026-08-05T09:08:47.405Z",
+      "updatedAt": "2026-08-05T09:08:47.405Z"
+    },
+    {
+      "id": "cmsfv7i0y000ctovdcbhkl9x3",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0",
+      "productId": "cmsfv7hh60000tovd2ogahdim",
+      "priceKurus": 332000,
+      "createdAt": "2026-08-05T09:08:46.210Z",
+      "updatedAt": "2026-08-05T13:06:23.961Z"
+    },
+    {
+      "id": "cmsfv7ics000ktovdnqe0690z",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hle0003tovdx95mw5ph",
+      "priceKurus": 32000,
+      "createdAt": "2026-08-05T09:08:46.636Z",
+      "updatedAt": "2026-08-05T13:06:29.198Z"
+    },
+    {
+      "id": "cmsfv7hz1000btovdl577oakg",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz",
+      "productId": "cmsfv7hh60000tovd2ogahdim",
+      "priceKurus": 350000,
+      "createdAt": "2026-08-05T09:08:46.141Z",
+      "updatedAt": "2026-08-05T13:07:28.211Z"
+    }
+  ],
+  "leads": [
+    {
+      "id": "cmsfblkhz000015vdb3s2rtep",
+      "companyName": "Beşiktaş Şarküteri Dünyası",
+      "contactName": "Murat Kaya",
+      "phone": "0532 111 22 33",
+      "city": "İstanbul",
+      "channel": "SARKUTERI",
+      "stage": "MUZAKERE",
+      "estimatedMonthlyKg": "420",
+      "note": "17 kg teneke beyaz peynir + kaşar için haftalık sabit sipariş istiyor.",
+      "createdAt": "2026-08-04T23:59:50.279Z",
+      "updatedAt": "2026-08-04T23:59:50.279Z"
+    },
+    {
+      "id": "cmsfblkj9000115vdx07kv1gr",
+      "companyName": "Kadıköy Zincir Market A.Ş.",
+      "contactName": "Elif Sarıkaya",
+      "phone": "0533 222 33 44",
+      "city": "İstanbul",
+      "channel": "MARKET",
+      "stage": "NUMUNE_TEKLIF",
+      "estimatedMonthlyKg": "1250",
+      "note": "6 şube için merkezi sipariş; numune gönderildi, fiyat teklifi bekleniyor.",
+      "createdAt": "2026-08-04T23:59:50.325Z",
+      "updatedAt": "2026-08-04T23:59:50.325Z"
+    },
+    {
+      "id": "cmsfblkkh000215vd6fa6s0f6",
+      "companyName": "Liman Otel & Restoran Grubu",
+      "contactName": "Serkan Demir",
+      "phone": "0535 333 44 55",
+      "city": "Antalya",
+      "channel": "HORECA",
+      "stage": "ILETISIMDE",
+      "estimatedMonthlyKg": "300",
+      "note": "Otel mutfağı için dilimli kaşar ve lor peyniri görüşülüyor.",
+      "createdAt": "2026-08-04T23:59:50.369Z",
+      "updatedAt": "2026-08-04T23:59:50.369Z"
+    },
+    {
+      "id": "cmsfblkn5000315vdrqi67tik",
+      "companyName": "Ege Toptan Gıda Dağıtım",
+      "contactName": "Ayşe Yıldırım",
+      "phone": "0536 444 55 66",
+      "city": "İzmir",
+      "channel": "ARA_TOPTANCI",
+      "stage": "YENI",
+      "estimatedMonthlyKg": "2000",
+      "note": "Ege bölgesi ara toptancı; ilk görüşme talebi WhatsApp'tan geldi.",
+      "createdAt": "2026-08-04T23:59:50.465Z",
+      "updatedAt": "2026-08-04T23:59:50.465Z"
+    },
+    {
+      "id": "cmsfblkog000415vdrb3logy4",
+      "companyName": "Bursa Şehir Marketleri",
+      "contactName": "Hakan Öztürk",
+      "phone": "0537 555 66 77",
+      "city": "Bursa",
+      "channel": "MARKET",
+      "stage": "KAZANILDI",
+      "estimatedMonthlyKg": "680",
+      "note": "Sözleşme imzalandı, ilk sevkiyat planlanıyor.",
+      "createdAt": "2026-08-04T23:59:50.512Z",
+      "updatedAt": "2026-08-04T23:59:50.512Z"
+    },
+    {
+      "id": "cmsfblkpq000515vdfq854tdo",
+      "companyName": "Karaköy Cafe & Bistro",
+      "contactName": "Zeynep Aydın",
+      "phone": "0538 666 77 88",
+      "city": "İstanbul",
+      "channel": "HORECA",
+      "stage": "KAYBEDILDI",
+      "estimatedMonthlyKg": "60",
+      "note": "Bütçe uyuşmadı; 6 ay sonra tekrar aranacak.",
+      "createdAt": "2026-08-04T23:59:50.558Z",
+      "updatedAt": "2026-08-04T23:59:50.558Z"
+    },
+    {
+      "id": "cmsfblkqx000615vdkxkpbj03",
+      "companyName": "Konya Şarküteri Toptan",
+      "contactName": "Mehmet Çelik",
+      "phone": "0539 777 88 99",
+      "city": "Konya",
+      "channel": "SARKUTERI",
+      "stage": "ILETISIMDE",
+      "estimatedMonthlyKg": "540",
+      "note": "Tulum peyniri kapasitesi soruldu; teknik görüşme planlanıyor.",
+      "createdAt": "2026-08-04T23:59:50.601Z",
+      "updatedAt": "2026-08-04T23:59:50.601Z"
+    },
+    {
+      "id": "cmsfblks8000715vd96l97m91",
+      "companyName": "Adana Toptan Süt Ürünleri",
+      "contactName": "Fatma Şahin",
+      "phone": "0530 888 99 00",
+      "city": "Adana",
+      "channel": "ARA_TOPTANCI",
+      "stage": "YENI",
+      "estimatedMonthlyKg": "1800",
+      "note": "Fuar standından gelen kayıt; henüz aranmadı.",
+      "createdAt": "2026-08-04T23:59:50.648Z",
+      "updatedAt": "2026-08-04T23:59:50.648Z"
+    }
+  ],
+  "users": [
+    {
+      "id": "IgF4qwbz9GI2NfdXpcU7vvJUL1X6lXMi",
+      "email": "admin@yetisgrup.test",
+      "name": "Yetiş Admin",
+      "accountType": "STAFF",
+      "priceListId": null
+    },
+    {
+      "id": "RrlQ93Qrke0mCZ8u1x8Eu6pznjEeF81y",
+      "email": "bayi@yetisgrup.test",
+      "name": "Test Bayi",
+      "accountType": "DEALER",
+      "priceListId": "cmsfv7huj0008tovdgji2z6jz"
+    },
+    {
+      "id": "dVoPX5oL2GSesMxFYyPY4BcXj8N8PJ56",
+      "email": "horeca@yetisgrup.test",
+      "name": "Test HORECA",
+      "accountType": "DEALER",
+      "priceListId": "cmsfv7hw90009tovdqggmf2l0"
+    }
+  ],
+  "counts": {
+    "product": 8,
+    "lot": 17,
+    "stock_movement": 17,
+    "price_list_item": 24,
+    "lead": 8,
+    "user": 3
+  }
+}

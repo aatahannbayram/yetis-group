@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 import { SITE } from "@/lib/site";
 import { useConsent } from "@/components/store/consent-provider";
-import { cn } from "@/lib/utils";
 
 /** Nav order: discover → learn → engage → account */
 const siteLinks = [
@@ -28,35 +27,27 @@ export function SiteFooter() {
   const { openPreferences } = useConsent();
 
   return (
-    <footer className="mkt-slab overflow-hidden bg-[#0f1f17] text-white">
+    <footer className="mkt-slab overflow-hidden">
       <div className="mkt-pad !py-10 md:!py-14">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
           <div className="max-w-sm">
             <Link href="/" className="inline-block">
-              <Logo
-                variant="dark"
-                size="lg"
-                className="brightness-0 invert md:hidden"
-              />
-              <Logo
-                variant="dark"
-                size="xl"
-                className="hidden brightness-0 invert md:block"
-              />
+              <Logo size="lg" className="md:hidden" />
+              <Logo size="xl" className="hidden md:block" />
             </Link>
-            <p className="mt-4 text-[14px] leading-relaxed text-white/65 sm:text-[15px]">
+            <p className="mt-4 text-[14px] leading-relaxed text-mkt-ink-muted sm:text-[15px]">
               {SITE.slogan}. Yöresel ve kırsal ürünlerde B2B çözüm ortağı.
             </p>
             <div className="mt-5 flex flex-col gap-1.5 text-[14px]">
               <a
                 href={`mailto:${SITE.email}`}
-                className="font-medium text-white/85 hover:text-white"
+                className="font-medium text-mkt-ink hover:text-mkt-green-text"
               >
                 {SITE.email}
               </a>
               <a
                 href={`tel:${SITE.phone}`}
-                className="font-medium tabular-nums text-white/85 hover:text-white"
+                className="font-medium tabular-nums text-mkt-ink hover:text-mkt-green-text"
               >
                 {SITE.phoneDisplay}
               </a>
@@ -73,14 +64,14 @@ export function SiteFooter() {
             <FooterCol title="Keşfet" links={siteLinks} />
             <FooterCol title="Yasal" links={legalLinks} />
             <div className="col-span-2 sm:col-span-1">
-              <p className="text-[12px] font-semibold tracking-wide text-white/45 uppercase">
+              <p className="text-[12px] font-semibold tracking-wide text-mkt-ink-muted uppercase">
                 Hesap
               </p>
               <ul className="mt-3.5 space-y-2.5">
                 <li>
                   <Link
                     href="/auth"
-                    className="text-[14px] font-medium text-white/70 transition-colors hover:text-white"
+                    className="text-[14px] font-medium text-mkt-ink transition-colors hover:text-mkt-green-text"
                   >
                     Giriş yap
                   </Link>
@@ -88,7 +79,7 @@ export function SiteFooter() {
                 <li>
                   <Link
                     href="/auth?tab=uye"
-                    className="text-[14px] font-medium text-white/70 transition-colors hover:text-white"
+                    className="text-[14px] font-medium text-mkt-ink transition-colors hover:text-mkt-green-text"
                   >
                     Üye ol
                   </Link>
@@ -96,7 +87,7 @@ export function SiteFooter() {
                 <li>
                   <Link
                     href="/iletisim"
-                    className="text-[14px] font-medium text-white/70 transition-colors hover:text-white"
+                    className="text-[14px] font-medium text-mkt-ink transition-colors hover:text-mkt-green-text"
                   >
                     Satışa yaz
                   </Link>
@@ -105,7 +96,7 @@ export function SiteFooter() {
                   <button
                     type="button"
                     onClick={openPreferences}
-                    className="text-[14px] font-medium text-white/70 transition-colors hover:text-white"
+                    className="text-[14px] font-medium text-mkt-ink transition-colors hover:text-mkt-green-text"
                   >
                     Çerez tercihleri
                   </button>
@@ -115,19 +106,19 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[12px] text-white/45">
+        <div className="mt-10 flex flex-col gap-3 border-t border-[color:var(--mkt-border)] pt-6 sm:mt-12 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[12px] text-mkt-ink-muted">
             &copy; {new Date().getFullYear()} {SITE.legalName}. Tüm hakları saklıdır.
           </p>
           <nav
             aria-label="Yasal kısayollar"
-            className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-white/45"
+            className="flex flex-wrap gap-x-4 gap-y-2 text-[12px] text-mkt-ink-muted"
           >
             {legalLinks.slice(0, 3).map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="hover:text-white/75"
+                className="hover:text-mkt-ink"
               >
                 {link.label}
               </Link>
@@ -148,15 +139,15 @@ function FooterCol({
 }) {
   return (
     <div>
-      <p className="text-[12px] font-semibold tracking-wide text-white/45 uppercase">{title}</p>
+      <p className="text-[12px] font-semibold tracking-wide text-mkt-ink-muted uppercase">
+        {title}
+      </p>
       <ul className="mt-3.5 space-y-2.5">
         {links.map((link) => (
           <li key={link.href}>
             <Link
               href={link.href}
-              className={cn(
-                "text-[14px] font-medium text-white/70 transition-colors hover:text-white",
-              )}
+              className="text-[14px] font-medium text-mkt-ink transition-colors hover:text-mkt-green-text"
             >
               {link.label}
             </Link>

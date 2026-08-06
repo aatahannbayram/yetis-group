@@ -18,8 +18,10 @@ export type CartViewLine = {
   productId: string;
   name: string;
   unitLabel: string;
+  imageUrl: string | null;
   quantity: number;
   unitPriceKurus: number;
+  lineTotalKurus: number;
   lotId: string | null;
 };
 
@@ -44,12 +46,14 @@ function toView(cart: NonNullable<Awaited<ReturnType<typeof getOrCreateCart>>>):
     productId: line.variant.productId,
     name: line.variant.product.name,
     unitLabel: line.variant.packSize ?? line.variant.packagingType,
+    imageUrl: line.variant.product.imageUrl,
     quantity: line.quantity,
     unitPriceKurus: line.unitPriceKurus,
+    lineTotalKurus: line.unitPriceKurus * line.quantity,
     lotId: line.lotId,
   }));
   const itemCount = lines.reduce((n, l) => n + l.quantity, 0);
-  const totalKurus = lines.reduce((n, l) => n + l.unitPriceKurus * l.quantity, 0);
+  const totalKurus = lines.reduce((n, l) => n + l.lineTotalKurus, 0);
   return { id: cart.id, lines, itemCount, totalKurus };
 }
 

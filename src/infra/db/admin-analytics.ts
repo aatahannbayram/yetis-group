@@ -1,4 +1,9 @@
 import { prisma } from "@/infra/db/client";
+import {
+  LEAD_CHANNEL_LABELS,
+  LEAD_STAGE_LABELS,
+  LEAD_STAGES,
+} from "@/domain/leads";
 
 /**
  * Staff-facing snapshot for /admin and /admin/analytics.
@@ -6,7 +11,8 @@ import { prisma } from "@/infra/db/client";
  */
 export async function getAdminAnalyticsSnapshot() {
   const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+  fourteenDaysAgo.setHours(0, 0, 0, 0);
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
 
   const [
     totalLeads,
@@ -17,6 +23,8 @@ export async function getAdminAnalyticsSnapshot() {
     dealersTotal,
     dealersActive,
     dealersBasvuru,
+    dealersInceleme,
+    dealersRiskli,
     productsActive,
     variantsActive,
     publishedPosts,
@@ -25,6 +33,7 @@ export async function getAdminAnalyticsSnapshot() {
     cartsWithLines,
     cartLinesAgg,
     recentLeadsByDay,
+    allLeadsSlim,
   ] = await Promise.all([
     prisma.lead.count(),
     prisma.lead.count({ where: { stage: { notIn: ["KAZANILDI", "KAYBEDILDI"] } } }),
@@ -34,6 +43,8 @@ export async function getAdminAnalyticsSnapshot() {
     prisma.dealer.count(),
     prisma.dealer.count({ where: { status: { in: ["ONAYLI", "AKTIF"] } } }),
     prisma.dealer.count({ where: { status: "BASVURU" } }),
+    prisma.dealer.count({ where: { status: "INCELEME" } }),
+    prisma.dealer.count({ where: { status: { in: ["RISKLI", "BLOKE", "PASIF"] } } }),
     prisma.product.count({ where: { active: true } }),
     prisma.productVariant.count({ where: { isActive: true } }),
     prisma.contentPost.count({ where: { status: "PUBLISHED" } }),
@@ -48,6 +59,9 @@ export async function getAdminAnalyticsSnapshot() {
       where: { createdAt: { gte: fourteenDaysAgo } },
       select: { createdAt: true, channel: true },
       orderBy: { createdAt: "asc" },
+    }),
+    prisma.lead.findMany({
+      select: { stage: true, channel: true },
     }),
   ]);
 
@@ -79,6 +93,24 @@ export async function getAdminAnalyticsSnapshot() {
     }
   }
 
+  const weekdayShort = ["Pz", "Pt", "Sa", "Ça", "Pe", "Cu", "Ct"] as const;
+
+  const stageCounts = LEAD_STAGES.map((stage) => ({
+    stage,
+    label: LEAD_STAGE_LABELS[stage],
+    count: allLeadsSlim.filter((l) => l.stage === stage).length,
+  }));
+
+  const channelCounts = Object.entries(LEAD_CHANNEL_LABELS).map(([channel, label]) => ({
+    channel,
+    label,
+    count: allLeadsSlim.filter((l) => l.channel === channel).length,
+  }));
+
+  const closed = wonLeads + lostLeads;
+  const prev7 = Array.from(leadsByDayMap.values()).slice(0, 7).reduce((a, b) => a + b, 0);
+  const last7 = Array.from(leadsByDayMap.values()).slice(7).reduce((a, b) => a + b, 0);
+
   return {
     crm: {
       totalLeads,
@@ -86,19 +118,29 @@ export async function getAdminAnalyticsSnapshot() {
       wonLeads,
       lostLeads,
       leadsLast14d,
-      winRate:
-        wonLeads + lostLeads > 0
-          ? Math.round((wonLeads / (wonLeads + lostLeads)) * 100)
-          : 0,
-      leadsByDay: Array.from(leadsByDayMap.entries()).map(([date, count]) => ({
-        date,
-        count,
-      })),
+      winRate: closed > 0 ? Math.round((wonLeads / closed) * 100) : 0,
+      leadsByDay: Array.from(leadsByDayMap.entries()).map(([date, count]) => {
+        const d = new Date(`${date}T12:00:00`);
+        return {
+          date,
+          count,
+          dayLabel: weekdayShort[d.getDay()] ?? "",
+          dayNum: date.slice(8),
+        };
+      }),
+      stageCounts,
+      channelCounts,
+      weekOverWeek:
+        prev7 === 0 ? (last7 > 0 ? 100 : 0) : Math.round(((last7 - prev7) / prev7) * 100),
+      last7,
+      prev7,
     },
     dealers: {
       total: dealersTotal,
       active: dealersActive,
       basvuru: dealersBasvuru,
+      inceleme: dealersInceleme,
+      other: dealersRiskli,
     },
     catalog: {
       productsActive,

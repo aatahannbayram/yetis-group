@@ -24,10 +24,47 @@ export async function getDealerById(id: string) {
   });
 }
 
+export async function listPriceListOptions() {
+  return prisma.priceList.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
+export async function listSalesRepOptions() {
+  return prisma.user.findMany({
+    where: { accountType: "STAFF" },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, email: true },
+  });
+}
+
+export type DealerInput = {
+  unvan: string;
+  dealerType: "BAYI" | "HORECA" | "ZINCIR" | "ARA_TOPTANCI";
+  status: "BASVURU" | "INCELEME" | "ONAYLI" | "AKTIF" | "RISKLI" | "BLOKE" | "PASIF";
+  vergiNo: string | null;
+  vergiDairesi: string | null;
+  membershipTier: string | null;
+  creditLimitKurus: number | null;
+  paymentTermDays: number | null;
+  deliveryZoneCode: string | null;
+  priceListId: string | null;
+  salesRepId: string | null;
+};
+
+export async function createDealer(input: DealerInput) {
+  return prisma.dealer.create({ data: input });
+}
+
+export async function updateDealer(id: string, input: DealerInput) {
+  return prisma.dealer.update({ where: { id }, data: input });
+}
+
 /**
  * After better-auth sign-up: attach BASVURU dealer + CRM lead.
  * Idempotent if the user already has a dealerId.
- * Does NOT set ONAYLI/AKTIF — staff must approve.
+ * Does NOT set ONAYLI/AKTIF - staff must approve.
  */
 export async function attachDealerApplication(input: {
   userId: string;

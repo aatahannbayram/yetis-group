@@ -57,23 +57,23 @@ const overviewItems: NavItem[] = [
 
 const crmItems: NavItem[] = [
   { href: "/admin/bayi-adaylari", label: "Bayi Adayları", icon: Target, badgeKey: "leads" },
-  { href: "/admin/crm-alanlari", label: "CRM Alanları", icon: FormInput },
   { href: "/admin/bayiler", label: "Bayiler", icon: Users2 },
+  { href: "/admin/crm-alanlari", label: "CRM Alanları", icon: FormInput },
 ];
 
 const b2bItems: NavItem[] = [
-  { href: "/admin/b2b/katalog", label: "B2B Katalog", icon: Store },
-  { href: "/admin/b2b/sepetler", label: "Açık Sepetler", icon: ShoppingCart },
   { href: "/admin/siparisler", label: "Siparişler", icon: ClipboardList },
+  { href: "/admin/b2b/sepetler", label: "Açık Sepetler", icon: ShoppingCart },
   { href: "/admin/cari", label: "Cari", icon: Wallet },
   { href: "/admin/sevkiyat", label: "Sevkiyat", icon: Truck },
+  { href: "/admin/b2b/katalog", label: "B2B Katalog", icon: Store },
 ];
 
 const catalogItems: NavItem[] = [
   { href: "/admin/urunler", label: "Ürün Yönetimi", icon: Package },
+  { href: "/admin/fiyat-listeleri", label: "Fiyat Listeleri", icon: Tags },
   { href: "/admin/kategoriler", label: "Kategoriler", icon: FolderTree },
   { href: "/admin/nitelikler", label: "Nitelikler", icon: Shapes },
-  { href: "/admin/fiyat-listeleri", label: "Fiyat Listeleri", icon: Tags },
 ];
 
 const contentItems: NavItem[] = [
@@ -156,21 +156,21 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-3 md:h-16">
+      <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-4 md:h-20">
         <Link
           href="/admin"
-          className="flex items-center justify-center px-1"
+          className="flex items-center justify-center px-1 transition-opacity hover:opacity-80"
           onClick={() => {
             if (isMobile) setOpenMobile(false);
           }}
         >
           <Logo
             variant={theme === "dark" ? "dark" : "light"}
-            size="sm"
+            size="md"
             className="group-data-[collapsible=icon]:hidden"
           />
           <BrandMark
-            size={22}
+            size={26}
             className="hidden group-data-[collapsible=icon]:block"
           />
         </Link>

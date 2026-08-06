@@ -24,7 +24,7 @@ describe.runIf(Boolean(url))("M12.5 live DB integrity", () => {
       `);
       const row = r.rows[0];
       expect(row.products).toBe(row.variants);
-      expect(row.lots).toBe(17);
+      expect(row.lots).toBe(19);
       expect(row.pli).toBe(24);
       expect(row.pc).toBeGreaterThanOrEqual(row.products);
       expect(Number(row.missing_primary)).toBe(0);

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
@@ -64,31 +65,48 @@ export default async function AdminPriceListsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12"></TableHead>
                     <TableHead>Ürün / SKU</TableHead>
                     <TableHead className="text-right">Fiyat</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {priceList.items.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium text-neutral-900">
-                        {item.variant.product.name}
-                        <span className="ml-2 font-mono text-caption text-neutral-400">
-                          {item.variant.sku}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <EditablePrice
-                          priceKurus={item.priceKurus}
-                          onSave={updatePriceListItemAction.bind(
-                            null,
-                            priceList.id,
-                            item.variantId,
+                  {priceList.items.map((item) => {
+                    const product = item.variant.product;
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="w-12 pr-0">
+                          {product.imageUrl ? (
+                            <Image
+                              src={product.imageUrl}
+                              alt=""
+                              width={36}
+                              height={36}
+                              className="size-9 rounded-md object-cover"
+                            />
+                          ) : (
+                            <div className="size-9 rounded-md bg-neutral-100" aria-hidden />
                           )}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>
+                          <p className="font-medium text-neutral-900">{product.name}</p>
+                          <p className="font-mono text-caption text-neutral-400">
+                            {item.variant.sku}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <EditablePrice
+                            priceKurus={item.priceKurus}
+                            onSave={updatePriceListItemAction.bind(
+                              null,
+                              priceList.id,
+                              item.variantId,
+                            )}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>

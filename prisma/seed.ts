@@ -724,6 +724,188 @@ async function seedM14Content() {
   console.log(`M14 content: ${postCount} post(s), ${recipeCount} recipe(s).`);
 }
 
+async function seedDealerDemoData() {
+  const admin = await prisma.user.findUnique({ where: { email: "admin@yetisgrup.test" } });
+  const salesRepId = admin?.id ?? null;
+
+  const priceLists = await prisma.priceList.findMany({ select: { id: true, slug: true } });
+  const priceListBySlug = new Map(priceLists.map((p) => [p.slug, p.id]));
+
+  await prisma.dealer.updateMany({
+    where: { unvan: "Test Bayi", vergiNo: null },
+    data: {
+      vergiNo: "1234567890",
+      vergiDairesi: "Kadıköy V.D.",
+      membershipTier: "Standart",
+      creditLimitKurus: 5_000_00,
+      paymentTermDays: 30,
+      deliveryZoneCode: "IST-AVR",
+      salesRepId,
+    },
+  });
+
+  await prisma.dealer.updateMany({
+    where: { unvan: "Test HORECA", vergiNo: null },
+    data: {
+      vergiNo: "9876543210",
+      vergiDairesi: "Muratpaşa V.D.",
+      membershipTier: "Gold",
+      creditLimitKurus: 15_000_00,
+      paymentTermDays: 45,
+      deliveryZoneCode: "ANT-1",
+      salesRepId,
+    },
+  });
+
+  const zincirExists = await prisma.dealer.findFirst({
+    where: { unvan: "Kadıköy Zincir Market A.Ş." },
+  });
+  if (!zincirExists) {
+    await prisma.dealer.create({
+      data: {
+        unvan: "Kadıköy Zincir Market A.Ş.",
+        dealerType: "ZINCIR",
+        status: "AKTIF",
+        vergiNo: "5551234567",
+        vergiDairesi: "Kadıköy V.D.",
+        membershipTier: "Platinum",
+        creditLimitKurus: 50_000_00,
+        paymentTermDays: 60,
+        deliveryZoneCode: "IST-AND",
+        priceListId: priceListBySlug.get("zincir-market") ?? null,
+        salesRepId,
+      },
+    });
+  }
+
+  const toptanciExists = await prisma.dealer.findFirst({
+    where: { unvan: "Marmara Gıda Ara Toptan Ltd. Şti." },
+  });
+  if (!toptanciExists) {
+    await prisma.dealer.create({
+      data: {
+        unvan: "Marmara Gıda Ara Toptan Ltd. Şti.",
+        dealerType: "ARA_TOPTANCI",
+        status: "ONAYLI",
+        vergiNo: "1112223334",
+        vergiDairesi: "Bakırköy V.D.",
+        creditLimitKurus: 25_000_00,
+        paymentTermDays: 30,
+        deliveryZoneCode: "IST-AVR",
+        priceListId: priceListBySlug.get("standart") ?? null,
+        salesRepId,
+      },
+    });
+  }
+
+  console.log("Seeded demo bayi/müşteri field data (vergi, kredi limiti, vade, bölge, temsilci).");
+}
+
+async function seedPaymentSettingsDemo() {
+  const existing = await prisma.paymentSettings.findUnique({ where: { id: "singleton" } });
+  if (existing && (existing.bankTransferEnabled || existing.iban)) {
+    console.log("Skipping payment settings demo - already configured.");
+    return;
+  }
+  const demo = {
+    bankTransferEnabled: true,
+    bankName: "Ziraat Bankası",
+    accountHolder: "Yetiş Gıda San. Tic. A.Ş.",
+    iban: "TR33 0001 0009 4123 4567 8900 01",
+    note: "Açıklama kısmına sipariş numaranızı yazınız.",
+  };
+  await prisma.paymentSettings.upsert({
+    where: { id: "singleton" },
+    update: demo,
+    create: { id: "singleton", ...demo },
+  });
+  console.log("Seeded demo ödeme ayarları (banka havalesi / EFT).");
+}
+
+async function seedShippingDemoVariety() {
+  const variants = await prisma.productVariant.findMany({ include: { product: true } });
+
+  const extraExpired = variants.find((v) => v.product.slug === "sut-1l");
+  if (extraExpired) {
+    const lotNumber = `${extraExpired.sku}-EXP`;
+    const exists = await prisma.lot.findFirst({ where: { lotNumber } });
+    if (!exists) {
+      await prisma.lot.create({
+        data: {
+          variantId: extraExpired.id,
+          lotNumber,
+          expirationDate: daysFromNow(-1),
+          movements: {
+            create: { type: "GIRIS", quantityKg: 6, note: "Satılamadan kalan parti" },
+          },
+        },
+      });
+    }
+  }
+
+  const criticalSoon = variants.find((v) => v.product.slug === "kasar-peyniri-1kg-vakum");
+  if (criticalSoon) {
+    const lotNumber = `${criticalSoon.sku}-C`;
+    const exists = await prisma.lot.findFirst({ where: { lotNumber } });
+    if (!exists) {
+      await prisma.lot.create({
+        data: {
+          variantId: criticalSoon.id,
+          lotNumber,
+          expirationDate: daysFromNow(2),
+          movements: {
+            create: { type: "GIRIS", quantityKg: criticalSoon.unitFactor.mul(3), note: "Kritik SKT partisi" },
+          },
+        },
+      });
+    }
+  }
+
+  console.log("Seeded sevkiyat demo çeşitliliği (ek geçmiş/kritik SKT lotları).");
+}
+
+async function seedLedgerDemoData() {
+  const existing = await prisma.ledgerEntry.count();
+  if (existing > 0) {
+    console.log(`Skipping cari demo - ${existing} ledger entry(ies) already exist.`);
+    return;
+  }
+
+  const plan: Record<string, { borc: number; odeme: number; note: string }> = {
+    "Test Bayi": { borc: 3_200_00, odeme: 1_200_00, note: "17 kg teneke beyaz peynir sevkiyatı" },
+    "Test HORECA": { borc: 12_500_00, odeme: 4_000_00, note: "Aylık toplu sevkiyat" },
+    "Kadıköy Zincir Market A.Ş.": {
+      borc: 48_000_00,
+      odeme: 10_000_00,
+      note: "6 şube merkezi sevkiyat faturası",
+    },
+    "Marmara Gıda Ara Toptan Ltd. Şti.": {
+      borc: 30_000_00,
+      odeme: 3_000_00,
+      note: "Toptan sevkiyat faturası",
+    },
+  };
+
+  for (const [unvan, { borc, odeme, note }] of Object.entries(plan)) {
+    const dealer = await prisma.dealer.findFirst({ where: { unvan } });
+    if (!dealer) continue;
+
+    await prisma.ledgerEntry.create({
+      data: { dealerId: dealer.id, type: "BORC", amountKurus: borc, description: note },
+    });
+    await prisma.ledgerEntry.create({
+      data: {
+        dealerId: dealer.id,
+        type: "ODEME",
+        amountKurus: odeme,
+        description: "Kısmi tahsilat (banka havalesi)",
+      },
+    });
+  }
+
+  console.log("Seeded demo cari (ledger) hareketleri.");
+}
+
 async function main() {
   await seedLeads();
   await seedCatalog();
@@ -732,6 +914,10 @@ async function main() {
   await seedInventory();
   await seedM13CatalogDepth();
   await seedM14Content();
+  await seedDealerDemoData();
+  await seedPaymentSettingsDemo();
+  await seedShippingDemoVariety();
+  await seedLedgerDemoData();
 }
 
 main()

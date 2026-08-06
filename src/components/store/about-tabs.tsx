@@ -1,15 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { SceneImage } from "@/components/store/scene-image";
+import type { ImageSlotId } from "@/content/images";
 
 type Tab = {
   id: string;
   label: string;
   title: string;
   body: string;
-  image?: string;
+  imageSlot?: ImageSlotId;
 };
 
 export function AboutTabs({
@@ -51,19 +52,18 @@ export function AboutTabs({
     </div>
   );
 
-  if (!visual || !current.image) return content;
+  if (!visual || !current.imageSlot) return content;
 
   return (
     <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] md:items-stretch md:gap-8">
       {content}
       <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] md:aspect-auto md:min-h-[240px]">
-        <Image
-          key={current.image}
-          src={current.image}
-          alt=""
+        <SceneImage
+          key={current.imageSlot}
+          id={current.imageSlot}
           fill
           quality={70}
-          className="object-cover transition-opacity duration-500"
+          className="transition-opacity duration-500"
           sizes="(min-width: 768px) 28vw, 90vw"
         />
       </div>

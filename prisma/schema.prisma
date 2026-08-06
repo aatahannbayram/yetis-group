@@ -119,23 +119,44 @@ enum DealerRole {
   DEPO
 }
 
+enum MembershipTier {
+  STANDART
+  PREMIUM
+  VIP
+}
+
+enum DealerPaymentMethod {
+  VADELI
+  PESIN
+  HAVALE
+  KARMA
+}
+
 model Dealer {
-  id                 String       @id @default(cuid())
-  unvan              String
-  vergiNo            String?
-  vergiDairesi       String?
-  dealerType         DealerType
-  status             DealerStatus @default(BASVURU)
-  membershipTier     String?
-  creditLimitKurus   Int?
-  paymentTermDays    Int?
-  deliveryZoneCode   String?
-  priceListId        String?
-  priceList          PriceList?   @relation(fields: [priceListId], references: [id])
-  salesRepId         String?
-  salesRep           User?        @relation("DealerSalesRep", fields: [salesRepId], references: [id])
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id                   String               @id @default(cuid())
+  unvan                String
+  vergiNo              String?
+  vergiDairesi         String?
+  dealerType           DealerType
+  status               DealerStatus         @default(BASVURU)
+  membershipTier       MembershipTier?
+  email                String?
+  phone                String?
+  addressLine          String?
+  city                 String?
+  district             String?
+  deliveryAddressLine  String?
+  paymentMethod        DealerPaymentMethod?
+  iban                 String?
+  creditLimitKurus     Int?
+  paymentTermDays      Int?
+  deliveryZoneCode     String?
+  priceListId          String?
+  priceList            PriceList?           @relation(fields: [priceListId], references: [id])
+  salesRepId           String?
+  salesRep             User?                @relation("DealerSalesRep", fields: [salesRepId], references: [id])
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   users         User[]
   roles         DealerUserRole[]
@@ -454,6 +475,7 @@ model ProductVariant {
   packSize           String?
   baseUnit           BaseUnit      @default(KG)
   unitFactor         Decimal       @db.Decimal(10, 3)
+  moq                Int           @default(1)
   pricePerUnitKurus  Int
   vatRateBasisPoints Int           @default(100)
   isActive           Boolean       @default(true)

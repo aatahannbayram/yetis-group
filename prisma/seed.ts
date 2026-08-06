@@ -736,7 +736,7 @@ async function seedDealerDemoData() {
     data: {
       vergiNo: "1234567890",
       vergiDairesi: "Kadıköy V.D.",
-      membershipTier: "Standart",
+      membershipTier: "STANDART",
       creditLimitKurus: 5_000_00,
       paymentTermDays: 30,
       deliveryZoneCode: "IST-AVR",
@@ -749,7 +749,7 @@ async function seedDealerDemoData() {
     data: {
       vergiNo: "9876543210",
       vergiDairesi: "Muratpaşa V.D.",
-      membershipTier: "Gold",
+      membershipTier: "PREMIUM",
       creditLimitKurus: 15_000_00,
       paymentTermDays: 45,
       deliveryZoneCode: "ANT-1",
@@ -768,7 +768,7 @@ async function seedDealerDemoData() {
         status: "AKTIF",
         vergiNo: "5551234567",
         vergiDairesi: "Kadıköy V.D.",
-        membershipTier: "Platinum",
+        membershipTier: "VIP",
         creditLimitKurus: 50_000_00,
         paymentTermDays: 60,
         deliveryZoneCode: "IST-AND",

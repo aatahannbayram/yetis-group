@@ -19,7 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { updateUserPriceListAction } from "@/app/(admin)/admin/kullanicilar/actions";
+import { updateUserPriceListAction } from "@/app/(panel)/panel/kullanicilar/actions";
 
 type UserRow = {
   id: string;

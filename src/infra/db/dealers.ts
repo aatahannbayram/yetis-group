@@ -1,6 +1,7 @@
 import { prisma } from "@/infra/db/client";
 import { dealerTypeFromChannel } from "@/domain/auth/dealer-signup";
 import { LEAD_SOURCE_LABELS } from "@/domain/leads";
+import type { DealerPaymentMethod, MembershipTier } from "@/generated/prisma/client";
 
 export async function listDealers() {
   return prisma.dealer.findMany({
@@ -39,13 +40,29 @@ export async function listSalesRepOptions() {
   });
 }
 
+/** Lightweight list for command palette / impersonation */
+export async function listDealerOptions() {
+  return prisma.dealer.findMany({
+    orderBy: { unvan: "asc" },
+    select: { id: true, unvan: true },
+  });
+}
+
 export type DealerInput = {
   unvan: string;
   dealerType: "BAYI" | "HORECA" | "ZINCIR" | "ARA_TOPTANCI";
   status: "BASVURU" | "INCELEME" | "ONAYLI" | "AKTIF" | "RISKLI" | "BLOKE" | "PASIF";
   vergiNo: string | null;
   vergiDairesi: string | null;
-  membershipTier: string | null;
+  membershipTier: MembershipTier | null;
+  email: string | null;
+  phone: string | null;
+  addressLine: string | null;
+  city: string | null;
+  district: string | null;
+  deliveryAddressLine: string | null;
+  paymentMethod: DealerPaymentMethod | null;
+  iban: string | null;
   creditLimitKurus: number | null;
   paymentTermDays: number | null;
   deliveryZoneCode: string | null;
@@ -91,6 +108,9 @@ export async function attachDealerApplication(input: {
         vergiNo: input.vergiNo?.trim() || null,
         dealerType: dealerTypeFromChannel(input.channel),
         status: "BASVURU",
+        email: input.email.trim() || null,
+        phone: input.phone.trim() || null,
+        city: input.city.trim() || null,
       },
     });
 

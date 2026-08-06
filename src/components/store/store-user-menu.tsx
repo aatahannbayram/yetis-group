@@ -46,7 +46,7 @@ export function StoreUserMenu({ userName, isStaff }: { userName: string; isStaff
         <DropdownMenuSeparator />
         {isStaff ? (
           <DropdownMenuItem asChild>
-            <Link href="/admin">
+            <Link href="/panel">
               <LayoutDashboard />
               Yönetim Paneli
             </Link>

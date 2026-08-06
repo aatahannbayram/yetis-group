@@ -6,91 +6,82 @@
 /* shadcn semantic tokens - mapped onto our warm brand palette, not the library's
    default gray/oklch theme (CLAUDE.md forbids a generic gray admin look). */
 :root {
-  --background: var(--surface-canvas);
-  --foreground: var(--neutral-900);
-  --card: var(--surface-card);
-  --card-foreground: var(--neutral-900);
-  --popover: var(--surface-card);
-  --popover-foreground: var(--neutral-900);
-  --primary: var(--brand-700);
+  --background: var(--canvas);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--primary-solid);
   --primary-foreground: #ffffff;
-  --secondary: var(--neutral-100);
-  --secondary-foreground: var(--neutral-900);
-  --muted: var(--neutral-100);
-  --muted-foreground: var(--neutral-600);
-  --accent: var(--brand-50);
-  --accent-foreground: var(--brand-700);
-  --destructive: var(--danger-fg);
-  --border: var(--neutral-200);
-  --input: var(--neutral-200);
-  --ring: var(--brand-500);
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--primary-subtle);
+  --accent-foreground: var(--primary-text);
+  --destructive: var(--danger-solid);
+  --input: var(--border-strong);
+  --ring: var(--focus-ring);
   --radius: var(--radius-md);
   --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
 
-  --chart-1: var(--brand-500);
-  --chart-2: var(--info-fg);
-  --chart-3: var(--warning-fg);
-  --chart-4: var(--brand-800);
-  --chart-5: var(--neutral-500);
+  --chart-1: var(--chart-cat-1);
+  --chart-2: var(--chart-cat-2);
+  --chart-3: var(--chart-cat-3);
+  --chart-4: var(--chart-cat-4);
+  --chart-5: var(--chart-cat-5);
 
-  --sidebar: var(--surface-card);
-  --sidebar-foreground: var(--neutral-900);
-  --sidebar-primary: var(--brand-700);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text-primary);
+  --sidebar-primary: var(--primary-solid);
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: var(--brand-50);
-  --sidebar-accent-foreground: var(--brand-700);
-  --sidebar-border: var(--neutral-200);
-  --sidebar-ring: var(--brand-500);
+  --sidebar-accent: var(--primary-subtle);
+  --sidebar-accent-foreground: var(--primary-text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus-ring);
 }
 
-/* Admin shell - light theme by default; dark is opt-in via the theme toggle
-   (data-theme="dark"), Sphere UI-style dark canvas with white floating cards.
-   Brand green is kept instead of a generic accent color in both modes.
-   Scoped to .admin-shell only; the store always stays on the light warm canvas. */
-.admin-shell {
-  --background: var(--surface-admin-frame);
+.admin-shell,
+.panel-shell {
+  --background: var(--panel-canvas);
+  color: var(--text-primary);
 }
 
-.admin-shell[data-theme="dark"] {
-  --background: var(--neutral-900);
-  --foreground: var(--neutral-50);
-  --muted: var(--neutral-800);
-  --muted-foreground: var(--neutral-400);
-  --border: var(--neutral-800);
-  --input: var(--neutral-800);
+/* Dark: tokens remapped on html.dark; shadcn semantics follow */
+html.dark {
+  --background: var(--canvas);
+  --foreground: var(--text-primary);
+  --card: var(--surface);
+  --card-foreground: var(--text-primary);
+  --popover: var(--surface);
+  --popover-foreground: var(--text-primary);
+  --primary: var(--primary-solid);
+  --primary-foreground: #06231a;
+  --secondary: var(--surface-3);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--primary-subtle);
+  --accent-foreground: var(--primary-text);
+  --destructive: var(--danger-solid);
+  --input: var(--border-strong);
+  --ring: var(--focus-ring);
 
-  --sidebar: var(--neutral-900);
-  --sidebar-foreground: var(--neutral-400);
-  --sidebar-primary: var(--brand-500);
-  --sidebar-primary-foreground: var(--neutral-900);
-  --sidebar-accent: var(--brand-600);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: var(--neutral-800);
-  --sidebar-ring: var(--brand-500);
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--text-secondary);
+  --sidebar-primary: var(--primary-solid);
+  --sidebar-primary-foreground: #06231a;
+  --sidebar-accent: var(--primary-subtle);
+  --sidebar-accent-foreground: var(--primary-text);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--focus-ring);
 }
 
-/* White "card" surfaces (Card component, raw bg-card containers, popovers/
-   dialogs/sheets/selects - all bg-popover) always stay light internally, even
-   when the page canvas is dark: reset the token scope back to light values so
-   nested shadcn primitives (Table headers, Select triggers, muted captions)
-   that read --foreground/--muted-foreground don't inherit the dark page tokens. */
-.admin-shell[data-theme="dark"] [data-slot="card"],
-.admin-shell[data-theme="dark"] .bg-card,
-.admin-shell[data-theme="dark"] [data-slot="sheet-content"],
-.admin-shell[data-theme="dark"] [data-slot="dialog-content"],
-.admin-shell[data-theme="dark"] [data-slot="dropdown-menu-content"],
-.admin-shell[data-theme="dark"] [data-slot="select-content"] {
-  --foreground: var(--neutral-900);
-  --muted: var(--neutral-100);
-  --muted-foreground: var(--neutral-600);
-  --border: var(--neutral-200);
-  --input: var(--neutral-200);
-  /* Redefining the custom properties above only affects elements that
-     re-read them explicitly (e.g. text-foreground). Plain inherited text
-     (table cells, select values with no color class of their own) inherits
-     the *computed* color from further up the tree, so it must be set here
-     too for that inheritance chain to pick up the corrected value. */
-  color: var(--foreground);
+html.dark .admin-shell,
+html.dark .panel-shell {
+  --background: var(--panel-canvas);
+  color: var(--text-primary);
 }
 
 @theme inline {
@@ -246,9 +237,39 @@ body {
 }
 
 .mkt-label {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.mkt-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  color: var(--mkt-green-text);
+}
+
+.mkt-section-label::before {
+  content: "•";
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+:root {
+  --mkt-motion-hover: 200ms;
+  --mkt-motion-reveal: 700ms;
+  --mkt-motion-faq: 300ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --mkt-motion-hover: 0ms;
+    --mkt-motion-reveal: 0ms;
+    --mkt-motion-faq: 0ms;
+  }
 }
 
 /* Canvas gutter + inset slabs */
@@ -365,8 +386,8 @@ body {
 }
 [data-reveal] {
   transition:
-    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity var(--mkt-motion-reveal, 0.7s) cubic-bezier(0.16, 1, 0.3, 1),
+    transform var(--mkt-motion-reveal, 0.7s) cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-reveal="true"] {
   opacity: 1;
@@ -377,6 +398,42 @@ body {
     opacity: 1;
     transform: none;
   }
+  .panel-shell *,
+  .panel-shell *::before,
+  .panel-shell *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.panel-shell {
+  --background: var(--panel-canvas);
+  font-size: var(--panel-font-size);
+}
+
+@keyframes panel-bulk-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes panel-row-flash {
+  from {
+    background-color: color-mix(in srgb, var(--info-bg) 80%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.panel-row-flash {
+  animation: panel-row-flash var(--motion-row-flash) ease-out;
 }
 
 @layer base {

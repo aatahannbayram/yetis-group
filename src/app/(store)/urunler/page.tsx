@@ -53,6 +53,8 @@ export default async function ProductsPage({
                   unitLabel: product.unitLabel,
                   kgPerUnit: product.kgPerUnit.toString(),
                   unitPrice: product.unitPrice,
+                  moq: product.moq,
+                  vatRateBasisPoints: product.vatRateBasisPoints,
                 }))}
               />
             </Suspense>

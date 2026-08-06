@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { createShipmentAction, updateShipmentStatusAction } from "@/app/(admin)/admin/sevkiyat/actions";
+import { createShipmentAction, updateShipmentStatusAction } from "@/app/(panel)/panel/sevkiyat/actions";
 import { canTransitionShipment, type ShipmentStatus } from "@/domain/shipment";
 import { cn } from "@/lib/utils";
 
@@ -45,10 +45,10 @@ const COLUMNS: { status: ShipmentStatus; label: string; hint: string }[] = [
 ];
 
 const DEALER_TYPE_COLOR: Record<string, string> = {
-  BAYI: "bg-brand-100 text-brand-700",
-  HORECA: "bg-amber-100 text-amber-800",
-  ZINCIR: "bg-sky-100 text-sky-700",
-  ARA_TOPTANCI: "bg-violet-100 text-violet-700",
+  BAYI: "bg-[var(--primary-subtle)] text-[var(--primary-text)]",
+  HORECA: "bg-[var(--warning-subtle)] text-[var(--warning-text)]",
+  ZINCIR: "bg-[var(--info-subtle)] text-[var(--info-text)]",
+  ARA_TOPTANCI: "bg-[var(--neutral-subtle)] text-[var(--neutral-text)]",
 };
 
 const kgFormatter = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 3 });
@@ -383,7 +383,7 @@ export function ShipmentBoard({
           <SheetHeader>
             <SheetTitle>Yeni Sevkiyat</SheetTitle>
             <SheetDescription>
-              Miktar girildiğinde lotlar otomatik olarak FEFO sırasıyla (en erken SKT önce) ayrılır.
+              Lotlar en erken SKT sırasıyla ayrılır.
             </SheetDescription>
           </SheetHeader>
 

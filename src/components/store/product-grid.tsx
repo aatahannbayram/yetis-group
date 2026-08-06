@@ -29,7 +29,8 @@ export function ProductGrid({
     return products.filter(
       (p) =>
         p.name.toLocaleLowerCase("tr-TR").includes(q) ||
-        p.category.toLocaleLowerCase("tr-TR").includes(q),
+        p.category.toLocaleLowerCase("tr-TR").includes(q) ||
+        p.sku.toLocaleLowerCase("tr-TR").includes(q),
     );
   }, [products, query]);
 
@@ -89,9 +90,9 @@ export function ProductGrid({
       {filtered.length === 0 ? (
         <p className="mkt-body mt-10">Sonuç bulunamadı.</p>
       ) : (
-        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((product, index) => (
-            <Reveal key={product.id} delay={(index % 6) * 60}>
+            <Reveal key={product.id} delay={(index % 6) * 40}>
               <ProductCard product={product} />
             </Reveal>
           ))}

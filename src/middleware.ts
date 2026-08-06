@@ -5,6 +5,8 @@ export async function middleware(request: NextRequest) {
 
   if (
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/panel") ||
+    pathname.startsWith("/bayi") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/brand") ||

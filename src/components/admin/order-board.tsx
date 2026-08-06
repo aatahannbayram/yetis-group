@@ -31,7 +31,7 @@ import {
   createOrderAction,
   transitionOrderAction,
   createShipmentFromOrderAction,
-} from "@/app/(admin)/admin/siparisler/actions";
+} from "@/app/(panel)/panel/siparisler/actions";
 import { nextOrderStatuses, type OrderStatus } from "@/domain/order/state-machine";
 
 export type OrderLineRow = {

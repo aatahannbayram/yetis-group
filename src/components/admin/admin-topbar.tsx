@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, LogOut, Search, Store, User } from "lucide-react";
@@ -23,38 +24,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/admin/theme-toggle";
+import { panelTitleFromPath } from "@/components/admin/panel-nav";
 import { authClient } from "@/infra/auth/client";
-
-const SECTION_LABELS: Record<string, string> = {
-  "/admin": "Pano",
-  "/admin/analytics": "Analytics",
-  "/admin/bayi-adaylari": "Bayi Adayları",
-  "/admin/crm-alanlari": "CRM Alanları",
-  "/admin/bayiler": "Bayiler",
-  "/admin/b2b/katalog": "B2B Katalog",
-  "/admin/b2b/sepetler": "Açık Sepetler",
-  "/admin/urunler": "Ürün Yönetimi",
-  "/admin/kategoriler": "Kategoriler",
-  "/admin/nitelikler": "Nitelikler",
-  "/admin/fiyat-listeleri": "Fiyat Listeleri",
-  "/admin/icerikler": "Haberler",
-  "/admin/tarifler": "Tarifler",
-  "/admin/seo": "SEO / AEO",
-  "/admin/kullanicilar": "Kullanıcılar",
-  "/admin/siparisler": "Siparişler",
-  "/admin/cari": "Cari",
-  "/admin/sevkiyat": "Sevkiyat",
-  "/admin/whatsapp": "WhatsApp",
-  "/admin/ayarlar": "Ayarlar",
-};
-
-function sectionFromPath(pathname: string) {
-  if (SECTION_LABELS[pathname]) return SECTION_LABELS[pathname];
-  const match = Object.keys(SECTION_LABELS)
-    .filter((k) => k !== "/admin" && pathname.startsWith(k))
-    .sort((a, b) => b.length - a.length)[0];
-  return match ? SECTION_LABELS[match] : "Yönetim";
-}
 
 function initials(name: string) {
   return name
@@ -74,7 +45,11 @@ export function AdminTopbar({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const section = sectionFromPath(pathname);
+  const section = panelTitleFromPath(pathname);
+
+  useEffect(() => {
+    document.title = `${section} · Yetiş Grup`;
+  }, [section]);
 
   async function handleSignOut() {
     await authClient.signOut();
@@ -90,7 +65,7 @@ export function AdminTopbar({
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList className="flex-nowrap">
           <BreadcrumbItem className="hidden sm:inline-flex">
-            <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+            <Link href="/panel" className="text-muted-foreground hover:text-foreground">
               Panel
             </Link>
           </BreadcrumbItem>
@@ -106,13 +81,13 @@ export function AdminTopbar({
       <Button
         variant="outline"
         size="sm"
-        className="hidden h-9 w-44 justify-start gap-2 rounded-full bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground lg:flex lg:w-56"
+        className="hidden h-9 w-52 justify-start gap-2 rounded-[var(--radius-sm)] bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground lg:flex lg:w-64"
         onClick={() =>
           document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))
         }
       >
         <Search className="size-3.5" aria-hidden />
-        Ara...
+        Bayi, sipariş, SKU ara...
         <kbd className="ml-auto rounded border border-border bg-background px-1.5 py-0.5 text-caption leading-caption text-muted-foreground">
           ⌘K
         </kbd>
@@ -134,7 +109,7 @@ export function AdminTopbar({
         href="/urunler"
         target="_blank"
         rel="noopener noreferrer"
-        className="hidden size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex"
+        className="hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:flex md:size-9"
         aria-label="Mağazayı aç"
       >
         <Store className="size-4" aria-hidden />
@@ -157,7 +132,7 @@ export function AdminTopbar({
             className="flex items-center gap-2 rounded-full py-1 pr-1 pl-1 transition-colors hover:bg-muted md:pr-2"
           >
             <Avatar className="size-8">
-              <AvatarFallback className="bg-brand-600 text-white">
+              <AvatarFallback className="bg-[var(--primary-solid)] text-white">
                 {initials(userName) || <User className="size-4" />}
               </AvatarFallback>
             </Avatar>
@@ -173,7 +148,7 @@ export function AdminTopbar({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="font-normal">
-            <p className="text-body-sm leading-body-sm font-medium text-neutral-900">
+            <p className="text-body-sm leading-body-sm font-medium text-foreground">
               {userName}
             </p>
             <p className="truncate text-caption text-muted-foreground">{userEmail}</p>
@@ -186,12 +161,12 @@ export function AdminTopbar({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/admin/ayarlar">Ayarlar</Link>
+            <Link href="/panel/ayarlar">Ayarlar</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} variant="destructive">
             <LogOut />
-            Çıkış Yap
+            Çıkış yap
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

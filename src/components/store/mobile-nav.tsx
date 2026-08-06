@@ -91,7 +91,7 @@ export function MobileNav({
             {isStaff ? (
               <li>
                 <SheetClose asChild>
-                  <Link href="/admin" className={linkClass}>
+                  <Link href="/panel" className={linkClass}>
                     Yönetim Paneli
                   </Link>
                 </SheetClose>

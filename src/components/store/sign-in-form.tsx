@@ -33,7 +33,7 @@ export function SignInForm() {
 
     const me = await fetch("/api/me").then((res) => (res.ok ? res.json() : null));
     setIsSubmitting(false);
-    router.push(me?.isStaff ? "/admin" : "/urunler");
+    router.push(me?.isStaff ? "/panel" : "/urunler");
     router.refresh();
   }
 

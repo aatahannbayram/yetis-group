@@ -8,6 +8,8 @@ import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { Reveal } from "@/components/store/reveal";
+import { SceneImage } from "@/components/store/scene-image";
+import { getImage } from "@/content/images";
 import {
   JsonLdScript,
   breadcrumbJsonLd,
@@ -23,7 +25,7 @@ export const metadata: Metadata = buildPageMetadata({
   description:
     "Food cost, soğuk zincir, yöresel peynir ve B2B tedarik üzerine pratik rehberler. Market, şarküteri ve HORECA için.",
   path: "/haberler",
-  image: "/scenes/kitchen.jpg",
+  image: getImage("news-hero").src,
 });
 
 type PostRow = Awaited<ReturnType<typeof listPublishedPosts>>[number];
@@ -68,13 +70,12 @@ export default async function BlogIndexPage({
 
       {/* Hero */}
       <Slab className="relative min-h-[40vh] overflow-hidden !p-0 md:min-h-[48vh]">
-        <Image
-          src="/scenes/kitchen.jpg"
-          alt=""
+        <SceneImage
+          id="news-hero"
           fill
           priority
-          quality={75}
-          className="scale-105 object-cover object-center"
+          quality={60}
+          className="object-center"
           sizes="100vw"
         />
         <div

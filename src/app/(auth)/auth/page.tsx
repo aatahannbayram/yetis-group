@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { LoginPage } from "@/components/ui/sign-in-page";
 import { buildPageMetadata } from "@/lib/seo/metadata";
+import { getImage } from "@/content/images";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Bayi Girişi / Üyelik",
@@ -17,5 +18,5 @@ export default async function AuthPage({
   const { tab } = await searchParams;
   const initialMode = tab === "uye" || tab === "uyelik" ? "uye" : "giris";
 
-  return <LoginPage initialMode={initialMode} imageSrc="/hero-dairy.jpg" />;
+  return <LoginPage initialMode={initialMode} imageSrc={getImage("auth-side").src} />;
 }

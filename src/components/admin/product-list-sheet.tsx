@@ -1,27 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Maximize2, PackageSearch, Plus } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DataTable } from "@/components/ui/data-table";
+import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EditablePrice } from "@/components/admin/editable-price";
 import { EditableTextarea } from "@/components/admin/editable-textarea";
 import {
   createProductAction,
   updateVariantPriceAction,
   updateProductDescriptionAction,
-} from "@/app/(admin)/admin/urunler/actions";
+} from "@/app/(panel)/panel/urunler/actions";
+import type { Density } from "@/components/ui/density-toggle";
 
 const kgFormatter = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 0,
@@ -76,6 +72,8 @@ export function ProductListSheet({
 }) {
   const [mode, setMode] = useState<"closed" | "create" | "detail">("closed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [density, setDensity] = useState<Density>("compact");
   const selected = products.find((p) => p.id === selectedId) ?? null;
 
   function openCreate() {
@@ -93,114 +91,177 @@ export function ProductListSheet({
     setSelectedId(null);
   }
 
-  return (
-    <>
-      <div className="mb-4 flex justify-end px-4 pt-4 sm:px-5 sm:pt-5">
-        <Button type="button" onClick={openCreate} className="gap-1.5">
-          <Plus className="size-4" aria-hidden />
-          Yeni Ürün
-        </Button>
-      </div>
+  const getRowId = useCallback((r: ProductRow) => r.id, []);
+  const globalFilterFn = useCallback(
+    (row: ProductRow, q: string) => {
+      const variant = row.variants[0];
+      return (
+        row.name.toLocaleLowerCase("tr-TR").includes(q) ||
+        row.categoryName.toLocaleLowerCase("tr-TR").includes(q) ||
+        (variant?.sku.toLocaleLowerCase("tr-TR").includes(q) ?? false)
+      );
+    },
+    [],
+  );
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead></TableHead>
-            <TableHead>Ürün</TableHead>
-            <TableHead>SKU</TableHead>
-            <TableHead>Kategori</TableHead>
-            <TableHead>Stok</TableHead>
-            <TableHead className="text-right">Baz Fiyat</TableHead>
-            <TableHead className="w-9"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} className="py-10 text-center text-neutral-400">
-                Henüz ürün yok. &ldquo;Yeni Ürün&rdquo; ile ekleyin.
-              </TableCell>
-            </TableRow>
+  const columns = useMemo<ColumnDef<ProductRow, unknown>[]>(
+    () => [
+      {
+        id: "thumb",
+        header: "",
+        size: 48,
+        enableSorting: false,
+        cell: ({ row }) =>
+          row.original.imageUrl ? (
+            <Image
+              src={row.original.imageUrl}
+              alt=""
+              width={40}
+              height={40}
+              className="size-10 rounded-[var(--radius-sm)] object-cover"
+            />
           ) : (
-            products.map((product) => {
-              const variant = product.variants[0];
-              if (!variant) return null;
-              const isSelected = mode === "detail" && selectedId === product.id;
-              return (
-                <TableRow
-                  key={product.id}
-                  role="button"
-                  tabIndex={0}
-                  aria-pressed={isSelected}
-                  data-state={isSelected ? "selected" : undefined}
-                  className="cursor-pointer"
-                  onClick={() => openDetail(product.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      openDetail(product.id);
-                    }
-                  }}
-                >
-                  <TableCell>
-                    {product.imageUrl ? (
-                      <Image
-                        src={product.imageUrl}
-                        alt=""
-                        width={36}
-                        height={36}
-                        className="rounded-md object-cover"
-                      />
-                    ) : (
-                      <div className="size-9 rounded-md bg-neutral-100" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium text-neutral-900">{product.name}</span>
-                    <p className="text-caption text-neutral-400">
-                      {variant.packSize ?? variant.packagingType}
-                    </p>
-                  </TableCell>
-                  <TableCell className="font-mono text-caption text-neutral-500">
-                    {variant.sku}
-                  </TableCell>
-                  <TableCell className="text-neutral-500">{product.categoryName}</TableCell>
-                  <TableCell className="tabular-nums text-neutral-700">
-                    {formatStockKg(product.stockKg)}
-                  </TableCell>
-                  <TableCell
-                    className="text-right"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  >
-                    <EditablePrice
-                      priceKurus={variant.pricePerUnitKurus}
-                      onSave={(kurus) => updateVariantPriceAction(variant.id, kurus)}
-                    />
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Link
-                      href={`/admin/urunler/${product.slug}`}
-                      className="inline-flex items-center justify-center rounded-md p-1.5 text-neutral-300 transition-colors hover:bg-muted hover:text-brand-700"
-                      title="Tam ekranda aç"
-                      aria-label={`${product.name} tam ekranda aç`}
-                    >
-                      <Maximize2 className="size-3.5" />
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
+            <div className="flex size-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-3)] text-[var(--text-muted)]">
+              <PackageSearch className="size-4" aria-hidden />
+            </div>
+          ),
+      },
+      {
+        accessorKey: "name",
+        header: "Ürün",
+        minSize: 200,
+        cell: ({ row }) => {
+          const variant = row.original.variants[0];
+          return (
+            <div className="min-w-0 max-w-[280px]">
+              <p className="truncate font-medium text-[var(--text-primary)]" title={row.original.name}>
+                {row.original.name}
+              </p>
+              <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
+                {variant?.packSize ?? variant?.packagingType ?? "—"}
+              </p>
+            </div>
+          );
+        },
+      },
+      {
+        id: "sku",
+        header: "SKU",
+        cell: ({ row }) => (
+          <span className="font-mono text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
+            {row.original.variants[0]?.sku ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "categoryName",
+        header: "Kategori",
+        cell: ({ getValue }) => (
+          <span className="text-[var(--text-secondary)]">{String(getValue())}</span>
+        ),
+      },
+      {
+        id: "vat",
+        header: "KDV",
+        cell: ({ row }) => {
+          const bp = row.original.variants[0]?.vatRateBasisPoints;
+          return (
+            <span className="tabular-nums text-[var(--text-secondary)]">
+              {bp != null ? `%${(bp / 100).toString()}` : "—"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "stockKg",
+        header: "Stok",
+        cell: ({ row }) => (
+          <span className="tabular-nums text-[var(--text-primary)]">
+            {formatStockKg(row.original.stockKg)}
+          </span>
+        ),
+      },
+      {
+        id: "price",
+        header: "Baz fiyat",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const variant = row.original.variants[0];
+          if (!variant) return "—";
+          return (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <EditablePrice
+                priceKurus={variant.pricePerUnitKurus}
+                onSave={(kurus) => updateVariantPriceAction(variant.id, kurus)}
+              />
+            </div>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "",
+        size: 44,
+        enableSorting: false,
+        cell: ({ row }) => (
+          <Link
+            href={`/panel/urunler/${row.original.slug}`}
+            className="inline-flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--primary-text)]"
+            title="Tam ekranda aç"
+            aria-label={`${row.original.name} tam ekranda aç`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Maximize2 className="size-3.5" />
+          </Link>
+        ),
+      },
+    ],
+    [],
+  );
+
+  return (
+    <div className="space-y-3" data-density={density}>
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Ürün, SKU veya kategori ara…"
+        density={density}
+        onDensityChange={setDensity}
+        trailing={
+          <Button type="button" onClick={openCreate} className="h-8 gap-1.5">
+            <Plus className="size-4" aria-hidden />
+            Yeni ürün
+          </Button>
+        }
+      />
+
+      <DataTable
+        data={products}
+        columns={columns}
+        getRowId={getRowId}
+        storageKey="panel-products"
+        search={search}
+        globalFilterFn={globalFilterFn}
+        onRowOpen={(row) => openDetail(row.id)}
+        emptyTitle="Ürün yok"
+        emptyDescription="Yeni ürün ekleyerek kataloğu doldurun."
+        emptyAction={
+          <Button type="button" onClick={openCreate} className="gap-1.5">
+            <Plus className="size-4" aria-hidden />
+            Yeni ürün
+          </Button>
+        }
+      />
 
       <Sheet open={mode !== "closed"} onOpenChange={(open) => !open && close()}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           {mode === "create" ? (
             <>
               <SheetHeader>
-                <SheetTitle>Yeni Ürün</SheetTitle>
+                <SheetTitle>Yeni ürün</SheetTitle>
                 <SheetDescription>
                   Ürün ve varsayılan varyant birlikte oluşturulur. Lot ve görselleri sonra ekleyebilirsiniz.
                 </SheetDescription>
@@ -404,7 +465,7 @@ export function ProductListSheet({
                 ) : null}
 
                 <Button asChild className="w-full">
-                  <Link href={`/admin/urunler/${selected.slug}`}>
+                  <Link href={`/panel/urunler/${selected.slug}`}>
                     <Maximize2 className="size-3.5" />
                     Tam ekranda aç &amp; düzenle
                   </Link>
@@ -414,6 +475,6 @@ export function ProductListSheet({
           ) : null}
         </SheetContent>
       </Sheet>
-    </>
+    </div>
   );
 }

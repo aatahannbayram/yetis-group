@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -19,6 +18,8 @@ import { Canvas, Slab } from "@/components/store/slab";
 import { ContactForm } from "@/components/store/contact-form";
 import { Reveal } from "@/components/store/reveal";
 import { PillCta } from "@/components/store/pill-cta";
+import { SceneImage } from "@/components/store/scene-image";
+import { getImage } from "@/content/images";
 import { listCategories } from "@/infra/db/categories";
 import { ensureDefaultLeadFields, listActiveFormFields } from "@/infra/db/lead-fields";
 import {
@@ -35,7 +36,7 @@ export const metadata: Metadata = buildPageMetadata({
   description:
     "Yetiş Grup satış ekibine ulaşın. Bayilik, numune ve HORECA talepleriniz tek CRM havuzuna düşer.",
   path: "/iletisim",
-  image: "/scenes/kitchen.jpg",
+  image: getImage("contact-facility").src,
 });
 
 const topics = [
@@ -188,13 +189,12 @@ export default async function ContactPage({
 
       {/* Hero */}
       <Slab className="relative min-h-[40vh] overflow-hidden !p-0 md:min-h-[48vh]">
-        <Image
-          src="/scenes/kitchen.jpg"
-          alt=""
+        <SceneImage
+          id="contact-facility"
           fill
           priority
           quality={75}
-          className="scale-105 object-cover object-center"
+          className="scale-105 object-center"
           sizes="100vw"
         />
         <div

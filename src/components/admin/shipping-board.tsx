@@ -70,7 +70,7 @@ function LotChip({ lot }: { lot: ShippingLot }) {
   );
 }
 
-function VariantCard({ row, index }: { row: ShippingRow; index: number }) {
+function VariantCard({ row }: { row: ShippingRow }) {
   const [requiredKg, setRequiredKg] = useState("");
   const [result, setResult] = useState<
     { allocations: FefoAllocation[]; error: string | null } | null
@@ -102,11 +102,8 @@ function VariantCard({ row, index }: { row: ShippingRow; index: number }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.04, 0.6), ease: [0.22, 1, 0.36, 1] }}
-      className="rounded-3xl border border-border bg-card p-5 shadow-sm"
+    <div
+      className="rounded-[var(--radius-md)] border border-[var(--panel-border)] bg-card p-5"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -187,15 +184,15 @@ function VariantCard({ row, index }: { row: ShippingRow; index: number }) {
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }
 
 export function ShippingBoard({ rows }: { rows: ShippingRow[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {rows.map((row, index) => (
-        <VariantCard key={row.variantId} row={row} index={index} />
+      {rows.map((row) => (
+        <VariantCard key={row.variantId} row={row} />
       ))}
     </div>
   );

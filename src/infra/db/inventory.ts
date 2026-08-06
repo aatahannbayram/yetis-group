@@ -92,8 +92,16 @@ export async function getInventoryDashboardSummary() {
   const expiringSoonCount = lots.filter(
     (lot) => lot.expirationDate >= now && lot.expirationDate <= soon,
   ).length;
+  const expiredCount = lots.filter((lot) => lot.expirationDate < now).length;
+  const healthyCount = lots.filter((lot) => lot.expirationDate > soon).length;
 
-  return { totalKg, lotCount: lots.length, expiringSoonCount };
+  return {
+    totalKg,
+    lotCount: lots.length,
+    expiringSoonCount,
+    expiredCount,
+    healthyCount,
+  };
 }
 
 export async function getStockSummaryByProduct() {

@@ -10,10 +10,10 @@ import { formatDate } from "@/lib/format/date";
 import { SoftTile } from "@/components/b2b";
 
 const QUICK_LINKS = [
-  { label: "Genel bakış", href: "/admin", icon: LayoutDashboard },
-  { label: "Bayi adayları", href: "/admin/bayi-adaylari", icon: UserPlus },
-  { label: "Ürünler", href: "/admin/urunler", icon: Package },
-  { label: "Kullanıcılar", href: "/admin/kullanicilar", icon: Users },
+  { label: "Genel bakış", href: "/panel", icon: LayoutDashboard },
+  { label: "Bayi adayları", href: "/panel/bayi-adaylari", icon: UserPlus },
+  { label: "Ürünler", href: "/panel/urunler", icon: Package },
+  { label: "Kullanıcılar", href: "/panel/kullanicilar", icon: Users },
 ];
 
 export function DashboardHero() {
@@ -34,7 +34,7 @@ export function DashboardHero() {
           <p className="text-display leading-display font-semibold text-white">Pano</p>
           <p className="text-body-sm text-white/70">{formatDate(new Date())}</p>
           <Link
-            href="/admin/siparisler"
+            href="/panel/siparisler"
             className="mt-2 inline-flex w-fit rounded-full bg-brand-500 px-5 py-2.5 text-body-sm font-medium text-neutral-900 shadow-sm hover:brightness-105"
           >
             Siparişlere git

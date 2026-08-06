@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500" role="img" aria-label="24 · Haberler">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a3d2e"/>
+      <stop offset="100%" stop-color="#0c1812"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1500" fill="url(#g)"/>
+  <rect x="48" y="48" width="1104" height="1404" fill="none" stroke="#30A369" stroke-width="3" stroke-opacity="0.45" rx="24"/>
+  <text x="80" y="140" fill="#30A369" font-family="ui-monospace,monospace" font-size="42" font-weight="700">24 · Haberler</text>
+  <text x="80" y="210" fill="#F0EEE8" font-family="system-ui,sans-serif" font-size="36" opacity="0.85">Yetiş Grup · çekim bekleniyor</text>
+  <text x="80" y="1400" fill="#F0EEE8" font-family="system-ui,sans-serif" font-size="28" opacity="0.45">placeholder</text>
+</svg>

@@ -1,0 +1,86 @@
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/infra/auth/server";
+import { getUserDealerId, isStaffUser } from "@/infra/db/users";
+import { prisma } from "@/infra/db/client";
+import { calculateBalance } from "@/domain/ledger";
+import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
+import {
+  composeHomeModules,
+  resolveDealerProfile,
+  resolveLifecycle,
+} from "@/features/dealer/dealerProfiles";
+import { DealerHomeModules } from "@/components/dealer/dealer-home-modules";
+import { getOrCreateCart } from "@/infra/db/cart";
+
+const TYPE_LABEL: Record<string, string> = {
+  BAYI: "Market / Şarküteri",
+  HORECA: "HORECA",
+  ARA_TOPTANCI: "Ara toptancı",
+  ZINCIR: "Zincir",
+};
+
+export default async function BayiHomePage() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/auth");
+
+  const jar = await cookies();
+  const impId = parseImpersonationCookie(jar.get(IMPERSONATE_COOKIE)?.value);
+  const staff = await isStaffUser(session.user.id);
+  let dealerId = await getUserDealerId(session.user.id);
+  if (impId && staff) dealerId = impId;
+  if (!dealerId) redirect("/");
+
+  const dealer = await prisma.dealer.findUniqueOrThrow({
+    where: { id: dealerId },
+    include: {
+      ledgerEntries: true,
+      carts: {
+        where: { lines: { some: {} } },
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        include: {
+          lines: {
+            include: { variant: { include: { product: { select: { name: true } } } } },
+          },
+        },
+      },
+    },
+  });
+
+  const profile = resolveDealerProfile(dealer.dealerType);
+  const lastCart = dealer.carts[0] ?? null;
+  const lifecycle = resolveLifecycle({
+    status: dealer.status,
+    createdAt: dealer.createdAt,
+    lastOrderAt: lastCart?.updatedAt ?? null,
+    orderCount: dealer.carts.length,
+  });
+  const modules = composeHomeModules(profile, lifecycle);
+  const balanceKurus = calculateBalance(dealer.ledgerEntries);
+
+  const currentCart = await getOrCreateCart({
+    userId: impId && staff ? null : session.user.id,
+    dealerId,
+    createGuest: Boolean(impId && staff),
+  });
+
+  const lastSummary = lastCart
+    ? lastCart.lines
+        .slice(0, 3)
+        .map((l) => l.variant.product.name)
+        .join(", ") + (lastCart.lines.length > 3 ? "…" : "")
+    : null;
+
+  return (
+    <DealerHomeModules
+      modules={modules}
+      creditLimitKurus={dealer.creditLimitKurus}
+      balanceKurus={balanceKurus}
+      paymentTermDays={dealer.paymentTermDays}
+      openCartLines={currentCart?.lines.length ?? 0}
+      lastCartSummary={lastSummary}
+      dealerTypeLabel={TYPE_LABEL[dealer.dealerType] ?? dealer.dealerType}
+    />
+  );
+}

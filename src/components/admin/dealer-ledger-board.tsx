@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { Plus, Undo2, Wallet } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { AnimatedMoney } from "@/components/admin/count-up-money";
+import { CreditLimitBar } from "@/components/admin/credit-limit-bar";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
-import { addLedgerEntryAction, reverseLedgerEntryAction } from "@/app/(admin)/admin/cari/actions";
+import { addLedgerEntryAction, reverseLedgerEntryAction } from "@/app/(panel)/panel/cari/actions";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 const DEALER_TYPE_LABEL: Record<string, string> = {
   BAYI: "Bayi",
@@ -55,9 +55,8 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {dealers.map((dealer, index) => {
           const owesMoney = dealer.balanceKurus > 0;
-          const limit = dealer.creditLimitKurus;
-          const usagePct = limit && limit > 0 ? Math.min(100, (dealer.balanceKurus / limit) * 100) : null;
-          const overLimit = usagePct !== null && dealer.balanceKurus > (limit ?? 0);
+          const overLimit =
+            dealer.creditLimitKurus != null && dealer.balanceKurus > dealer.creditLimitKurus;
 
           return (
             <motion.button
@@ -68,53 +67,60 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
               whileHover={{ y: -3 }}
-              className="rounded-3xl border border-border bg-card p-5 text-left shadow-sm transition-shadow hover:shadow-md"
+              className={cn(
+                "relative overflow-hidden rounded-[var(--radius-md)] border bg-[var(--surface)] p-4 text-left shadow-[var(--shadow-sm)] transition-[border-color,box-shadow] hover:shadow-[var(--shadow-md)]",
+                overLimit
+                  ? "border-[var(--danger-border)]"
+                  : owesMoney
+                    ? "border-[var(--warning-border)]"
+                    : "border-[var(--border)] hover:border-[var(--border-strong)]",
+              )}
             >
-              <div className="flex items-start justify-between gap-2">
+              {overLimit || owesMoney ? (
+                <span
+                  aria-hidden
+                  className={cn(
+                    "absolute inset-y-0 left-0 w-[3px]",
+                    overLimit ? "bg-[var(--danger-solid)]" : "bg-[var(--warning-solid)]",
+                  )}
+                />
+              ) : null}
+              <div className="flex items-start justify-between gap-2 pl-0.5">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-neutral-900">{dealer.unvan}</p>
-                  <p className="text-caption text-muted-foreground">
+                  <p className="truncate font-semibold text-[var(--text-primary)]">{dealer.unvan}</p>
+                  <p className="text-caption text-[var(--text-muted)]">
                     {DEALER_TYPE_LABEL[dealer.dealerType] ?? dealer.dealerType}
                   </p>
                 </div>
-                <Badge variant={overLimit ? "destructive" : "outline"}>
-                  {dealer.entryCount} kayıt
-                </Badge>
+                <StatusBadge
+                  label={`${dealer.entryCount} kayıt`}
+                  tone={overLimit ? "danger" : "neutral"}
+                />
               </div>
 
               <p
                 className={cn(
-                  "mt-4 tabular-nums text-h2 leading-h2 font-bold",
-                  owesMoney ? "text-danger-fg" : "text-brand-700",
+                  "mt-4 tabular-nums text-[1.5rem] font-bold",
+                  overLimit ? "text-[var(--danger-text)]" : "text-[var(--text-primary)]",
                 )}
               >
-                <AnimatedMoney valueKurus={Math.abs(dealer.balanceKurus)} />
+                {formatMoney(money(Math.abs(dealer.balanceKurus)))}
               </p>
-              <p className="text-caption text-muted-foreground">
+              <p className="text-caption text-[var(--text-muted)]">
                 {owesMoney ? "Bayi borcu" : dealer.balanceKurus < 0 ? "Bayi alacaklı" : "Bakiye sıfır"}
               </p>
 
-              {limit ? (
-                <div className="mt-4">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${Math.max(0, usagePct ?? 0)}%` }}
-                      transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                      className={cn(
-                        "h-full rounded-full",
-                        overLimit ? "bg-danger-fg" : "bg-brand-600",
-                      )}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-caption text-muted-foreground">
-                    Limit: {formatMoney(money(limit))}
-                    {dealer.paymentTermDays ? ` · ${dealer.paymentTermDays} gün vade` : ""}
+              <div className="mt-4">
+                <CreditLimitBar
+                  balanceKurus={dealer.balanceKurus}
+                  limitKurus={dealer.creditLimitKurus}
+                />
+                {dealer.paymentTermDays ? (
+                  <p className="mt-1 text-caption text-[var(--text-muted)]">
+                    {dealer.paymentTermDays} gün vade
                   </p>
-                </div>
-              ) : (
-                <p className="mt-4 text-caption text-muted-foreground">Kredi limiti atanmamış</p>
-              )}
+                ) : null}
+              </div>
             </motion.button>
           );
         })}
@@ -132,15 +138,17 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
               </SheetHeader>
 
               <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-4">
-                <div className="rounded-2xl bg-muted/60 p-4">
-                  <p className="text-caption text-muted-foreground">Güncel bakiye</p>
+                <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                  <p className="text-caption text-[var(--text-muted)]">Güncel bakiye</p>
                   <p
                     className={cn(
                       "mt-1 tabular-nums text-h3 leading-h3 font-bold",
-                      openDealer.balanceKurus > 0 ? "text-danger-fg" : "text-brand-700",
+                      openDealer.balanceKurus > 0
+                        ? "text-[var(--danger-text)]"
+                        : "text-[var(--text-primary)]",
                     )}
                   >
-                    <AnimatedMoney valueKurus={Math.abs(openDealer.balanceKurus)} />
+                    {formatMoney(money(Math.abs(openDealer.balanceKurus)))}
                   </p>
                 </div>
 

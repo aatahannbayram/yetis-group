@@ -11,9 +11,8 @@ type PillCtaProps = {
 };
 
 /**
- * Primary CTA - accent fill + dark ink.
- * Mobile: clean pill + inline arrow (no heavy black disc).
- * Desktop: optional disc arrow for signature look.
+ * Signature CTA: accent fill + dark circle arrow.
+ * Mobile keeps the disc (slightly smaller); no inline-only arrow.
  */
 export function PillCta({
   href,
@@ -23,7 +22,7 @@ export function PillCta({
   showArrow = true,
 }: PillCtaProps) {
   const base =
-    "mkt-pill inline-flex items-center justify-center font-semibold transition-[transform,filter] active:scale-[0.98]";
+    "mkt-pill inline-flex items-center justify-center font-semibold transition-[transform,filter] duration-[var(--mkt-motion-hover,200ms)] active:scale-[0.98]";
 
   if (variant === "primary") {
     return (
@@ -32,21 +31,22 @@ export function PillCta({
         className={cn(
           base,
           "bg-mkt-accent text-mkt-accent-ink hover:brightness-105",
-          /* Mobile: balanced padding, inline arrow */
-          "h-11 gap-2 px-6 text-[14px]",
-          /* Desktop: slightly larger; disc arrow if enabled */
-          "sm:h-12 sm:gap-3 sm:pr-2.5 sm:pl-6 sm:text-[15px]",
+          "h-12 gap-3 pr-1.5 pl-6 text-[15px]",
+          "sm:h-[3.25rem] sm:pr-2 sm:pl-7 sm:text-[15px]",
           className,
         )}
       >
         <span>{children}</span>
         {showArrow ? (
-          <>
-            <ArrowUpRight className="size-4 sm:hidden" aria-hidden strokeWidth={2.25} />
-            <span className="hidden size-9 items-center justify-center rounded-full bg-mkt-accent-ink text-white sm:flex">
-              <ArrowUpRight className="size-4" aria-hidden />
-            </span>
-          </>
+          <span
+            className={cn(
+              "inline-flex shrink-0 items-center justify-center rounded-full bg-mkt-accent-ink text-white",
+              "size-9 sm:size-10",
+            )}
+            aria-hidden
+          >
+            <ArrowUpRight className="size-4" />
+          </span>
         ) : null}
       </Link>
     );
@@ -58,7 +58,7 @@ export function PillCta({
         href={href}
         className={cn(
           base,
-          "h-11 border border-[color:var(--mkt-border)] bg-transparent px-5 text-[14px] text-mkt-ink hover:bg-mkt-card-muted sm:h-12 sm:px-6 sm:text-[15px]",
+          "h-12 border border-[color:var(--mkt-border)] bg-transparent px-5 text-[14px] text-mkt-ink hover:bg-mkt-card-muted sm:h-[3.25rem] sm:px-6 sm:text-[15px]",
           className,
         )}
       >

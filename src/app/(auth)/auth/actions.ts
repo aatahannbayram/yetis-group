@@ -47,9 +47,9 @@ export async function completeDealerRegistrationAction(input: {
     return { ok: false, message: msg };
   }
 
-  revalidatePath("/admin/bayiler");
-  revalidatePath("/admin/bayi-adaylari");
-  revalidatePath("/admin");
+  revalidatePath("/panel/bayiler");
+  revalidatePath("/panel/bayi-adaylari");
+  revalidatePath("/panel");
 
   return {
     ok: true,

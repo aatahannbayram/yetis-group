@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format/date";
-import { createLotAction, addStockMovementAction } from "@/app/(admin)/admin/urunler/actions";
+import { createLotAction, addStockMovementAction } from "@/app/(panel)/panel/urunler/actions";
 
 type Movement = {
   id: string;

@@ -41,11 +41,11 @@ import {
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
 import { formatDateTime } from "@/lib/format/date";
-import { addLeadActivityAction, transitionLeadStageAction } from "@/app/(admin)/admin/bayi-adaylari/actions";
+import { addLeadActivityAction, transitionLeadStageAction } from "@/app/(panel)/panel/bayi-adaylari/actions";
 import {
   completeLeadTaskAction,
   createLeadTaskAction,
-} from "@/app/(admin)/admin/crm-alanlari/actions";
+} from "@/app/(panel)/panel/crm-alanlari/actions";
 import { LEAD_STAGES, type LeadStage } from "@/domain/leads";
 import { Input } from "@/components/ui/input";
 import type { LeadItem } from "@/components/admin/leads-board";

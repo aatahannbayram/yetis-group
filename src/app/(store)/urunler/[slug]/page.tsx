@@ -222,7 +222,7 @@ export default async function ProductDetailPage({
               <h2 className="text-[1.25rem] font-medium tracking-[-0.015em] text-mkt-ink">
                 {product.category} kategorisinden diğerleri
               </h2>
-              <div className="mt-6 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {related.map((p, index) => (
                   <Reveal key={p.id} delay={(index % 3) * 60}>
                     <ProductCard
@@ -237,6 +237,8 @@ export default async function ProductDetailPage({
                         unitLabel: p.unitLabel,
                         kgPerUnit: p.kgPerUnit.toString(),
                         unitPrice: p.unitPrice,
+                        moq: p.moq,
+                        vatRateBasisPoints: p.vatRateBasisPoints,
                       }}
                     />
                   </Reveal>

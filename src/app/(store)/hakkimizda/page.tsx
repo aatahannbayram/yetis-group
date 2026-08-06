@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
@@ -13,6 +12,8 @@ import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { Reveal } from "@/components/store/reveal";
+import { SceneImage } from "@/components/store/scene-image";
+import { getImage, type ImageSlotId } from "@/content/images";
 import {
   JsonLdScript,
   breadcrumbJsonLd,
@@ -26,7 +27,7 @@ export const metadata: Metadata = buildPageMetadata({
   description:
     "Yetiş Grup: yöresel ve kırsal ürünlerde B2B tedarik. Net fiyat, SKT/lot takibi ve düzenli sevkiyat: market, şarküteri ve HORECA için.",
   path: "/hakkimizda",
-  image: "/scenes/warehouse.jpg",
+  image: getImage("about-producer").src,
 });
 
 const principles = [
@@ -47,26 +48,26 @@ const principles = [
   },
 ] as const;
 
-const faces = [
+const faces: Array<{ slot: ImageSlotId; role: string; title: string; body: string }> = [
   {
-    src: "/scenes/how-sales.jpg",
+    slot: "about-sales",
     role: "Satış",
     title: "Bayi ilişkisi",
     body: "Başvuru, fiyat listesi ve ilk sipariş: yanınızdayız.",
   },
   {
-    src: "/scenes/how-quality.jpg",
+    slot: "about-quality",
     role: "Kalite",
     title: "Soğuk zincir",
     body: "SKT’si geçen ürün yola çıkmaz. Lot kaydı tutulur.",
   },
   {
-    src: "/scenes/how-ops.jpg",
+    slot: "about-ops",
     role: "Operasyon",
     title: "Sevkiyat",
     body: "Önce yakını biten gider; teslimat günü netleşir.",
   },
-] as const;
+];
 
 export default function AboutPage() {
   return (
@@ -95,13 +96,12 @@ export default function AboutPage() {
 
       {/* Hero - NURA-style dark full-bleed title */}
       <Slab className="relative min-h-[44vh] overflow-hidden !p-0 md:min-h-[56vh]">
-        <Image
-          src="/scenes/warehouse.jpg"
-          alt=""
+        <SceneImage
+          id="about-producer"
           fill
           priority
           quality={75}
-          className="object-cover object-center scale-105"
+          className="object-center scale-105"
           sizes="100vw"
         />
         <div
@@ -124,9 +124,7 @@ export default function AboutPage() {
       {/* Principles */}
       <Slab className="mkt-pad !bg-[var(--mkt-card-muted)]">
         <Reveal>
-          <span className="mkt-pill mkt-label inline-flex bg-white px-3.5 py-1.5 text-mkt-ink-muted">
-            İlkeler
-          </span>
+          <p className="mkt-section-label">İlkeler</p>
           <h2 className="mkt-h2 mt-5 max-w-3xl text-balance text-mkt-ink md:mt-6">
             Yetiş Grup basit bir fikre dayanır:{" "}
             <span className="text-mkt-ink-muted">tedarik net olsun, kafa karıştırmasın.</span>{" "}
@@ -154,9 +152,7 @@ export default function AboutPage() {
       {/* Faces of the work - not stock headshots */}
       <Slab className="mkt-pad">
         <Reveal>
-          <span className="mkt-pill mkt-label inline-flex bg-mkt-card-muted px-3.5 py-1.5 text-mkt-ink-muted">
-            Nasıl çalışırız
-          </span>
+          <p className="mkt-section-label">Nasıl çalışırız</p>
           <h2 className="mkt-h2 mt-4 max-w-xl text-balance text-mkt-ink">
             Her gün net karar için yanınızdayız
           </h2>
@@ -171,12 +167,11 @@ export default function AboutPage() {
             <Reveal key={item.role} delay={i * 70}>
               <article className="group overflow-hidden rounded-[1.25rem] bg-mkt-card-muted">
                 <div className="relative aspect-[4/5] overflow-hidden">
-                  <Image
-                    src={item.src}
-                    alt=""
+                  <SceneImage
+                    id={item.slot}
                     fill
                     quality={70}
-                    className="object-cover object-center transition-transform duration-500 group-hover:scale-[1.03]"
+                    className="object-center transition-transform duration-500 group-hover:scale-[1.03]"
                     sizes="(min-width: 640px) 30vw, 90vw"
                   />
                   <div

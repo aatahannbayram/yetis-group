@@ -958,6 +958,152 @@ async function seedShipmentDemoData() {
   console.log("Seeded demo sevkiyat kayıtları (hazırlanıyor/yolda/teslim edildi).");
 }
 
+async function seedOrderDemoData() {
+  const existing = await prisma.order.count();
+  if (existing > 0) {
+    console.log(`Skipping sipariş demo - ${existing} order(s) already exist.`);
+    return;
+  }
+
+  async function resolvePrice(dealerId: string, variantId: string) {
+    const dealer = await prisma.dealer.findUniqueOrThrow({
+      where: { id: dealerId },
+      select: { priceListId: true },
+    });
+    const variant = await prisma.productVariant.findUniqueOrThrow({
+      where: { id: variantId },
+      select: { pricePerUnitKurus: true, vatRateBasisPoints: true },
+    });
+    if (!dealer.priceListId) {
+      return { unitPriceKurus: variant.pricePerUnitKurus, vatRateBasisPoints: variant.vatRateBasisPoints };
+    }
+    const override = await prisma.priceListItem.findUnique({
+      where: { priceListId_variantId: { priceListId: dealer.priceListId, variantId } },
+      select: { priceKurus: true },
+    });
+    return {
+      unitPriceKurus: override?.priceKurus ?? variant.pricePerUnitKurus,
+      vatRateBasisPoints: variant.vatRateBasisPoints,
+    };
+  }
+
+  type Plan = {
+    dealerUnvan: string;
+    lines: { productSlug: string; quantity: number }[];
+    history: { status: string; daysAgo: number; note: string }[];
+  };
+
+  const plans: Plan[] = [
+    {
+      dealerUnvan: "Test Bayi",
+      lines: [
+        { productSlug: "beyaz-peynir-17kg-teneke", quantity: 2 },
+        { productSlug: "lor-peyniri-1kg", quantity: 5 },
+      ],
+      history: [
+        { status: "SUBMITTED", daysAgo: 6, note: "Sipariş oluşturuldu" },
+        { status: "UNDER_REVIEW", daysAgo: 5, note: "Stok ve kredi limiti kontrol ediliyor" },
+        { status: "CONFIRMED", daysAgo: 5, note: "Onaylandı" },
+        { status: "PREPARING", daysAgo: 4, note: "Depoda hazırlanıyor" },
+        { status: "SHIPPED", daysAgo: 4, note: "Yola çıktı" },
+        { status: "DELIVERED", daysAgo: 3, note: "Bayi teslim aldı" },
+      ],
+    },
+    {
+      dealerUnvan: "Test HORECA",
+      lines: [{ productSlug: "dilimli-kasar-250g", quantity: 10 }],
+      history: [
+        { status: "SUBMITTED", daysAgo: 2, note: "Sipariş oluşturuldu" },
+        { status: "UNDER_REVIEW", daysAgo: 2, note: "İnceleniyor" },
+        { status: "CONFIRMED", daysAgo: 1, note: "Onaylandı" },
+        { status: "PREPARING", daysAgo: 0, note: "Depoda hazırlanıyor" },
+      ],
+    },
+    {
+      dealerUnvan: "Kadıköy Zincir Market A.Ş.",
+      lines: [
+        { productSlug: "tereyagi-1kg-kova", quantity: 20 },
+        { productSlug: "yogurt-5kg-kova", quantity: 8 },
+      ],
+      history: [
+        { status: "SUBMITTED", daysAgo: 1, note: "6 şube merkezi sipariş" },
+        { status: "UNDER_REVIEW", daysAgo: 0, note: "İnceleniyor" },
+      ],
+    },
+    {
+      dealerUnvan: "Marmara Gıda Ara Toptan Ltd. Şti.",
+      lines: [{ productSlug: "sut-1l", quantity: 200 }],
+      history: [
+        { status: "SUBMITTED", daysAgo: 3, note: "Sipariş oluşturuldu" },
+        { status: "UNDER_REVIEW", daysAgo: 2, note: "Kredi limiti aşıldığı için inceleniyor" },
+        { status: "REJECTED", daysAgo: 2, note: "Kredi limiti aşımı nedeniyle reddedildi" },
+      ],
+    },
+  ];
+
+  for (const plan of plans) {
+    const dealer = await prisma.dealer.findFirst({ where: { unvan: plan.dealerUnvan } });
+    if (!dealer) continue;
+
+    const lineData = [];
+    for (const line of plan.lines) {
+      const variant = await prisma.productVariant.findFirst({
+        where: { product: { slug: line.productSlug } },
+      });
+      if (!variant) continue;
+      const { unitPriceKurus, vatRateBasisPoints } = await resolvePrice(dealer.id, variant.id);
+      lineData.push({
+        variantId: variant.id,
+        quantity: line.quantity,
+        unitPriceKurus,
+        vatRateBasisPoints,
+        lineTotalKurus: unitPriceKurus * line.quantity,
+      });
+    }
+    if (lineData.length === 0) continue;
+
+    const totalKurus = lineData.reduce((sum, l) => sum + l.lineTotalKurus, 0);
+    const finalEvent = plan.history[plan.history.length - 1]!;
+    const createdAt = daysFromNow(-plan.history[0]!.daysAgo);
+
+    const order = await prisma.order.create({
+      data: {
+        dealerId: dealer.id,
+        status: finalEvent.status as never,
+        totalKurus,
+        createdAt,
+        updatedAt: daysFromNow(-finalEvent.daysAgo),
+        lines: { create: lineData },
+      },
+    });
+
+    for (const h of plan.history) {
+      await prisma.orderEvent.create({
+        data: {
+          orderId: order.id,
+          status: h.status as never,
+          note: h.note,
+          createdAt: daysFromNow(-h.daysAgo),
+        },
+      });
+    }
+
+    if (finalEvent.status === "DELIVERED") {
+      await prisma.ledgerEntry.create({
+        data: {
+          dealerId: dealer.id,
+          type: "BORC",
+          amountKurus: totalKurus,
+          description: `Sipariş #${order.id.slice(-6)} teslim edildi`,
+          createdAt: daysFromNow(-finalEvent.daysAgo),
+        },
+      });
+    }
+  }
+
+  console.log("Seeded demo siparişler (tam yaşam döngüsü geçmişiyle).");
+}
+
 async function seedLedgerDemoData() {
   const existing = await prisma.ledgerEntry.count();
   if (existing > 0) {
@@ -1013,6 +1159,7 @@ async function main() {
   await seedShippingDemoVariety();
   await seedShipmentDemoData();
   await seedLedgerDemoData();
+  await seedOrderDemoData();
 }
 
 main()

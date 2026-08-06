@@ -32,6 +32,7 @@ export async function createShipment(input: {
   variantId: string;
   quantityKg: number;
   note?: string;
+  orderId?: string;
 }) {
   if (input.quantityKg <= 0) throw new Error("Miktar sıfırdan büyük olmalı");
 
@@ -46,6 +47,7 @@ export async function createShipment(input: {
       data: {
         dealerId: input.dealerId,
         variantId: input.variantId,
+        orderId: input.orderId,
         quantityKg: input.quantityKg,
         note: input.note,
       },

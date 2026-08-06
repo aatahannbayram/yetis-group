@@ -143,6 +143,7 @@ model Dealer {
   fromLeads     Lead[]          @relation("LeadConvertedDealer")
   ledgerEntries LedgerEntry[]
   shipments     Shipment[]
+  orders        Order[]
 
   @@map("dealer")
 }
@@ -464,6 +465,7 @@ model ProductVariant {
   priceListItems PriceListItem[]
   cartLines      CartLine[]
   shipments      Shipment[]
+  orderLines     OrderLine[]
 
   @@map("product_variant")
 }
@@ -621,6 +623,8 @@ model Shipment {
   dealer      Dealer         @relation(fields: [dealerId], references: [id], onDelete: Cascade)
   variantId   String
   variant     ProductVariant @relation(fields: [variantId], references: [id])
+  orderId     String?
+  order       Order?         @relation(fields: [orderId], references: [id])
   quantityKg  Decimal        @db.Decimal(10, 3)
   status      ShipmentStatus @default(HAZIRLANIYOR)
   note        String?
@@ -726,6 +730,64 @@ model CartLine {
 
   @@index([cartId, variantId])
   @@map("cart_line")
+}
+
+// ---- Orders (M4 FSM; transitions logged in OrderEvent) ----
+
+enum OrderStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  CONFIRMED
+  PREPARING
+  SHIPPED
+  DELIVERED
+  REJECTED
+  CANCELLED
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  dealerId   String
+  dealer     Dealer      @relation(fields: [dealerId], references: [id])
+  status     OrderStatus @default(SUBMITTED)
+  totalKurus Int
+  note       String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  lines     OrderLine[]
+  events    OrderEvent[]
+  shipments Shipment[]
+
+  @@index([dealerId, createdAt])
+  @@map("order")
+}
+
+model OrderLine {
+  id                 String         @id @default(cuid())
+  orderId            String
+  order              Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId          String
+  variant            ProductVariant @relation(fields: [variantId], references: [id])
+  /// Sales-unit count (e.g. tenekes/packs), NOT kg — see ProductVariant.unitFactor for kg conversion.
+  quantity           Int
+  unitPriceKurus     Int
+  vatRateBasisPoints Int
+  lineTotalKurus     Int
+
+  @@map("order_line")
+}
+
+model OrderEvent {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  @@map("order_event")
 }
 
 // ---- M14 Content: blog + recipes ----

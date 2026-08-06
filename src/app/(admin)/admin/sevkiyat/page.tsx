@@ -19,6 +19,7 @@ export default async function AdminShipmentsPage() {
     id: s.id,
     dealerId: s.dealerId,
     dealerName: s.dealer.unvan,
+    dealerType: s.dealer.dealerType,
     productName: s.variant.product.name,
     packLabel: s.variant.packSize ?? s.variant.packagingType,
     sku: s.variant.sku,

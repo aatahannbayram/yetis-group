@@ -22,7 +22,7 @@ export default async function AdminSettingsPage() {
         </div>
         <p className="mt-1 text-body-sm text-muted-foreground">
           Etkinleştirildiğinde bayiler sepette banka havalesi / EFT ile ödeme seçeneğini ve
-          aşağıdaki hesap bilgilerini görür. Sipariş onayı ve mutabakat manuel yapılır — otomatik
+          aşağıdaki hesap bilgilerini görür. Sipariş onayı ve mutabakat manuel yapılır. Otomatik
           tahsilat entegrasyonu değildir.
         </p>
 

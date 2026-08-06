@@ -41,7 +41,7 @@ export function Logo({
   );
 }
 
-/** Brand mark only — favicon / collapsed sidebar. */
+/** Brand mark only - favicon / collapsed sidebar. */
 export function BrandMark({
   size = 28,
   className,

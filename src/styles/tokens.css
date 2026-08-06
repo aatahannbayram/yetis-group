@@ -1,5 +1,5 @@
 /**
- * Yetiş Grup — design tokens
+ * Yetiş Grup - design tokens
  * Single source of truth for color, type, spacing, radius, density.
  * Do not hardcode these values elsewhere; reference the tokens.
  */
@@ -13,12 +13,12 @@
   --brand-400: #45c980;
   --brand-500: #30a369; /* accent / fill */
   --brand-600: #008a43; /* strong green */
-  --brand-700: #00693e; /* text & primary action — WCAG AA on white */
+  --brand-700: #00693e; /* text & primary action - WCAG AA on white */
   --brand-800: #00522f;
   --brand-900: #003d23;
 
   /* ---- Surface (warm bone/cream signature, not generic gray) ---- */
-  --surface-canvas: #f0eee8; /* marketing canvas — Farmora-style inset slabs */
+  --surface-canvas: #f0eee8; /* marketing canvas - Farmora-style inset slabs */
   --surface-card: #ffffff;
   --surface-sunken: #f5f3ed;
   --surface-overlay: rgba(38, 33, 24, 0.48);
@@ -96,7 +96,7 @@
   --radius-lg: 16px;
   --radius-card: var(--radius-md);
 
-  /* ---- Shadow (soft, layered — no heavy drop shadow) ---- */
+  /* ---- Shadow (soft, layered - no heavy drop shadow) ---- */
   --shadow-sm: 0 1px 2px rgba(33, 28, 22, 0.06);
   --shadow-md: 0 2px 8px rgba(33, 28, 22, 0.08), 0 1px 2px rgba(33, 28, 22, 0.04);
   --shadow-lg: 0 12px 32px rgba(33, 28, 22, 0.12), 0 2px 6px rgba(33, 28, 22, 0.06);

@@ -34,7 +34,7 @@ type Props = {
   onChange?: (state: CardState, validity: CardValidity) => void;
   onSubmit?: (state: CardState, validity: CardValidity) => void;
   className?: string;
-  /** UI copy — B2B müşteri / bayi kartı */
+  /** UI copy - B2B müşteri / bayi kartı */
   title?: string;
   brandLabel?: string;
 };

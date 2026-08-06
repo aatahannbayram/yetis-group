@@ -127,7 +127,7 @@ Küçük ve orta ölçekli bir işletme için yüksek minimum sipariş tutarı, 
 
 ## 5. Randıman ve kalite tutarlılığı nasıl sağlanıyor?
 
-Aynı SKU'nun her partisi benzer tuz oranında, benzer kıvamda ve benzer randımanda gelmelidir. Üretici/menşei bilgisi (hangi bölge, hangi süt tipi — inek/koyun, hangi olgunlaşma seviyesi) paylaşılabiliyorsa, bu tutarlılığın izlenebilir bir kaynağı olduğunu gösterir. Yöresel ürünlerde (tulum, kaşar) bölge ve süt tipi bilgisi, menü tanıtımında da kullanılabilecek bir hikâye sunar.
+Aynı SKU'nun her partisi benzer tuz oranında, benzer kıvamda ve benzer randımanda gelmelidir. Üretici/menşei bilgisi (hangi bölge, hangi süt tipi: inek/koyun, hangi olgunlaşma seviyesi) paylaşılabiliyorsa, bu tutarlılığın izlenebilir bir kaynağı olduğunu gösterir. Yöresel ürünlerde (tulum, kaşar) bölge ve süt tipi bilgisi, menü tanıtımında da kullanılabilecek bir hikâye sunar.
 
 ## 6. İade ve hasar politikası ne?
 
@@ -257,7 +257,7 @@ Bir otel kahvaltı büfesinde peynir çeşitliliği rastgele değil, doku ve tat
 - **Tulum peyniri**: Keskin ve yöresel bir tat sunar; özellikle yerli misafirler ve "otantik" deneyim arayan yabancı misafirler için fark yaratır.
 - **Lor peyniri**: Hafif ve düşük tuzlu; diyet/sağlıklı beslenme tercih eden misafiriler ve reçel/bal ile tüketim için idealdir.
 
-Bu dört çeşidi bir arada sunmak, hem geniş damak zevkine hitap eder hem de otelin "yöresel/kırsal" hikâyesini sofraya taşır — özellikle Yetiş Grup gibi yöresel üretim odaklı tedarikçilerden alınan ürünlerle bu hikâye daha inandırıcı hale gelir.
+Bu dört çeşidi bir arada sunmak, hem geniş damak zevkine hitap eder hem de otelin "yöresel/kırsal" hikâyesini sofraya taşır. Özellikle Yetiş Grup gibi yöresel üretim odaklı tedarikçilerden alınan ürünlerle bu hikâye daha inandırıcı hale gelir.
 
 ## Porsiyon planlama: misafir başına gramaj
 
@@ -323,7 +323,7 @@ Otel kahvaltı büfenizin peynir tabağını çeşitlilik, doğru porsiyon ve d�
     tags: ["soğuk zincir", "gıda güvenliği", "depolama", "lojistik"],
     coverUrl: "/products/sut.jpg",
     relatedProductSlugs: ["sut-1l", "yogurt-5kg-kova", "tereyagi-1kg-kova"],
-    body: `Soğuk zincir, bir gıda ürününün üretildiği andan tüketiciye ulaşana kadar geçen her aşamada (depolama, taşıma, teslimat, işletme içi saklama) belirli bir sıcaklık aralığında kesintisiz tutulmasıdır. Süt ve süt ürünlerinde bu aralık genelde 2-4°C'dir. Zincir herhangi bir noktada kırıldığında — örneğin araç soğutması durduğunda veya ürün uzun süre oda sıcaklığında beklediğinde — mikrobiyal üreme hızlanır, raf ömrü kısalır ve gıda güvenliği riski ortaya çıkar.
+    body: `Soğuk zincir, bir gıda ürününün üretildiği andan tüketiciye ulaşana kadar geçen her aşamada (depolama, taşıma, teslimat, işletme içi saklama) belirli bir sıcaklık aralığında kesintisiz tutulmasıdır. Süt ve süt ürünlerinde bu aralık genelde 2-4°C'dir. Zincir herhangi bir noktada kırıldığında (örneğin araç soğutması durduğunda veya ürün uzun süre oda sıcaklığında beklediğinde) mikrobiyal üreme hızlanır, raf ömrü kısalır ve gıda güvenliği riski ortaya çıkar.
 
 ## Soğuk zincirin aşamaları
 
@@ -573,20 +573,20 @@ Başvuru formunda genel olarak istenen bilgiler:
 - İşletme unvanı ve vergi bilgileri.
 - İşletme türü (market, şarküteri, HORECA, toptancı) ve tahmini aylık hacim.
 - Teslimat adresi/bölgesi ve tercih edilen teslimat günleri.
-- Yetkili kişi bilgileri (ad, telefon, e-posta) — sipariş ve onay süreçlerinde iletişim buradan sağlanır.
+- Yetkili kişi bilgileri (ad, telefon, e-posta): sipariş ve onay süreçlerinde iletişim buradan sağlanır.
 - Varsa mevcut tedarikçi bilgisi ve geçiş nedeni (isteğe bağlı, süreç hızlandırmaya yardımcı olabilir).
 
 Eksiksiz ve doğru bilgiyle yapılan başvurular, değerlendirme sürecinde daha hızlı ilerler.
 
 ## Onay süreci nasıl işler?
 
-Başvuru formu gönderildikten sonra Yetiş satış ekibi işletme bilgilerini değerlendirir; gerekirse ek doğrulama için yetkili kişiyle iletişime geçilir. Bayi kaydı otomatik olarak onaylanmaz — her başvuru satış ekibi tarafından incelenir ve onaylandıktan sonra hesap aktif hâle gelir. Bu süreç, hem işletmenin gerçek bir ticari varlık olduğunu doğrulamak hem de doğru fiyat listesi ve kredi limiti koşullarının belirlenmesi için gereklidir.
+Başvuru formu gönderildikten sonra Yetiş satış ekibi işletme bilgilerini değerlendirir; gerekirse ek doğrulama için yetkili kişiyle iletişime geçilir. Bayi kaydı otomatik olarak onaylanmaz. Her başvuru satış ekibi tarafından incelenir ve onaylandıktan sonra hesap aktif hâle gelir. Bu süreç, hem işletmenin gerçek bir ticari varlık olduğunu doğrulamak hem de doğru fiyat listesi ve kredi limiti koşullarının belirlenmesi için gereklidir.
 
 Onay sonrasında bayi, kendi rolüne göre (yetkili, satın alma, muhasebe, depo) hesabına giriş yaparak mağazayı görüntüleyebilir ve sipariş sürecine başlayabilir.
 
 ## Fiyat listesi ve kredi limiti nasıl çalışır?
 
-Her bayiye, işletme tipi ve hacmine uygun bir fiyat listesi tanımlanır; bu liste hacme bağlı kademeli iskontoları da içerebilir. Bayi mağazasında görünen fiyatlar, bu listeye göre otomatik hesaplanır — pazarlık veya manuel fiyat sorma gerekmez.
+Her bayiye, işletme tipi ve hacmine uygun bir fiyat listesi tanımlanır; bu liste hacme bağlı kademeli iskontoları da içerebilir. Bayi mağazasında görünen fiyatlar, bu listeye göre otomatik hesaplanır. Pazarlık veya manuel fiyat sorma gerekmez.
 
 Kredi limiti, bayinin açık (henüz tahsil edilmemiş) siparişlerinin toplam tutarını belirli bir sınırla kısıtlayan bir mekanizmadır. Sipariş verildiğinde ve onaylandığında limit kontrolü otomatik yapılır; bu sayede hem bayi hem de Yetiş Grup için ödeme riski önceden yönetilir. Kredi limiti, bayinin ödeme geçmişi ve hacmine göre zaman içinde güncellenebilir.
 

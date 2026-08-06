@@ -99,7 +99,7 @@ export default async function AdminProductDetailPage({
         <div className="mt-3">
           <EditableTextarea
             value={product.description}
-            placeholder="Ürün açıklaması eklenmemiş — mağazada gösterilecek metni yazmak için tıklayın"
+            placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
             onSave={saveDescription}
           />
         </div>

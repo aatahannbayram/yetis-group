@@ -24,7 +24,7 @@ import { absoluteUrl, SITE } from "@/lib/site";
 export const metadata: Metadata = buildPageMetadata({
   title: "Hakkımızda",
   description:
-    "Yetiş Grup: yöresel ve kırsal ürünlerde B2B tedarik. Net fiyat, SKT/lot takibi ve düzenli sevkiyat — market, şarküteri ve HORECA için.",
+    "Yetiş Grup: yöresel ve kırsal ürünlerde B2B tedarik. Net fiyat, SKT/lot takibi ve düzenli sevkiyat: market, şarküteri ve HORECA için.",
   path: "/hakkimizda",
   image: "/scenes/warehouse.jpg",
 });
@@ -38,7 +38,7 @@ const principles = [
   {
     icon: RefreshCw,
     title: "Uyum",
-    body: "Siparişiniz değişir, limitiniz dolabilir — sistem buna göre uyarır, kaos çıkarmaz.",
+    body: "Siparişiniz değişir, limitiniz dolabilir. Sistem buna göre uyarır, kaos çıkarmaz.",
   },
   {
     icon: Focus,
@@ -52,7 +52,7 @@ const faces = [
     src: "/scenes/how-sales.jpg",
     role: "Satış",
     title: "Bayi ilişkisi",
-    body: "Başvuru, fiyat listesi ve ilk sipariş — yanınızdayız.",
+    body: "Başvuru, fiyat listesi ve ilk sipariş: yanınızdayız.",
   },
   {
     src: "/scenes/how-quality.jpg",
@@ -93,7 +93,7 @@ export default function AboutPage() {
         ]}
       />
 
-      {/* Hero — NURA-style dark full-bleed title */}
+      {/* Hero - NURA-style dark full-bleed title */}
       <Slab className="relative min-h-[44vh] overflow-hidden !p-0 md:min-h-[56vh]">
         <Image
           src="/scenes/warehouse.jpg"
@@ -151,7 +151,7 @@ export default function AboutPage() {
         </div>
       </Slab>
 
-      {/* Faces of the work — not stock headshots */}
+      {/* Faces of the work - not stock headshots */}
       <Slab className="mkt-pad">
         <Reveal>
           <span className="mkt-pill mkt-label inline-flex bg-mkt-card-muted px-3.5 py-1.5 text-mkt-ink-muted">
@@ -210,7 +210,7 @@ export default function AboutPage() {
                   20+ yıllık tecrübe, bugünün sipariş platformu
                 </h2>
                 <p className="mkt-body mt-2 max-w-xl">
-                  Üreticiden tezgağa — lot, SKT ve fiyat kaydı ile. Bayi hesabınız onaylanınca katalog
+                  Üreticiden tezgağa: lot, SKT ve fiyat kaydı ile. Bayi hesabınız onaylanınca katalog
                   ve listeniz açılır.
                 </p>
               </div>
@@ -222,7 +222,7 @@ export default function AboutPage() {
         </Reveal>
       </Slab>
 
-      {/* Closing CTA slab — same language as home */}
+      {/* Closing CTA slab - same language as home */}
       <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
         <div
           aria-hidden
@@ -235,7 +235,7 @@ export default function AboutPage() {
               Kataloğu inceleyin veya bize yazın.
             </h2>
             <p className="mt-3 max-w-md text-[15px] text-white/65">
-              Sorunuz mu var? İletişim formundan ulaşın — satış ekibi dönüş yapar.
+              Sorunuz mu var? İletişim formundan ulaşın. Satış ekibi dönüş yapar.
             </p>
           </Reveal>
           <Reveal delay={60}>

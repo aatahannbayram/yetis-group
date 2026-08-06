@@ -121,7 +121,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      {/* Quick actions — mobile-friendly */}
+      {/* Quick actions - mobile-friendly */}
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         <QuickLink
           href="/admin/b2b/katalog"

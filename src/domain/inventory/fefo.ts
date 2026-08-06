@@ -13,7 +13,7 @@ export function isLotExpired(expirationDate: Date, asOf: Date = new Date()): boo
   return expirationDate.getTime() < asOf.getTime();
 }
 
-/** SKT'si geçmiş lot hiçbir zaman sevk edilemez — non-negotiable domain kuralı. */
+/** SKT'si geçmiş lot hiçbir zaman sevk edilemez - non-negotiable domain kuralı. */
 export function assertNotExpired(
   lot: { lotNumber: string; expirationDate: Date },
   asOf: Date = new Date(),
@@ -36,7 +36,7 @@ export type FefoAllocation = { lotId: string; lotNumber: string; quantityKg: Kg 
 
 /**
  * Talep edilen miktarı FEFO sırasıyla (en erken SKT'li, stoklu, süresi
- * geçmemiş) lotlardan karşılar. Stok yetmezse hata fırlatır — kısmi/sessiz
+ * geçmemiş) lotlardan karşılar. Stok yetmezse hata fırlatır - kısmi/sessiz
  * eksik sevkiyat önerisi üretmez.
  */
 export function suggestFefoShipment(

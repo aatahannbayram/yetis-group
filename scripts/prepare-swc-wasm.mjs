@@ -2,12 +2,12 @@
 // needs to hit its own on-demand downloader. That downloader always tries to
 // fetch a fresh copy into `node_modules/next/wasm/@next/swc-wasm-nodejs` (see
 // `next/dist/build/swc/index.js` -> tryLoadWasmWithFallback / download-swc.js),
-// even when the package is already installed normally — and on hosts where
+// even when the package is already installed normally - and on hosts where
 // `pnpm` isn't resolvable from a bare shell (e.g. Hostinger's build sandbox),
 // that downloader's `pnpm config get registry` call fails outright.
 //
 // Harmless no-op wherever the native SWC binary already loads fine (e.g. local
-// macOS/Windows dev) — this only matters as a fallback path.
+// macOS/Windows dev) - this only matters as a fallback path.
 import fs from "fs";
 import path from "path";
 import { createRequire } from "module";

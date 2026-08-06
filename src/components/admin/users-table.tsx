@@ -93,11 +93,11 @@ export function UsersTable({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-caption text-neutral-500">
-                    {user.dealerLabel ?? "—"}
+                    {user.dealerLabel ?? "-"}
                   </TableCell>
                   <TableCell>
                     {user.accountType === "STAFF" ? (
-                      <span className="text-caption text-neutral-400">—</span>
+                      <span className="text-caption text-neutral-400">-</span>
                     ) : (
                       <Select
                         defaultValue={user.priceListId ?? "none"}

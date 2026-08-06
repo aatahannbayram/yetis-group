@@ -11,7 +11,7 @@ export type HomeFaqItem = {
 };
 
 /**
- * Single bordered panel + divide-y — no inter-item gaps.
+ * Single bordered panel + divide-y - no inter-item gaps.
  * Expand uses grid-template-rows so opening one item grows in place
  * without shifting sibling margins/gaps.
  */

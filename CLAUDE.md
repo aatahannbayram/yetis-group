@@ -1,8 +1,8 @@
-# Yetiş Grup — B2B Sipariş & Yönetim Platformu
+# Yetiş Grup - B2B Sipariş & Yönetim Platformu
 
 Bayilerin sipariş verdiği mağaza + Shopify/ikas kalitesinde yönetim paneli + WhatsApp Business Cloud API entegrasyonu.
 
-**Müşteri:** Yetiş Grup — yöresel ve kırsal ürünlerden oluşan, tüketici dostu bir **çözüm ortağı** (Türkiye)  
+**Müşteri:** Yetiş Grup - yöresel ve kırsal ürünlerden oluşan, tüketici dostu bir **çözüm ortağı** (Türkiye)  
 **Slogan:** Temiz Gıdaya Eriş, Sağlıklı Yetiş  
 **Alıcılar:** market, şarküteri, HORECA, ara toptancı  
 **Faz:** B2B only. B2C mimariyi bozmasın; bu fazda yazılmaz.
@@ -30,7 +30,7 @@ Bayilerin sipariş verdiği mağaza + Shopify/ikas kalitesinde yönetim paneli +
 | Auth | better-auth | Kendimiz yazmıyoruz; email/şifre + WhatsApp OTP eklentisi |
 | UI | Tailwind + shadcn/ui + Lucide | Hızlı, tutarlı, erişilebilir |
 | Tablolar | TanStack Table | Yoğun admin listeleri, satır seçimi, inline edit |
-| Validasyon | Zod | API, form, env — tek şema dili |
+| Validasyon | Zod | API, form, env - tek şema dili |
 | Test | Vitest (unit/domain) + Playwright (E2E) | Saf domain önce, UI sonra |
 | Para | Integer kuruş, branded type, tek `money` modülü | Float yasak |
 | Ağırlık | Prisma `Decimal`, kg 3 ondalık | Hassasiyet |
@@ -85,17 +85,17 @@ local → git push → GitHub (main veya production branch)
 
 ## Domain kuralları (pazarlık dışı)
 
-1. **PARA** — Integer kuruş. Float yok. Branded type + `domain/money` + birim test.
-2. **AĞIRLIK** — kg, 3 ondalık (`Decimal`). Varyantta `baseUnit` + `unitFactor` (koli↔kg).
-3. **KDV** — Ürün bazlı oran alanı. Temel gıda çoğu zaman %1; sabit kodlama yok.
-4. **FİYAT SNAPSHOT** — Sipariş satırına birim fiyat, iskonto, KDV oranı kopyalanır. Liste değişince geçmiş bozulmaz.
-5. **CARİ** — Append-only ledger. Bakiye alanı yok; bakiyeyi ledger’dan türet. Düzeltme = ters kayıt.
-6. **KREDİ LİMİTİ** — Açık siparişler limiti tüketir. Kontrol sipariş anında + onayda.
-7. **LOT/SKT** — Her stok hareketi lota bağlı. Sevkiyat önerisi FEFO. SKT geçmiş lot sevk edilemez.
-8. **SİPARİŞ FSM** — İzinli geçişler tek yerde. Her geçiş: kim / ne zaman / neden loglanır.
-9. **TESLİMAT** — Bölge × gün kısıtı (soğuk zincir). Kapalı gün seçilemez.
-10. **AUDIT** — Para, stok, fiyat, bayi durumu değişimleri loglanır.
-11. **IDEMPOTENCY** — WhatsApp, e-Fatura, dış çağrılar idempotency key ile.
+1. **PARA** - Integer kuruş. Float yok. Branded type + `domain/money` + birim test.
+2. **AĞIRLIK** - kg, 3 ondalık (`Decimal`). Varyantta `baseUnit` + `unitFactor` (koli↔kg).
+3. **KDV** - Ürün bazlı oran alanı. Temel gıda çoğu zaman %1; sabit kodlama yok.
+4. **FİYAT SNAPSHOT** - Sipariş satırına birim fiyat, iskonto, KDV oranı kopyalanır. Liste değişince geçmiş bozulmaz.
+5. **CARİ** - Append-only ledger. Bakiye alanı yok; bakiyeyi ledger’dan türet. Düzeltme = ters kayıt.
+6. **KREDİ LİMİTİ** - Açık siparişler limiti tüketir. Kontrol sipariş anında + onayda.
+7. **LOT/SKT** - Her stok hareketi lota bağlı. Sevkiyat önerisi FEFO. SKT geçmiş lot sevk edilemez.
+8. **SİPARİŞ FSM** - İzinli geçişler tek yerde. Her geçiş: kim / ne zaman / neden loglanır.
+9. **TESLİMAT** - Bölge × gün kısıtı (soğuk zincir). Kapalı gün seçilemez.
+10. **AUDIT** - Para, stok, fiyat, bayi durumu değişimleri loglanır.
+11. **IDEMPOTENCY** - WhatsApp, e-Fatura, dış çağrılar idempotency key ile.
 
 ### Sipariş durum makinesi (özet)
 
@@ -119,7 +119,7 @@ Policy örnekleri: `order:create`, `ledger:read`, `dealer:approve`, `whatsapp:re
 - İşletme → müşteri: onaylı **template** zorunlu; template’ler kodda kayıtlı, versiyonlu, değişkenleri tipli.
 - Müşteri yanıtından sonra serbest metin için hizmet penceresi; kapalıyken template’e düş.
 - Webhook imza doğrulaması zorunlu; gelen olaylar idempotent.
-- Her giden mesaj: **outbox** (status, attempts, provider response, cost alanları — fiyat sabitleme yok).
+- Her giden mesaj: **outbox** (status, attempts, provider response, cost alanları - fiyat sabitleme yok).
 - Bayi opt-in/opt-out + mesaj tercihleri; KVKK rıza kaydı.
 - Dev: mock provider + mesaj önizleme; gerçek Meta API yok.
 
@@ -132,13 +132,13 @@ Policy örnekleri: `order:create`, `ledger:read`, `dealer:approve`, `whatsapp:re
 ```css
 --brand-500: #30A369;   /* vurgu / dolgu */
 --brand-600: #008A43;   /* güçlü yeşil */
---brand-700: #00693E;   /* metin & birincil aksiyon — WCAG AA */
+--brand-700: #00693E;   /* metin & birincil aksiyon - WCAG AA */
 
-/* Yüzey — imza: sıcak kemik/krem (jenerik gri dashboard değil) */
+/* Yüzey - imza: sıcak kemik/krem (jenerik gri dashboard değil) */
 --surface-canvas: #FAF8F3;
 --surface-card: #FFFFFF;
 
-/* Nötr 50–900 (sıcak eğilimli) — tokens.css’te tam skala */
+/* Nötr 50–900 (sıcak eğilimli) - tokens.css’te tam skala */
 /* Durum renkleri marka yeşilinden AYRI (success ≠ brand) */
 --success, --warning, --danger, --info  /* ikon + etiket + renk */
 ```
@@ -215,7 +215,7 @@ Command palette (⌘K) · Slide-over · Inline edit · Optimistic UI + skeleton 
 │   ├── policies/
 │   ├── lib/
 │   │   ├── env.ts
-│   │   ├── format/           # para, tarih, kg — tek yer
+│   │   ├── format/           # para, tarih, kg - tek yer
 │   │   └── i18n/
 │   └── styles/
 │       └── tokens.css
@@ -240,11 +240,11 @@ Milestone ilerledikçe klasörler dolar; M0’da iskelet + token + auth.
 | **M4** | Sipariş + FSM + kredi limiti (satırlar `variantId`) | Snapshot + limit |
 | **M5–M12** | Mağaza, admin, cari, sevkiyat, WhatsApp, e-fatura, plasiyer | İlgili çıkış kriterleri |
 | **M12.5** | **Tek atomik yapısal migration** (Category, Variant, Dealer, Lead köprüsü, sunucu sepeti) | Kayıpsızlık testi; deprecated kolon yok |
-| **M13** | Kategori/nitelik UI + ürün detay derinleştirme | Ağaç, attribute, galeri, Schema.org — **UI + şema tamam** |
+| **M13** | Kategori/nitelik UI + ürün detay derinleştirme | Ağaç, attribute, galeri, Schema.org - **UI + şema tamam** |
 | **M14–M23** | Blog/reçete, SEO, CRM, self-serve, promo, SKT motoru, maliyet hesaplayıcı, AI, sözleşme | Milestone başına yeşil test |
-| **M14** | Blog/haber + reçete + 8 başlangıç yazısı | Schema.org Article/Recipe, RSS, admin — **UI + seed tamam** |
-| **M15** | SEO/AEO + analytics + çerez rızası | sitemap/robots/llms.txt, consent-gated GA4/GTM/Pixel, 301 admin — **UI + test tamam** |
-| **M16** | CRM: lead havuzu, özel alanlar, iletişim formu, aktivite/görev | Tek Lead havuzu, `/iletisim`, dönüşüm raporu — **UI + test tamam** |
+| **M14** | Blog/haber + reçete + 8 başlangıç yazısı | Schema.org Article/Recipe, RSS, admin - **UI + seed tamam** |
+| **M15** | SEO/AEO + analytics + çerez rızası | sitemap/robots/llms.txt, consent-gated GA4/GTM/Pixel, 301 admin - **UI + test tamam** |
+| **M16** | CRM: lead havuzu, özel alanlar, iletişim formu, aktivite/görev | Tek Lead havuzu, `/iletisim`, dönüşüm raporu - **UI + test tamam** |
 
 **Kural:** Bir milestone bitmeden diğerine geçilmez. **M12.5 bitmeden M13 yok.** Her milestone sonunda testler yeşil.
 
@@ -316,8 +316,8 @@ Zod ile `lib/env.ts` içinde doğrulanır. Örnek gruplar:
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+This version has breaking changes - APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+This block is written and re-added by `next dev` - verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->

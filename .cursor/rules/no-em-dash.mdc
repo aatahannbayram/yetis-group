@@ -1,0 +1,16 @@
+---
+description: Never use the em dash character (—) in this project
+alwaysApply: true
+---
+
+# No em dash (—)
+
+Never use the Unicode em dash character `—` (U+2014) anywhere in this project: UI copy, alt text, metadata, comments, docs, seeds, or commits.
+
+Prefer:
+- Sentence break: period (`.`) or semicolon (`;`)
+- Label / subtitle: colon (`:`) or comma (`,`)
+- Empty table cells: hyphen-minus (`-`)
+- Numeric ranges: en dash is also discouraged; use `09:00-18:00` or `1-2` with hyphen-minus
+
+Do not "fix" prose by inserting em dashes.

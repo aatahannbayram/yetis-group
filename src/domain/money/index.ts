@@ -1,6 +1,6 @@
 /**
  * Money is always an integer minor unit (kuruş). Float amounts are a domain error, not a rounding
- * detail — reject them at the boundary instead of coercing.
+ * detail - reject them at the boundary instead of coercing.
  */
 
 declare const moneyBrand: unique symbol;
@@ -42,7 +42,7 @@ export function multiplyByQuantity(unit: Money, quantity: number): Money {
 }
 
 /**
- * Rate expressed in integer basis points (1/100 of a percent — %1 KDV = 100, %18 KDV = 1800)
+ * Rate expressed in integer basis points (1/100 of a percent - %1 KDV = 100, %18 KDV = 1800)
  * so VAT/discount math never touches a float. Rounds half away from zero to the nearest kuruş.
  */
 export function applyRate(base: Money, rateBasisPoints: number): Money {

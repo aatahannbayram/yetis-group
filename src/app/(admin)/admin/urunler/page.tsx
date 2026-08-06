@@ -77,7 +77,7 @@ export default async function AdminProductsPage() {
 
       {lotCount === 0 ? (
         <p className="mt-3 text-caption text-muted-foreground">
-          Henüz lot kaydı yok — ürün detayına girip lot ekleyin.
+          Henüz lot kaydı yok. Ürün detayına girip lot ekleyin.
         </p>
       ) : null}
     </div>

@@ -11,7 +11,7 @@ type PillCtaProps = {
 };
 
 /**
- * Primary CTA — accent fill + dark ink.
+ * Primary CTA - accent fill + dark ink.
  * Mobile: clean pill + inline arrow (no heavy black disc).
  * Desktop: optional disc arrow for signature look.
  */

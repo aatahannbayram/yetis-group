@@ -91,7 +91,7 @@ export default async function BlogIndexPage({
               Haberler
             </h1>
             <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
-              Tedarik, maliyet ve soğuk zincir — sahada işe yarayan notlar.
+              Tedarik, maliyet ve soğuk zincir: sahada işe yarayan notlar.
             </p>
           </Reveal>
         </div>
@@ -191,7 +191,7 @@ export default async function BlogIndexPage({
               Okuduğunuzu rafta deneyin.
             </h2>
             <p className="mt-3 max-w-md text-[15px] text-white/65">
-              Ürünleri inceleyin veya satış ekibine yazın — bayilik ve numune tek formda.
+              Ürünleri inceleyin veya satış ekibine yazın. Bayilik ve numune tek formda.
             </p>
           </Reveal>
           <Reveal delay={60}>

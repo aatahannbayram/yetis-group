@@ -46,7 +46,7 @@ const homeFaqs = [
   {
     question: "Ne alırım, nasıl güvenirim?",
     answer:
-      "Peynir, yoğurt, süt, tereyağı ve daha fazlası. Listenizdeki fiyat net; SKT ve lot görünür. Soğuk giden ürün soğuk gider — SKT’si geçen sevk edilmez.",
+      "Peynir, yoğurt, süt, tereyağı ve daha fazlası. Listenizdeki fiyat net; SKT ve lot görünür. Soğuk giden ürün soğuk gider. SKT’si geçen sevk edilmez.",
   },
   {
     question: "Bayilik nasıl alınır?",
@@ -253,7 +253,7 @@ export default function StoreHomePage() {
             <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-[1.25rem]">
               <Image
                 src="/scenes/offer-board.jpg"
-                alt="Peynir tahtası — yöresel ürünler"
+                alt="Peynir tahtası, yöresel ürünler"
                 fill
                 quality={70}
                 className="object-cover"
@@ -371,7 +371,7 @@ export default function StoreHomePage() {
                 <p className="mkt-label text-mkt-accent">Destek</p>
                 <h2 className="mkt-h2 mt-3 text-balance text-white">Takıldığın yerde yaz.</h2>
                 <p className="mt-3 text-[15px] leading-relaxed text-white/70 md:text-base">
-                  Sipariş, numune veya bayilik — satış ekibi cevaplar. Formu doldur veya doğrudan ara.
+                  Sipariş, numune veya bayilik: satış ekibi cevaplar. Formu doldur veya doğrudan ara.
                 </p>
               </div>
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
@@ -425,7 +425,7 @@ export default function StoreHomePage() {
                 Bayilikten önce bilmen gerekenler.
               </h2>
               <p className="mt-2 hidden text-[15px] leading-relaxed text-mkt-ink-muted sm:mt-3 sm:block">
-                Kimlere sattığımız, ürün güveni ve başvuru — kısa ve net.
+                Kimlere sattığımız, ürün güveni ve başvuru: kısa ve net.
               </p>
             </div>
             <Link
@@ -442,7 +442,7 @@ export default function StoreHomePage() {
         </div>
       </Slab>
 
-      {/* Bayi hesabı — product visual + clear dual CTA (no ghost card stack) */}
+      {/* Bayi hesabı - product visual + clear dual CTA (no ghost card stack) */}
       <Slab className="overflow-hidden !p-0">
         <div className="grid lg:grid-cols-2">
           <div className="relative min-h-[220px] sm:min-h-[280px] lg:min-h-full">

@@ -37,7 +37,7 @@ export default async function AdminCategoriesPage() {
             className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
             defaultValue=""
           >
-            <option value="">— Kök —</option>
+            <option value="">Kök kategori</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

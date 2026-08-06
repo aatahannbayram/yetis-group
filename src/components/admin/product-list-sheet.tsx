@@ -162,7 +162,7 @@ export function ProductListSheet({ products }: { products: ProductRow[] }) {
                   </p>
                   <EditableTextarea
                     value={selected.description}
-                    placeholder="Ürün açıklaması eklenmemiş — mağazada gösterilecek metni yazmak için tıklayın"
+                    placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
                     onSave={(value) =>
                       updateProductDescriptionAction(selected.id, selected.slug, value)
                     }

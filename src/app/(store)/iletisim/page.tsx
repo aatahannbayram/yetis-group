@@ -63,7 +63,7 @@ const topicCopy = {
   bayilik: {
     eyebrow: "Bayilik başvurusu",
     headline: "Birlikte büyüyelim",
-    sub: "Market, şarküteri veya zincir — başvurunuz CRM’e düşer; satış ekibi fiyat listesi ve limit sürecini netleştirir.",
+    sub: "Market, şarküteri veya zincir: başvurunuz CRM’e düşer; satış ekibi fiyat listesi ve limit sürecini netleştirir.",
     points: [
       "Başvuru → inceleme → onaylı fiyat listesi",
       "Kredi limiti ve teslimat bölgesi planı",
@@ -89,7 +89,7 @@ const topicCopy = {
   horeca: {
     eyebrow: "HORECA tedarik",
     headline: "Mutfağınız için net tedarik",
-    sub: "Otel, restoran ve kafe ihtiyaçlarınızı yazın — food cost dostu SKU’lar ve düzenli sevkiyat.",
+    sub: "Otel, restoran ve kafe ihtiyaçlarınızı yazın. Food cost dostu SKU’lar ve düzenli sevkiyat.",
     points: [
       "Dilimli / blok / teneke seçenekleri",
       "Haftalık teslimat planı",
@@ -102,7 +102,7 @@ const topicCopy = {
   default: {
     eyebrow: "Satış & destek",
     headline: "Yazın, yanıtlayalım",
-    sub: "Bayilik, numune veya HORECA — talebiniz tek CRM kaydına düşer; ekip dönüş yapar.",
+    sub: "Bayilik, numune veya HORECA: talebiniz tek CRM kaydına düşer; ekip dönüş yapar.",
     points: [
       "Tek form, tek CRM kaydı",
       "Telefon ve WhatsApp desteği",

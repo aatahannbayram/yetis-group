@@ -40,7 +40,7 @@ export async function SiteHeader({
           !isOverlay && "border-b border-[color:var(--mkt-border)] bg-mkt-slab/90 backdrop-blur",
         )}
       >
-        {/* Wordmark already includes brand mark — do not stack BrandMark beside it */}
+        {/* Wordmark already includes brand mark - do not stack BrandMark beside it */}
         <Link href="/" className="flex min-w-0 shrink items-center">
           {isOverlay ? (
             <>

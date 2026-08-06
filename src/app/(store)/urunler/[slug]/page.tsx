@@ -32,7 +32,7 @@ export async function generateMetadata({
     title: product.name,
     description:
       product.description.slice(0, 160) ||
-      `${product.name} — Yetiş Grup B2B katalogunda yöresel/kırsal ürün.`,
+      `${product.name}: Yetiş Grup B2B katalogunda yöresel/kırsal ürün.`,
     path: `/urunler/${product.slug}`,
     image: product.imageUrl,
   });

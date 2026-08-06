@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
- * Metro-style B2B split banner — dark copy panel + photo.
+ * Metro-style B2B split banner - dark copy panel + photo.
  * Shared by storefront and admin (tone variants).
  */
 export function SplitPromo({

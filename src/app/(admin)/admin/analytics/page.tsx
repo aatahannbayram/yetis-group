@@ -29,7 +29,7 @@ export default async function AdminAnalyticsPage() {
     <div className="mx-auto max-w-6xl">
       <AdminPageHeader
         title="Analytics"
-        description="CRM, bayi, katalog, içerik ve açık B2B sepetleri — sipariş FSM gelince ciro katmanı eklenecek."
+        description="CRM, bayi, katalog, içerik ve açık B2B sepetleri. Sipariş FSM gelince ciro katmanı eklenecek."
         actions={
           <>
             <PillButton href="/admin/b2b/sepetler" variant="secondary">
@@ -62,7 +62,7 @@ export default async function AdminAnalyticsPage() {
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-h4 leading-h4 font-semibold text-foreground">
-                Son 14 gün — yeni aday
+                Son 14 gün: yeni aday
               </p>
               <p className="mt-1 text-caption text-muted-foreground">
                 Günlük form / başvuru hacmi

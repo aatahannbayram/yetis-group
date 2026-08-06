@@ -1,4 +1,4 @@
-// Yetiş Grup — Prisma schema (M12.5 structural target)
+// Yetiş Grup - Prisma schema (M12.5 structural target)
 // Dealer is the only commercial entity (no separate Customer table).
 // SKU / price / stock / lots live on ProductVariant.
 // Cart is server-side. Order lines arrive in M4 on variantId.

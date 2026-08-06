@@ -53,7 +53,7 @@ export function ContactForm({
           Talebiniz alındı
         </p>
         <p className="mt-3 text-[1.35rem] font-semibold tracking-[-0.02em] text-neutral-950">
-          Teşekkürler — satış ekibimiz dönüş yapacak.
+          Teşekkürler. Satış ekibimiz dönüş yapacak.
         </p>
         <p className="mt-3 text-[15px] leading-relaxed text-neutral-700">{state.message}</p>
         <div className="mt-7 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">

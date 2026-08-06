@@ -1,7 +1,7 @@
 import type { LeadStage } from "@/domain/leads/stages";
 import { LEAD_STAGES } from "@/domain/leads/stages";
 
-/** Presentation labels — changing these never requires a DB migration. */
+/** Presentation labels - changing these never requires a DB migration. */
 export const LEAD_STAGE_LABELS: Record<LeadStage, string> = {
   YENI: "Yeni",
   ILETISIMDE: "İletişimde",

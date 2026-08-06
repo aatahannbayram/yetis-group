@@ -31,7 +31,7 @@ export function EditableTextarea({
           <p className="whitespace-pre-wrap text-body-sm leading-relaxed text-neutral-700">{value}</p>
         ) : (
           <p className="text-body-sm italic text-neutral-400">
-            {placeholder ?? "Açıklama eklenmemiş — düzenlemek için tıklayın"}
+            {placeholder ?? "Açıklama eklenmemiş. Düzenlemek için tıklayın"}
           </p>
         )}
         <Pencil className="mt-0.5 size-3.5 shrink-0 text-neutral-300 opacity-0 transition-opacity group-hover:opacity-100" />

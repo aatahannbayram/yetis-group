@@ -20,7 +20,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Yetiş Grup — Haberler</title>
+    <title>Yetiş Grup Haberler</title>
     <link>${base}/haberler</link>
     <description>Yöresel ve kırsal gıda, B2B tedarik ve HORECA yazıları</description>
     <language>tr</language>

@@ -1,4 +1,4 @@
-/** Barrel — domain lead constants & FSM (framework-free). */
+/** Barrel - domain lead constants & FSM (framework-free). */
 export { LEAD_STAGES, type LeadStage } from "@/domain/leads/stages";
 export {
   LEAD_STAGE_LABELS,

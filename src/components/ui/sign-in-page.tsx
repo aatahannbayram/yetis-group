@@ -25,12 +25,12 @@ type Props = {
 
 /**
  * Split-panel bayi giriş / üyelik.
- * Next.js App Router — react-router yok. Sosyal OAuth yok (B2B e-posta/şifre).
+ * Next.js App Router - react-router yok. Sosyal OAuth yok (B2B e-posta/şifre).
  */
 export function LoginPage({
   initialMode = "giris",
   imageSrc = "/hero-dairy.jpg",
-  imageAlt = "Yetiş Grup — temiz gıda",
+  imageAlt = "Yetiş Grup, temiz gıda",
 }: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -42,7 +42,7 @@ export function LoginPage({
 
   return (
     <div className="flex min-h-screen w-full bg-[var(--mkt-canvas)]">
-      {/* Left — brand visual */}
+      {/* Left - brand visual */}
       <div className="relative hidden overflow-hidden lg:flex lg:w-[48%] xl:w-1/2">
         <Image
           src={imageSrc}
@@ -81,7 +81,7 @@ export function LoginPage({
         </div>
       </div>
 
-      {/* Right — form */}
+      {/* Right - form */}
       <div className="flex w-full flex-1 flex-col bg-white lg:w-[52%] xl:w-1/2">
         <div className="flex items-center justify-between px-6 py-5 lg:hidden">
           <Link href="/" className="flex items-center gap-2">

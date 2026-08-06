@@ -169,7 +169,7 @@ export default async function BlogPostPage({
             </span>
             <h2 className="mkt-h2 mt-4 text-balance text-mkt-ink">İlgili ürünler</h2>
             <p className="mkt-body mt-2 max-w-lg">
-              Bu yazıdaki konularla bağlantılı SKU’lar — listeden inceleyin.
+              Bu yazıdaki konularla bağlantılı SKU’lar: listeden inceleyin.
             </p>
           </Reveal>
           <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

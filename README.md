@@ -1,4 +1,4 @@
-# Yetiş Grup — B2B Sipariş & Yönetim Platformu
+# Yetiş Grup - B2B Sipariş & Yönetim Platformu
 
 Bayilerin sipariş verdiği mağaza + yönetim paneli + WhatsApp Business Cloud API
 entegrasyonu. Mimari kararlar, milestone sırası ve domain kuralları için
@@ -6,7 +6,7 @@ entegrasyonu. Mimari kararlar, milestone sırası ve domain kuralları için
 
 ## Gereksinimler
 
-- Node.js **20 LTS** (bkz. `.nvmrc`) — `nvm use`
+- Node.js **20 LTS** (bkz. `.nvmrc`) - `nvm use`
 - pnpm (bkz. `packageManager` alanı, `package.json`)
 - PostgreSQL (yerelde Docker/Postgres.app, ya da Neon/Supabase/Railway)
 
@@ -59,13 +59,13 @@ local → git push → GitHub (main)
 4. **Komutlar** (Hostinger pnpm desteklemiyorsa npm fallback kullan):
    - Install: `pnpm install --frozen-lockfile` (yoksa `npm ci`)
    - Build: `pnpm build` (yoksa `npm run build`)
-   - Start: `pnpm start` (yoksa `npm run start`) — `$PORT` Hostinger tarafından enjekte edilir.
+   - Start: `pnpm start` (yoksa `npm run start`) - `$PORT` Hostinger tarafından enjekte edilir.
 5. **Ortam değişkenleri**: Hostinger hPanel → env panelinde tanımla. **Secrets repoya commit edilmez.**
 6. **PostgreSQL notu**: Hostinger paylaşımlı hosting genelde MySQL sunar. Bu proje
-   **PostgreSQL zorunlu** kılar — Hostinger VPS/managed Postgres ya da harici
+   **PostgreSQL zorunlu** kılar - Hostinger VPS/managed Postgres ya da harici
    Neon/Supabase/Railway Postgres kullanıp `DATABASE_URL`'i Hostinger app env'ine yaz.
 7. **Migration**: `pnpm db:migrate` (`prisma migrate dev`) yalnızca yerel geliştirme
-   içindir. Prod'da deploy adımına `npx prisma migrate deploy` eklenmeli — bu repo
+   içindir. Prod'da deploy adımına `npx prisma migrate deploy` eklenmeli - bu repo
    otomatik migration çalıştırmaz, elle/CI adımıyla tetiklenir.
 8. **Sağlık kontrolü**: `GET /api/health` → `{ "status": "ok" }`, deploy sonrası
    canlılık kontrolü için kullanılabilir.
@@ -76,7 +76,7 @@ local → git push → GitHub (main)
 
 ```bash
 pnpm test       # domain birim testleri (money, weight, ...)
-pnpm test:e2e   # playwright (henüz senaryo yok — iskelet hazır)
+pnpm test:e2e   # playwright (henüz senaryo yok - iskelet hazır)
 ```
 
 CI (`.github/workflows/ci.yml`): lint → typecheck → unit test → build, her push/PR'da

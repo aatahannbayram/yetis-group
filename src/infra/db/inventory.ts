@@ -7,7 +7,7 @@ function availableKgFromMovements(movements: { type: string; quantityKg: unknown
     const quantity = kg(String(movement.quantityKg));
     if (movement.type === "GIRIS") return add(total, quantity);
     if (movement.type === "CIKIS") return subtract(total, quantity);
-    // REPACK reserved — not applied to balance until M13+ implementation
+    // REPACK reserved - not applied to balance until M13+ implementation
     return total;
   }, zeroKg);
 }
@@ -38,7 +38,7 @@ export async function getLotsForVariant(variantId: string) {
   }));
 }
 
-/** @deprecated prefer getLotsForVariant — aggregates all variants of a product */
+/** @deprecated prefer getLotsForVariant - aggregates all variants of a product */
 export async function getLotsForProduct(productId: string) {
   const variants = await prisma.productVariant.findMany({
     where: { productId },

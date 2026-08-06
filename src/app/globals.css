@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* shadcn semantic tokens — mapped onto our warm brand palette, not the library's
+/* shadcn semantic tokens - mapped onto our warm brand palette, not the library's
    default gray/oklch theme (CLAUDE.md forbids a generic gray admin look). */
 :root {
   --background: var(--surface-canvas);
@@ -43,7 +43,7 @@
   --sidebar-ring: var(--brand-500);
 }
 
-/* Admin shell — light theme by default; dark is opt-in via the theme toggle
+/* Admin shell - light theme by default; dark is opt-in via the theme toggle
    (data-theme="dark"), Sphere UI-style dark canvas with white floating cards.
    Brand green is kept instead of a generic accent color in both modes.
    Scoped to .admin-shell only; the store always stays on the light warm canvas. */
@@ -70,7 +70,7 @@
 }
 
 /* White "card" surfaces (Card component, raw bg-card containers, popovers/
-   dialogs/sheets/selects — all bg-popover) always stay light internally, even
+   dialogs/sheets/selects - all bg-popover) always stay light internally, even
    when the page canvas is dark: reset the token scope back to light values so
    nested shadcn primitives (Table headers, Select triggers, muted captions)
    that read --foreground/--muted-foreground don't inherit the dark page tokens. */
@@ -214,7 +214,7 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* Marketing display type — medium weight, geometric tracking */
+/* Marketing display type - medium weight, geometric tracking */
 .mkt-display {
   font-size: var(--text-display);
   line-height: var(--leading-display);

@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 
 export function GET() {
   const base = getSiteUrl();
-  const body = `# Yetiş Grup — LLMs / AI assistants
+  const body = `# Yetiş Grup: LLMs / AI assistants
 
 > ${SITE.description}
 

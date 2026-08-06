@@ -30,7 +30,7 @@ export function HomeHero({
       >
         <Image
           src={imageSrc}
-          alt="Yetiş Grup — yöresel peynir ve kırsal süt ürünleri"
+          alt="Yetiş Grup, yöresel peynir ve kırsal süt ürünleri"
           fill
           priority
           quality={75}
@@ -78,7 +78,7 @@ export function HomeHero({
               onaydan sonra açılır.
             </motion.p>
 
-            {/* Mobile: compact CTA row — not full-bleed clunky pill */}
+            {/* Mobile: compact CTA row - not full-bleed clunky pill */}
             <motion.div
               initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}

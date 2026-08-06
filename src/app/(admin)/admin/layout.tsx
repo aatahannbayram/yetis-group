@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/auth");
   }
 
-  // Bayi/müşteri hesapları (DEALER) mağazayı kullanır — admin paneli sadece
+  // Bayi/müşteri hesapları (DEALER) mağazayı kullanır - admin paneli sadece
   // Yetiş çalışanlarına (STAFF) açık.
   if (!(await isStaffUser(session.user.id))) {
     redirect("/");

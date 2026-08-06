@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Metro-style dark destination tile — tag + bold title + subtitle.
+ * Metro-style dark destination tile - tag + bold title + subtitle.
  */
 export function SolidTile({
   href,

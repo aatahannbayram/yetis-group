@@ -73,13 +73,13 @@ export function CookieBanner() {
             />
             <PrefRow
               title="Analitik"
-              description="GA4 / GTM — kullanım ölçümü"
+              description="GA4 / GTM: kullanım ölçümü"
               name="analytics"
               defaultChecked={consent.analytics}
             />
             <PrefRow
               title="Pazarlama"
-              description="Meta Pixel — kampanya ölçümü"
+              description="Meta Pixel: kampanya ölçümü"
               name="marketing"
               defaultChecked={consent.marketing}
             />

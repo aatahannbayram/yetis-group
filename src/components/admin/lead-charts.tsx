@@ -19,7 +19,7 @@ const BRAND_GREEN = "#008a43";
 const BRAND_GREEN_LIGHT = "#a3edc3";
 const CHANNEL_COLORS = ["#00693e", "#008a43", "#30a369", "#6fdda0"];
 
-/** Diagonal-stripe texture for de-emphasized/lost data — a muted alternative
+/** Diagonal-stripe texture for de-emphasized/lost data - a muted alternative
  * to a flat gray fill, matching the Sphere UI reference's hatch-pattern bars. */
 function HatchPatternDefs({ id }: { id: string }) {
   return (

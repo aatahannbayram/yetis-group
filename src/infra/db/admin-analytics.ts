@@ -2,7 +2,7 @@ import { prisma } from "@/infra/db/client";
 
 /**
  * Staff-facing snapshot for /admin and /admin/analytics.
- * Uses live CRM, catalog, content, and cart tables — no order FSM yet.
+ * Uses live CRM, catalog, content, and cart tables - no order FSM yet.
  */
 export async function getAdminAnalyticsSnapshot() {
   const fourteenDaysAgo = new Date();

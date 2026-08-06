@@ -51,12 +51,12 @@ export default async function AdminPriceListsPage() {
               <p className="text-caption text-neutral-500">
                 Kullanıcı:{" "}
                 {priceList.users.length === 0
-                  ? "—"
+                  ? "-"
                   : priceList.users.map((u) => u.name).join(", ")}
                 {" · "}
                 Bayi:{" "}
                 {priceList.dealers.length === 0
-                  ? "—"
+                  ? "-"
                   : priceList.dealers.map((d) => d.unvan).join(", ")}
               </p>
             </CardHeader>

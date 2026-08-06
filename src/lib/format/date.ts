@@ -1,5 +1,5 @@
 // DB stores UTC; every presentation surface renders in this timezone.
-// Not read from env — this file must stay usable in client components too.
+// Not read from env - this file must stay usable in client components too.
 const PRESENTATION_TIMEZONE = "Europe/Istanbul";
 
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", {

@@ -184,7 +184,7 @@ const products = [
   },
 ];
 
-// slug -> { horeca, market } fiyatları (kuruş) — Standart liste ürünün baz
+// slug -> { horeca, market } fiyatları (kuruş) - Standart liste ürünün baz
 // fiyatını (pricePerUnitKurus) kullanır.
 const priceListOverrides: Record<string, { horeca: number; market: number }> = {
   "beyaz-peynir-17kg-teneke": { horeca: 332000, market: 322000 },
@@ -200,7 +200,7 @@ const priceListOverrides: Record<string, { horeca: number; market: number }> = {
 async function seedLeads() {
   const existing = await prisma.lead.count();
   if (existing > 0) {
-    console.log(`Skipping leads — ${existing} already exist.`);
+    console.log(`Skipping leads - ${existing} already exist.`);
     return;
   }
   for (const lead of leads) {
@@ -212,7 +212,7 @@ async function seedLeads() {
 async function seedCatalog() {
   const existing = await prisma.product.count();
   if (existing > 0) {
-    console.log(`Skipping catalog — ${existing} product(s) already exist.`);
+    console.log(`Skipping catalog - ${existing} product(s) already exist.`);
     return;
   }
 
@@ -335,7 +335,7 @@ async function seedAccountTypes() {
 async function seedLeadActivities() {
   const existing = await prisma.leadActivity.count();
   if (existing > 0) {
-    console.log(`Skipping lead activities — ${existing} already exist.`);
+    console.log(`Skipping lead activities - ${existing} already exist.`);
     return;
   }
 
@@ -391,7 +391,7 @@ function daysFromNow(days: number) {
 async function seedInventory() {
   const existing = await prisma.lot.count();
   if (existing > 0) {
-    console.log(`Skipping inventory — ${existing} lot(s) already exist.`);
+    console.log(`Skipping inventory - ${existing} lot(s) already exist.`);
     return;
   }
 

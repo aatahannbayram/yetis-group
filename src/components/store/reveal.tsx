@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 /**
  * Renders fully visible by default (SSR, pre-hydration, no-JS, crawlers).
  * Only elements that are actually off-screen on mount get hidden-then-revealed
- * on scroll — content is never at the mercy of an observer that might not fire.
+ * on scroll - content is never at the mercy of an observer that might not fire.
  */
 export function Reveal({
   children,

@@ -142,6 +142,7 @@ model Dealer {
   carts         Cart[]
   fromLeads     Lead[]          @relation("LeadConvertedDealer")
   ledgerEntries LedgerEntry[]
+  shipments     Shipment[]
 
   @@map("dealer")
 }
@@ -462,6 +463,7 @@ model ProductVariant {
   lots           Lot[]
   priceListItems PriceListItem[]
   cartLines      CartLine[]
+  shipments      Shipment[]
 
   @@map("product_variant")
 }
@@ -578,8 +580,9 @@ model Lot {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  movements StockMovement[]
-  cartLines CartLine[]
+  movements   StockMovement[]
+  cartLines   CartLine[]
+  allocations ShipmentLotAllocation[]
 
   @@unique([variantId, lotNumber])
   @@map("lot")
@@ -601,6 +604,46 @@ model StockMovement {
   createdAt  DateTime          @default(now())
 
   @@map("stock_movement")
+}
+
+// ---- Shipments (dealer-facing dispatch tracking; FEFO-allocated) ----
+
+enum ShipmentStatus {
+  HAZIRLANIYOR
+  YOLDA
+  TESLIM_EDILDI
+  IPTAL
+}
+
+model Shipment {
+  id          String         @id @default(cuid())
+  dealerId    String
+  dealer      Dealer         @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id])
+  quantityKg  Decimal        @db.Decimal(10, 3)
+  status      ShipmentStatus @default(HAZIRLANIYOR)
+  note        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+
+  allocations ShipmentLotAllocation[]
+
+  @@index([dealerId, createdAt])
+  @@map("shipment")
+}
+
+model ShipmentLotAllocation {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  lotId      String
+  lot        Lot      @relation(fields: [lotId], references: [id])
+  quantityKg Decimal  @db.Decimal(10, 3)
+
+  @@map("shipment_lot_allocation")
 }
 
 // ---- Pricing ----

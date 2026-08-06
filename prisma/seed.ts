@@ -864,6 +864,100 @@ async function seedShippingDemoVariety() {
   console.log("Seeded sevkiyat demo çeşitliliği (ek geçmiş/kritik SKT lotları).");
 }
 
+async function seedShipmentDemoData() {
+  const existing = await prisma.shipment.count();
+  if (existing > 0) {
+    console.log(`Skipping sevkiyat demo - ${existing} shipment(s) already exist.`);
+    return;
+  }
+
+  const plan: {
+    dealerUnvan: string;
+    productSlug: string;
+    quantityKg: number;
+    status: "HAZIRLANIYOR" | "YOLDA" | "TESLIM_EDILDI";
+    daysAgo: number;
+    note: string;
+  }[] = [
+    {
+      dealerUnvan: "Test Bayi",
+      productSlug: "beyaz-peynir-17kg-teneke",
+      quantityKg: 34,
+      status: "TESLIM_EDILDI",
+      daysAgo: 4,
+      note: "Haftalık sabit sipariş",
+    },
+    {
+      dealerUnvan: "Test HORECA",
+      productSlug: "dilimli-kasar-250g",
+      quantityKg: 2,
+      status: "YOLDA",
+      daysAgo: 1,
+      note: "Otel mutfağı siparişi",
+    },
+    {
+      dealerUnvan: "Kadıköy Zincir Market A.Ş.",
+      productSlug: "tereyagi-1kg-kova",
+      quantityKg: 10,
+      status: "HAZIRLANIYOR",
+      daysAgo: 0,
+      note: "6 şube merkezi sevkiyat",
+    },
+    {
+      dealerUnvan: "Marmara Gıda Ara Toptan Ltd. Şti.",
+      productSlug: "yogurt-5kg-kova",
+      quantityKg: 25,
+      status: "TESLIM_EDILDI",
+      daysAgo: 6,
+      note: "Toptan sevkiyat",
+    },
+  ];
+
+  for (const p of plan) {
+    const dealer = await prisma.dealer.findFirst({ where: { unvan: p.dealerUnvan } });
+    const variant = await prisma.productVariant.findFirst({
+      where: { product: { slug: p.productSlug } },
+    });
+    if (!dealer || !variant) continue;
+
+    const lot = await prisma.lot.findFirst({
+      where: { variantId: variant.id, lotNumber: { endsWith: "-A" } },
+    });
+    if (!lot) continue;
+
+    const createdAt = daysFromNow(-p.daysAgo);
+    const shipment = await prisma.shipment.create({
+      data: {
+        dealerId: dealer.id,
+        variantId: variant.id,
+        quantityKg: p.quantityKg,
+        status: p.status,
+        note: p.note,
+        createdAt,
+        updatedAt: createdAt,
+        shippedAt: p.status === "YOLDA" || p.status === "TESLIM_EDILDI" ? createdAt : null,
+        deliveredAt: p.status === "TESLIM_EDILDI" ? createdAt : null,
+      },
+    });
+
+    await prisma.shipmentLotAllocation.create({
+      data: { shipmentId: shipment.id, lotId: lot.id, quantityKg: p.quantityKg },
+    });
+
+    await prisma.stockMovement.create({
+      data: {
+        lotId: lot.id,
+        type: "CIKIS",
+        quantityKg: p.quantityKg,
+        note: `Sevkiyat #${shipment.id.slice(-6)} (demo)`,
+        createdAt,
+      },
+    });
+  }
+
+  console.log("Seeded demo sevkiyat kayıtları (hazırlanıyor/yolda/teslim edildi).");
+}
+
 async function seedLedgerDemoData() {
   const existing = await prisma.ledgerEntry.count();
   if (existing > 0) {
@@ -917,6 +1011,7 @@ async function main() {
   await seedDealerDemoData();
   await seedPaymentSettingsDemo();
   await seedShippingDemoVariety();
+  await seedShipmentDemoData();
   await seedLedgerDemoData();
 }
 

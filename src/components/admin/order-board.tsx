@@ -129,7 +129,9 @@ function ProductThumb({
   size?: number;
   className?: string;
 }) {
-  if (!imageUrl) {
+  const [failed, setFailed] = useState(false);
+
+  if (!imageUrl || failed) {
     return (
       <div
         style={{ width: size, height: size }}
@@ -137,6 +139,7 @@ function ProductThumb({
           "flex shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground",
           className,
         )}
+        title={alt}
       >
         <Package className="size-4" />
       </div>
@@ -147,7 +150,14 @@ function ProductThumb({
       style={{ width: size, height: size }}
       className={cn("relative shrink-0 overflow-hidden rounded-full bg-muted", className)}
     >
-      <Image src={imageUrl} alt={alt} fill className="object-cover" sizes={`${size}px`} />
+      <Image
+        src={imageUrl}
+        alt={alt}
+        fill
+        className="object-cover"
+        sizes={`${size}px`}
+        onError={() => setFailed(true)}
+      />
     </div>
   );
 }

@@ -416,28 +416,28 @@ export default function StoreHomePage() {
         </div>
       </Slab>
 
-      <Slab className="mkt-pad">
+      <Slab className="mkt-pad !py-8 md:!py-12">
         <Reveal>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
             <div className="max-w-xl">
               <p className="mkt-label text-mkt-green-text">Sık sorulanlar</p>
-              <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
+              <h2 className="mkt-h2 mt-2 text-balance text-mkt-ink sm:mt-3">
                 Bayilikten önce bilmen gerekenler.
               </h2>
-              <p className="mt-3 text-[15px] leading-relaxed text-mkt-ink-muted">
-                Kimlere sattığımız, ürün güveni ve başvuru adımları — kısa ve net.
+              <p className="mt-2 hidden text-[15px] leading-relaxed text-mkt-ink-muted sm:mt-3 sm:block">
+                Kimlere sattığımız, ürün güveni ve başvuru — kısa ve net.
               </p>
             </div>
             <Link
               href="/iletisim"
-              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-mkt-green-text hover:underline"
+              className="inline-flex items-center gap-1.5 self-start text-[14px] font-semibold text-mkt-green-text hover:underline sm:self-auto"
             >
-              Başka soru mu var?
+              Başka soru?
               <ArrowUpRight className="size-3.5" aria-hidden />
             </Link>
           </div>
         </Reveal>
-        <div className="mt-7 md:mt-9">
+        <div className="mt-5 sm:mt-7 md:mt-8">
           <HomeFaq items={homeFaqs} />
         </div>
       </Slab>

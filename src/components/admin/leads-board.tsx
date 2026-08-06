@@ -13,7 +13,10 @@ import { LeadDetailSheet } from "@/components/admin/lead-detail-sheet";
 const STAGE_BADGE_VARIANT: Record<(typeof LEAD_STAGES)[number], "default" | "secondary" | "outline"> = {
   YENI: "outline",
   ILETISIMDE: "secondary",
+  NITELIKLI: "secondary",
+  NUMUNE: "secondary",
   NUMUNE_TEKLIF: "secondary",
+  TEKLIF: "secondary",
   MUZAKERE: "secondary",
   KAZANILDI: "default",
   KAYBEDILDI: "outline",

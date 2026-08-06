@@ -8,6 +8,7 @@ export default function AdminShipmentsPage() {
       icon={Truck}
       description="FEFO sevkiyat önerisi, irsaliye ve SKT kontrolü M8 kapsamında eklenecek."
       badge="M8"
+      relatedLink={{ href: "/admin/urunler", label: "Ürün ve Lot Yönetimi" }}
     />
   );
 }

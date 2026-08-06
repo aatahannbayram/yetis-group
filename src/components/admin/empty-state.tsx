@@ -12,8 +12,8 @@ export function EmptyState({
   badge?: string;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-neutral-300 bg-card p-6">
-      <div className="flex size-10 items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
+    <div className="flex flex-col items-start gap-3 rounded-3xl border border-dashed border-neutral-300 bg-card p-6">
+      <div className="flex size-10 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
         <Icon className="size-5" aria-hidden />
       </div>
       <div>

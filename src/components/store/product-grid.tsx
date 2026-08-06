@@ -1,12 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard, type ProductListItem } from "@/components/store/product-card";
+import { Reveal } from "@/components/store/reveal";
+import { cn } from "@/lib/utils";
 
-export function ProductGrid({ products }: { products: ProductListItem[] }) {
+export function ProductGrid({
+  products,
+  categories,
+  activeCategory,
+}: {
+  products: ProductListItem[];
+  categories: { slug: string; name: string }[];
+  activeCategory?: string;
+}) {
   const [query, setQuery] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("tr-TR");
@@ -18,30 +33,79 @@ export function ProductGrid({ products }: { products: ProductListItem[] }) {
     );
   }, [products, query]);
 
+  function setCategory(slug: string | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (slug) params.set("kategori", slug);
+    else params.delete("kategori");
+    const qs = params.toString();
+    router.push(qs ? `${pathname}?${qs}` : pathname);
+  }
+
   return (
     <div>
+      <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1">
+        <button
+          type="button"
+          onClick={() => setCategory(null)}
+          className={cn(
+            "mkt-pill mkt-label shrink-0 px-4 py-2",
+            !activeCategory
+              ? "bg-mkt-accent text-mkt-accent-ink"
+              : "bg-mkt-card-muted text-mkt-ink-muted",
+          )}
+        >
+          Tümü
+        </button>
+        {categories.map((cat) => (
+          <button
+            key={cat.slug}
+            type="button"
+            onClick={() => setCategory(cat.slug)}
+            className={cn(
+              "mkt-pill mkt-label shrink-0 px-4 py-2",
+              activeCategory === cat.slug
+                ? "bg-mkt-accent text-mkt-accent-ink"
+                : "bg-mkt-card-muted text-mkt-ink-muted",
+            )}
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+
       <div className="relative max-w-sm">
         <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mkt-ink-muted"
           aria-hidden
         />
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Ürün veya kategori ara..."
-          className="h-10 pl-9"
+          className="mkt-pill h-11 border-[color:var(--mkt-border)] bg-mkt-card-muted pl-9"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mt-10 text-body-sm text-neutral-400">Sonuç bulunamadı.</p>
+        <p className="mkt-body mt-10">Sonuç bulunamadı.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((product, index) => (
+            <Reveal key={product.id} delay={(index % 6) * 60}>
+              <ProductCard product={product} />
+            </Reveal>
           ))}
         </div>
       )}
+
+      {activeCategory ? (
+        <p className="mkt-label mt-8 text-mkt-ink-muted">
+          Filtre:{" "}
+          <Link href="/urunler" className="text-mkt-green-text hover:underline">
+            temizle
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

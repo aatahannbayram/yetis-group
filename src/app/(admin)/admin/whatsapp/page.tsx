@@ -8,6 +8,7 @@ export default function AdminWhatsAppPage() {
       icon={MessageCircleMore}
       description="WhatsApp Business Cloud API outbox, şablonlar ve bildirimler M9 kapsamında eklenecek."
       badge="M9"
+      relatedLink={{ href: "/admin/bayi-adaylari", label: "Bayi Adaylarını Gör" }}
     />
   );
 }

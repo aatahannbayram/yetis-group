@@ -1,17 +1,19 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-// Exact intrinsic dimensions of the source wordmark PNGs.
+/** Official wordmark PNGs (transparent). Intrinsic size 2250×1151. */
 const sources = {
-  light: { src: "/logo-wordmark.png", width: 1956, height: 978 },
-  dark: { src: "/logo-wordmark-dark-bg.png", width: 2000, height: 1027 },
-};
+  light: { src: "/brand/logo-light.png", width: 2250, height: 1151 },
+  dark: { src: "/brand/logo-dark.png", width: 2250, height: 1151 },
+} as const;
 
 const displayHeights = {
-  sm: 22,
-  md: 28,
-  lg: 40,
-};
+  sm: 32,
+  md: 40,
+  lg: 52,
+  xl: 64,
+  "2xl": 88,
+} as const;
 
 export function Logo({
   size = "md",
@@ -19,7 +21,7 @@ export function Logo({
   className,
 }: {
   size?: keyof typeof displayHeights;
-  /** which surface the logo sits on: "light" (cream/white) or "dark" (brand-700 etc.) */
+  /** Surface the logo sits on: "light" (cream/white) or "dark" (brand panels). */
   variant?: "light" | "dark";
   className?: string;
 }) {
@@ -33,6 +35,27 @@ export function Logo({
       width={width}
       height={naturalHeight}
       style={{ height, width: "auto" }}
+      className={cn("object-contain", className)}
+      priority
+    />
+  );
+}
+
+/** Brand mark only — favicon / collapsed sidebar. */
+export function BrandMark({
+  size = 28,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <Image
+      src="/brand/symbol.png"
+      alt="Yetiş Grup"
+      width={2250}
+      height={2197}
+      style={{ width: size, height: size }}
       className={cn("object-contain", className)}
       priority
     />

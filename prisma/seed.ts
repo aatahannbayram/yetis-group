@@ -1,8 +1,12 @@
+import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient, type PackagingType } from "../src/generated/prisma";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-const prisma = new PrismaClient({ adapter });
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+pool.on("connect", (client) => {
+  void client.query("SET search_path TO public");
+});
+const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 const leads = [
   {
@@ -62,6 +66,7 @@ const leads = [
     city: "İstanbul",
     channel: "HORECA" as const,
     stage: "KAYBEDILDI" as const,
+    lostReason: "Bütçe uyuşmazlığı",
     estimatedMonthlyKg: "60.000",
     note: "Bütçe uyuşmadı; 6 ay sonra tekrar aranacak.",
   },
@@ -211,9 +216,72 @@ async function seedCatalog() {
     return;
   }
 
-  const createdProducts = [];
-  for (const product of products) {
-    createdProducts.push(await prisma.product.create({ data: product }));
+  const producer =
+    (await prisma.producer.findUnique({ where: { slug: "yetis-uretim" } })) ??
+    (await prisma.producer.create({
+      data: {
+        name: "Yetiş Üretim",
+        slug: "yetis-uretim",
+        region: "Türkiye",
+        story: "Yetiş Grup kendi üretim ve seçilmiş yöresel ürün portföyü.",
+      },
+    }));
+
+  const categoryByName = new Map<string, string>();
+  for (const name of [...new Set(products.map((p) => p.category))]) {
+    const slug = name
+      .toLocaleLowerCase("tr-TR")
+      .replaceAll("ı", "i")
+      .replaceAll("ğ", "g")
+      .replaceAll("ü", "u")
+      .replaceAll("ş", "s")
+      .replaceAll("ö", "o")
+      .replaceAll("ç", "c")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const cat = await prisma.category.create({ data: { name, slug } });
+    categoryByName.set(name, cat.id);
+  }
+
+  function packagingOf(unitLabel: string): PackagingType {
+    const u = unitLabel.toLocaleLowerCase("tr-TR");
+    if (u.includes("teneke")) return "TENEKE";
+    if (u.includes("vakum")) return "VAKUM";
+    if (u.includes("kutu")) return "KUTU";
+    return "KOLI";
+  }
+
+  const createdVariants: { slug: string; variantId: string; price: number }[] = [];
+
+  for (const p of products) {
+    const categoryId = categoryByName.get(p.category);
+    if (!categoryId) throw new Error(`Missing category ${p.category}`);
+    const product = await prisma.product.create({
+      data: {
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        imageUrl: p.imageUrl,
+        producerId: producer.id,
+        primaryCategoryId: categoryId,
+        categories: { create: { categoryId } },
+        variants: {
+          create: {
+            sku: p.sku,
+            packagingType: packagingOf(p.unitLabel),
+            packSize: p.unitLabel,
+            unitFactor: p.kgPerUnit,
+            pricePerUnitKurus: p.pricePerUnitKurus,
+          },
+        },
+      },
+      include: { variants: true },
+    });
+    createdVariants.push({
+      slug: p.slug,
+      variantId: product.variants[0]!.id,
+      price: p.pricePerUnitKurus,
+    });
   }
 
   const standart = await prisma.priceList.create({
@@ -226,21 +294,17 @@ async function seedCatalog() {
     data: { name: "Zincir Market", slug: "zincir-market" },
   });
 
-  for (const product of createdProducts) {
-    const overrides = priceListOverrides[product.slug];
+  for (const row of createdVariants) {
+    const overrides = priceListOverrides[row.slug];
     await prisma.priceListItem.create({
-      data: {
-        priceListId: standart.id,
-        productId: product.id,
-        priceKurus: product.pricePerUnitKurus,
-      },
+      data: { priceListId: standart.id, variantId: row.variantId, priceKurus: row.price },
     });
     if (overrides) {
       await prisma.priceListItem.create({
-        data: { priceListId: horeca.id, productId: product.id, priceKurus: overrides.horeca },
+        data: { priceListId: horeca.id, variantId: row.variantId, priceKurus: overrides.horeca },
       });
       await prisma.priceListItem.create({
-        data: { priceListId: market.id, productId: product.id, priceKurus: overrides.market },
+        data: { priceListId: market.id, variantId: row.variantId, priceKurus: overrides.market },
       });
     }
   }
@@ -249,10 +313,16 @@ async function seedCatalog() {
     where: { email: "bayi@yetisgrup.test" },
     data: { priceListId: standart.id },
   });
+  await prisma.dealer.updateMany({
+    where: { users: { some: { email: "bayi@yetisgrup.test" } } },
+    data: { priceListId: standart.id },
+  });
+  await prisma.dealer.updateMany({
+    where: { users: { some: { email: "horeca@yetisgrup.test" } } },
+    data: { priceListId: horeca.id },
+  });
 
-  console.log(
-    `Seeded ${createdProducts.length} product(s) and 3 price lists (Standart/HORECA/Zincir Market).`,
-  );
+  console.log(`Seeded ${createdVariants.length} product(s) with variants + price lists.`);
 }
 
 async function seedAccountTypes() {
@@ -279,7 +349,11 @@ async function seedLeadActivities() {
     where: { companyName: "Bursa Şehir Marketleri" },
   });
 
-  const activities: { leadId: string; type: "ARAMA" | "NOT" | "TEKLIF" | "TESLIMAT" | "DURUM_DEGISIKLIGI"; note: string }[] = [];
+  const activities: {
+    leadId: string;
+    type: "ARAMA" | "NOT" | "TEKLIF" | "TESLIMAT" | "DURUM_DEGISIKLIGI";
+    note: string;
+  }[] = [];
 
   if (besiktas) {
     activities.push(
@@ -321,41 +395,44 @@ async function seedInventory() {
     return;
   }
 
-  const allProducts = await prisma.product.findMany();
+  const variants = await prisma.productVariant.findMany({ include: { product: true } });
 
-  for (const product of allProducts) {
-    // Ana lot: uzun vadeli, sağlıklı stok.
+  for (const variant of variants) {
     await prisma.lot.create({
       data: {
-        productId: product.id,
-        lotNumber: `${product.sku}-A`,
+        variantId: variant.id,
+        lotNumber: `${variant.sku}-A`,
         expirationDate: daysFromNow(90),
         movements: {
-          create: { type: "GIRIS", quantityKg: product.kgPerUnit.mul(20), note: "Üretimden ilk giriş" },
+          create: {
+            type: "GIRIS",
+            quantityKg: variant.unitFactor.mul(20),
+            note: "Üretimden ilk giriş",
+          },
         },
       },
     });
-
-    // İkinci lot: yakında SKT'si dolacak (dashboard uyarısını tetikler).
     await prisma.lot.create({
       data: {
-        productId: product.id,
-        lotNumber: `${product.sku}-B`,
+        variantId: variant.id,
+        lotNumber: `${variant.sku}-B`,
         expirationDate: daysFromNow(10),
         movements: {
-          create: { type: "GIRIS", quantityKg: product.kgPerUnit.mul(5), note: "Önceki parti" },
+          create: {
+            type: "GIRIS",
+            quantityKg: variant.unitFactor.mul(5),
+            note: "Önceki parti",
+          },
         },
       },
     });
   }
 
-  // Lor Peyniri'ne süresi geçmiş bir lot ekle — FEFO/SKT engelinin
-  // admin panelde nasıl göründüğünü kanıtlamak için (sevk edilemez, uyarı görünür).
-  const lor = allProducts.find((p) => p.slug === "lor-peyniri-1kg");
+  const lor = variants.find((v) => v.product.slug === "lor-peyniri-1kg");
   if (lor) {
     await prisma.lot.create({
       data: {
-        productId: lor.id,
+        variantId: lor.id,
         lotNumber: `${lor.sku}-EXP`,
         expirationDate: daysFromNow(-3),
         movements: {
@@ -365,7 +442,286 @@ async function seedInventory() {
     });
   }
 
-  console.log(`Seeded lots for ${allProducts.length} product(s).`);
+  console.log(`Seeded lots for ${variants.length} variant(s).`);
+}
+
+async function seedM13CatalogDepth() {
+  const attrs = [
+    {
+      key: "sut-tipi",
+      name: "Süt tipi",
+      type: "SELECT" as const,
+      options: [
+        { value: "inek", label: "İnek" },
+        { value: "koyun", label: "Koyun" },
+        { value: "keçi", label: "Keçi" },
+        { value: "karisim", label: "Karışım" },
+      ],
+    },
+    {
+      key: "yore",
+      name: "Yöre",
+      type: "SELECT" as const,
+      options: [
+        { value: "trakya", label: "Trakya" },
+        { value: "ege", label: "Ege" },
+        { value: "karadeniz", label: "Karadeniz" },
+        { value: "anadolu", label: "İç Anadolu" },
+      ],
+    },
+    {
+      key: "olgunlasma",
+      name: "Olgunlaşma",
+      type: "SELECT" as const,
+      options: [
+        { value: "taze", label: "Taze" },
+        { value: "yari", label: "Yarı olgun" },
+        { value: "olgun", label: "Olgun" },
+      ],
+    },
+    {
+      key: "sertifika",
+      name: "Sertifika",
+      type: "MULTI_SELECT" as const,
+      options: [
+        { value: "helal", label: "Helal" },
+        { value: "organik", label: "Organik" },
+        { value: "cografi", label: "Coğrafi işaret" },
+        { value: "iso", label: "ISO 22000" },
+      ],
+    },
+    {
+      key: "alerjen",
+      name: "Alerjen",
+      type: "MULTI_SELECT" as const,
+      options: [
+        { value: "sut", label: "Süt" },
+        { value: "laktoz", label: "Laktoz" },
+      ],
+    },
+    {
+      key: "saklama",
+      name: "Saklama koşulu",
+      type: "TEXT" as const,
+      options: [] as { value: string; label: string }[],
+    },
+  ];
+
+  for (const [i, a] of attrs.entries()) {
+    const existing = await prisma.attributeDefinition.findUnique({ where: { key: a.key } });
+    if (existing) continue;
+    await prisma.attributeDefinition.create({
+      data: {
+        key: a.key,
+        name: a.name,
+        type: a.type,
+        filterable: a.type !== "TEXT",
+        sortOrder: i,
+        options: a.options.length
+          ? { create: a.options.map((o, oi) => ({ ...o, sortOrder: oi })) }
+          : undefined,
+      },
+    });
+  }
+
+  const definitions = await prisma.attributeDefinition.findMany({
+    include: { options: true },
+  });
+  const byKey = Object.fromEntries(definitions.map((d) => [d.key, d]));
+
+  const categories = await prisma.category.findMany();
+  for (const cat of categories) {
+    for (const def of definitions) {
+      await prisma.categoryAttribute.upsert({
+        where: {
+          categoryId_attributeId: { categoryId: cat.id, attributeId: def.id },
+        },
+        create: { categoryId: cat.id, attributeId: def.id },
+        update: {},
+      });
+    }
+  }
+
+  const products = await prisma.product.findMany({ include: { media: true } });
+  const defaults: Record<string, { sut?: string; yore?: string; olgun?: string }> = {
+    "tam-yagli-beyaz-peynir-17kg": { sut: "inek", yore: "trakya", olgun: "taze" },
+    "kasar-peyniri-dilimli-1kg": { sut: "inek", yore: "anadolu", olgun: "olgun" },
+    "kasar-peyniri-blok-3kg": { sut: "inek", yore: "anadolu", olgun: "olgun" },
+    "tulum-peyniri-1kg": { sut: "koyun", yore: "ege", olgun: "yari" },
+    "lor-peyniri-1kg": { sut: "inek", yore: "trakya", olgun: "taze" },
+    "tereyagi-500g": { sut: "inek", yore: "karadeniz", olgun: "taze" },
+    "yogurt-5kg": { sut: "inek", yore: "anadolu", olgun: "taze" },
+    "gunluk-sut-1l": { sut: "inek", yore: "trakya", olgun: "taze" },
+  };
+
+  for (const product of products) {
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        storageCondition: product.storageCondition ?? "0–4°C, kapalı ambalaj",
+        shelfLifeDays: product.shelfLifeDays ?? 45,
+        requiresColdChain: true,
+        usageTips:
+          product.usageTips ||
+          "Soğuk zinciri bozmadan saklayın. Açıldıktan sonra 3 gün içinde tüketilmesi önerilir.",
+      },
+    });
+
+    if (product.media.length === 0 && product.imageUrl) {
+      await prisma.productMedia.create({
+        data: {
+          productId: product.id,
+          url: product.imageUrl,
+          kind: "IMAGE",
+          alt: product.name,
+          isPrimary: true,
+          sortOrder: 0,
+        },
+      });
+      // secondary gallery images from other product photos
+      const others = ["/products/beyaz-peynir.jpg", "/products/kasar.jpg", "/products/yogurt.jpg"].filter(
+        (u) => u !== product.imageUrl,
+      );
+      for (const [i, url] of others.slice(0, 2).entries()) {
+        await prisma.productMedia.create({
+          data: {
+            productId: product.id,
+            url,
+            kind: "IMAGE",
+            alt: `${product.name} detay ${i + 1}`,
+            sortOrder: i + 1,
+          },
+        });
+      }
+    }
+
+    const d = defaults[product.slug] ?? { sut: "inek", yore: "trakya", olgun: "taze" };
+
+    async function setSelect(key: string, optionValue: string) {
+      const def = byKey[key];
+      if (!def) return;
+      const opt = def.options.find((o) => o.value === optionValue);
+      if (!opt) return;
+      const value = await prisma.productAttributeValue.upsert({
+        where: {
+          productId_attributeId: { productId: product.id, attributeId: def.id },
+        },
+        create: { productId: product.id, attributeId: def.id },
+        update: {},
+      });
+      await prisma.productAttributeSelectedOption.deleteMany({ where: { valueId: value.id } });
+      await prisma.productAttributeSelectedOption.create({
+        data: { valueId: value.id, optionId: opt.id },
+      });
+    }
+
+    async function setMulti(key: string, optionValues: string[]) {
+      const def = byKey[key];
+      if (!def) return;
+      const value = await prisma.productAttributeValue.upsert({
+        where: {
+          productId_attributeId: { productId: product.id, attributeId: def.id },
+        },
+        create: { productId: product.id, attributeId: def.id },
+        update: {},
+      });
+      await prisma.productAttributeSelectedOption.deleteMany({ where: { valueId: value.id } });
+      const opts = def.options.filter((o) => optionValues.includes(o.value));
+      if (opts.length) {
+        await prisma.productAttributeSelectedOption.createMany({
+          data: opts.map((o) => ({ valueId: value.id, optionId: o.id })),
+        });
+      }
+    }
+
+    async function setText(key: string, text: string) {
+      const def = byKey[key];
+      if (!def) return;
+      await prisma.productAttributeValue.upsert({
+        where: {
+          productId_attributeId: { productId: product.id, attributeId: def.id },
+        },
+        create: { productId: product.id, attributeId: def.id, valueText: text },
+        update: { valueText: text },
+      });
+    }
+
+    await setSelect("sut-tipi", d.sut!);
+    await setSelect("yore", d.yore!);
+    await setSelect("olgunlasma", d.olgun!);
+    await setMulti("sertifika", ["helal", "iso"]);
+    await setMulti("alerjen", ["sut", "laktoz"]);
+    await setText("saklama", "0–4°C soğuk depo");
+  }
+
+  console.log(`M13 depth: attributes + media for ${products.length} product(s).`);
+}
+
+async function seedM14Content() {
+  const { seedPosts, seedRecipes } = await import("../src/content/seed-posts");
+  const { estimateReadingMins } = await import("../src/lib/content/reading");
+
+  const productBySlug = Object.fromEntries(
+    (await prisma.product.findMany({ select: { id: true, slug: true } })).map((p) => [p.slug, p.id]),
+  );
+
+  for (const post of seedPosts) {
+    const existing = await prisma.contentPost.findUnique({ where: { slug: post.slug } });
+    if (existing) continue;
+    const created = await prisma.contentPost.create({
+      data: {
+        title: post.title,
+        slug: post.slug,
+        excerpt: post.excerpt,
+        coverUrl: post.coverUrl,
+        body: post.body,
+        category: post.category,
+        tags: post.tags,
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        readingMins: estimateReadingMins(post.body),
+        products: {
+          create: post.relatedProductSlugs
+            .map((s) => productBySlug[s])
+            .filter(Boolean)
+            .map((productId) => ({ productId: productId! })),
+        },
+      },
+    });
+    void created;
+  }
+
+  for (const recipe of seedRecipes) {
+    const existing = await prisma.recipe.findUnique({ where: { slug: recipe.slug } });
+    if (existing) continue;
+    await prisma.recipe.create({
+      data: {
+        title: recipe.title,
+        slug: recipe.slug,
+        excerpt: recipe.excerpt,
+        coverUrl: recipe.coverUrl,
+        servings: recipe.servings,
+        prepMinutes: recipe.prepMinutes,
+        cookMinutes: recipe.cookMinutes,
+        difficulty: recipe.difficulty,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        tips: recipe.tips,
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+        products: {
+          create: recipe.relatedProductSlugs
+            .map((s) => productBySlug[s])
+            .filter(Boolean)
+            .map((productId) => ({ productId: productId! })),
+        },
+      },
+    });
+  }
+
+  const postCount = await prisma.contentPost.count();
+  const recipeCount = await prisma.recipe.count();
+  console.log(`M14 content: ${postCount} post(s), ${recipeCount} recipe(s).`);
 }
 
 async function main() {
@@ -374,6 +730,8 @@ async function main() {
   await seedAccountTypes();
   await seedLeadActivities();
   await seedInventory();
+  await seedM13CatalogDepth();
+  await seedM14Content();
 }
 
 main()
@@ -383,4 +741,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

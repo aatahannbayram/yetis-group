@@ -2,10 +2,19 @@
 
 Bayilerin sipariş verdiği mağaza + Shopify/ikas kalitesinde yönetim paneli + WhatsApp Business Cloud API entegrasyonu.
 
-**Müşteri:** Yetiş Grup (peynir & süt ürünleri, Türkiye)  
+**Müşteri:** Yetiş Grup — yöresel ve kırsal ürünlerden oluşan, tüketici dostu bir **çözüm ortağı** (Türkiye)  
 **Slogan:** Temiz Gıdaya Eriş, Sağlıklı Yetiş  
 **Alıcılar:** market, şarküteri, HORECA, ara toptancı  
 **Faz:** B2B only. B2C mimariyi bozmasın; bu fazda yazılmaz.
+
+### Yapısal kilitler (M12.5+)
+
+- **Dealer** tek ticari varlık; ayrı `Customer` tablosu yok (D2C’de `dealerType` genişler).
+- **Producer** (kamuya açık hikâye) ≠ **Supplier** (dahili ticari). Marketplace / üretici paneli yok.
+- **Product** + **ProductVariant**: SKU, fiyat, stok, LOT varyantta. `Product.category` string yok.
+- **Sepet sunucuda** (`Cart` / `CartLine`); client localStorage yok.
+- Lead aşamaları **additive**; rename/silme yok. `KAYBEDILDI` → `lostReason` zorunlu.
+- İndirim yığını (M18): liste/kademe → hacim → SKT lot satırı → otomatik → kupon.
 
 ---
 
@@ -77,7 +86,7 @@ local → git push → GitHub (main veya production branch)
 ## Domain kuralları (pazarlık dışı)
 
 1. **PARA** — Integer kuruş. Float yok. Branded type + `domain/money` + birim test.
-2. **AĞIRLIK** — kg, 3 ondalık (`Decimal`). Üründe koli↔kg katsayısı.
+2. **AĞIRLIK** — kg, 3 ondalık (`Decimal`). Varyantta `baseUnit` + `unitFactor` (koli↔kg).
 3. **KDV** — Ürün bazlı oran alanı. Temel gıda çoğu zaman %1; sabit kodlama yok.
 4. **FİYAT SNAPSHOT** — Sipariş satırına birim fiyat, iskonto, KDV oranı kopyalanır. Liste değişince geçmiş bozulmaz.
 5. **CARİ** — Append-only ledger. Bakiye alanı yok; bakiyeyi ledger’dan türet. Düzeltme = ters kayıt.
@@ -224,21 +233,18 @@ Milestone ilerledikçe klasörler dolar; M0’da iskelet + token + auth.
 
 | ID | Kapsam | Çıkış kriteri |
 |----|--------|----------------|
-| **M0** | Repo, env, CI (GitHub Actions), tokenler, UI katmanı, auth, Hostinger deploy checklist | Lint/typecheck/unit CI yeşil; giriş çalışır; README’de Hostinger adımları |
+| **M0** | Repo, env, CI, tokenler, UI, auth, Hostinger | CI yeşil; giriş çalışır |
 | **M1** | Ürün, lot, stok hareketi | Domain + Prisma + test |
-| **M2** | Bayi, kullanıcı, rol, üyelik kademesi | Policy + seed bayiler |
-| **M3** | Fiyat listesi + kademeli iskonto motoru | Saf fonksiyon, kapsamlı Vitest |
-| **M4** | Sipariş + FSM + kredi limiti | Snapshot + limit testleri |
-| **M5** | Bayi mağazası UI (hızlı sipariş & sepet önce) | TR seed ile kullanılabilir |
-| **M6** | Yönetim paneli UI | Pano + temel CRUD akışları |
-| **M7** | Cari ledger + vade + mutabakat | Append-only, bakiye türetme |
-| **M8** | Sevkiyat + irsaliye + FEFO | SKT engeli kanıtlı |
-| **M9** | WhatsApp outbox, template, bildirimler | Mock + önizleme |
-| **M10** | WhatsApp gelen kutusu + konuşmayla sipariş | Deep link sepet |
-| **M11** | Fatura + e-Fatura adaptörü | Arayüz + mock |
-| **M12** | Mobil plasiyer + çevrimdışı | Comfortable yoğunluk |
+| **M2** | Bayi org iskeleti (Dealer + roller) | Policy + seed bayiler |
+| **M3** | Fiyat listesi + kademeli iskonto motoru | Saf fonksiyon, Vitest |
+| **M4** | Sipariş + FSM + kredi limiti (satırlar `variantId`) | Snapshot + limit |
+| **M5–M12** | Mağaza, admin, cari, sevkiyat, WhatsApp, e-fatura, plasiyer | İlgili çıkış kriterleri |
+| **M12.5** | **Tek atomik yapısal migration** (Category, Variant, Dealer, Lead köprüsü, sunucu sepeti) | Kayıpsızlık testi; deprecated kolon yok |
+| **M13** | Kategori/nitelik UI + ürün detay derinleştirme | Ağaç, attribute, galeri, Schema.org — **UI + şema tamam** |
+| **M14–M23** | Blog/reçete, SEO, CRM, self-serve, promo, SKT motoru, maliyet hesaplayıcı, AI, sözleşme | Milestone başına yeşil test |
+| **M14** | Blog/haber + reçete + 8 başlangıç yazısı | Schema.org Article/Recipe, RSS, admin — **UI + seed tamam** |
 
-**Kural:** Bir milestone bitmeden diğerine geçilmez. Her milestone sonunda testler yeşil.
+**Kural:** Bir milestone bitmeden diğerine geçilmez. **M12.5 bitmeden M13 yok.** Her milestone sonunda testler yeşil.
 
 ---
 
@@ -275,6 +281,10 @@ Package manager: **pnpm** (CI ile kilitli).
 - Fiyat snapshot’sız sipariş satırı
 - Emoji; stok fotoğraf bağımlılığı
 - Milestone bitmeden UI’ya “her şeyi” ekleme; seed’siz ekran
+- Ayrı `Customer` tablosu; deprecated şema kolonu bırakma
+- Lead enum rename/silme; bayi kaydını otomatik onaylama
+- Client-side sepet; AI’ya fiyat/stok/bakiye ürettirme
+- Marketplace / üretici paneli (bu fazda)
 
 ---
 

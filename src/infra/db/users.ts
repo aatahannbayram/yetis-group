@@ -8,10 +8,21 @@ export async function isStaffUser(userId: string) {
 export async function getUsersWithPriceList() {
   return prisma.user.findMany({
     orderBy: { createdAt: "desc" },
-    include: { priceList: { select: { id: true, name: true } } },
+    include: {
+      priceList: { select: { id: true, name: true } },
+      dealer: { select: { id: true, unvan: true, status: true } },
+    },
   });
 }
 
 export async function updateUserPriceList(userId: string, priceListId: string | null) {
   return prisma.user.update({ where: { id: userId }, data: { priceListId } });
+}
+
+export async function getUserDealerId(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { dealerId: true },
+  });
+  return user?.dealerId ?? null;
 }

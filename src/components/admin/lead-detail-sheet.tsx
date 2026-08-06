@@ -2,13 +2,14 @@
 
 import { useState, useTransition } from "react";
 import {
-  Building2,
   MapPin,
   Phone,
   FileText,
   Handshake,
   Truck,
   RefreshCcw,
+  MessageCircle,
+  PhoneCall,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,9 @@ import {
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
 import { formatDateTime } from "@/lib/format/date";
-import { addLeadActivityAction } from "@/app/(admin)/admin/bayi-adaylari/actions";
+import { addLeadActivityAction, transitionLeadStageAction } from "@/app/(admin)/admin/bayi-adaylari/actions";
+import { LEAD_STAGES, type LeadStage } from "@/domain/leads";
+import { Input } from "@/components/ui/input";
 import type { LeadItem } from "@/components/admin/leads-board";
 
 const ACTIVITY_ICON: Record<(typeof LEAD_ACTIVITY_TYPES)[number], typeof Phone> = {
@@ -58,6 +61,9 @@ export function LeadDetailSheet({
 }) {
   const [type, setType] = useState<(typeof LEAD_ACTIVITY_TYPES)[number]>("ARAMA");
   const [note, setNote] = useState("");
+  const [toStage, setToStage] = useState<LeadStage>(lead?.stage ?? "YENI");
+  const [lostReason, setLostReason] = useState("");
+  const [stageError, setStageError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   if (!lead) return null;
@@ -67,6 +73,22 @@ export function LeadDetailSheet({
     startTransition(async () => {
       await addLeadActivityAction(lead.id, type, note);
       setNote("");
+    });
+  }
+
+  function handleStageChange() {
+    if (!lead) return;
+    setStageError(null);
+    startTransition(async () => {
+      try {
+        await transitionLeadStageAction({
+          leadId: lead.id,
+          toStage,
+          lostReason: toStage === "KAYBEDILDI" ? lostReason : null,
+        });
+      } catch (err) {
+        setStageError(err instanceof Error ? err.message : "Aşama güncellenemedi.");
+      }
     });
   }
 
@@ -83,50 +105,107 @@ export function LeadDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-col gap-1.5 border-b border-neutral-100 px-4 pb-4 text-body-sm text-neutral-600">
-          <div className="flex items-center gap-1.5">
-            <Building2 className="size-3.5" aria-hidden />
-            {lead.contactName}
+        <div className="border-b border-neutral-100 px-4 pb-4">
+          <div className="mb-3 flex flex-wrap items-end gap-2">
+            <div className="min-w-40 flex-1">
+              <p className="mb-1 text-caption text-neutral-500">Aşama</p>
+              <Select value={toStage} onValueChange={(v) => setToStage(v as LeadStage)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STAGES.map((stage) => (
+                    <SelectItem key={stage} value={stage}>
+                      {LEAD_STAGE_LABELS[stage]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {toStage === "KAYBEDILDI" ? (
+              <div className="min-w-40 flex-1">
+                <p className="mb-1 text-caption text-neutral-500">Kayıp nedeni</p>
+                <Input
+                  value={lostReason}
+                  onChange={(e) => setLostReason(e.target.value)}
+                  placeholder="Zorunlu"
+                />
+              </div>
+            ) : null}
+            <Button type="button" variant="outline" disabled={isPending} onClick={handleStageChange}>
+              Güncelle
+            </Button>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Phone className="size-3.5" aria-hidden />
-            {lead.phone}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MapPin className="size-3.5" aria-hidden />
-            {lead.city}
-          </div>
+          {stageError ? <p className="mb-2 text-caption text-danger-fg">{stageError}</p> : null}
           {lead.estimatedMonthlyKg ? (
-            <p className="tabular-nums font-medium text-brand-700">
+            <p className="mb-3 tabular-nums text-body-sm font-medium text-brand-700">
               ~{formatKg(kg(lead.estimatedMonthlyKg))}/ay tahmini hacim
             </p>
           ) : null}
+          <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-700 text-body-sm font-semibold text-white">
+              {lead.contactName.slice(0, 1).toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-body-sm leading-body-sm font-semibold text-neutral-900">
+                {lead.contactName}
+              </p>
+              <p className="flex items-center gap-1 truncate text-caption text-neutral-500">
+                <MapPin className="size-3" aria-hidden />
+                {lead.city}
+              </p>
+            </div>
+            <div className="flex shrink-0 gap-1.5">
+              <a
+                href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm transition-colors hover:text-brand-700"
+                aria-label="WhatsApp'tan yaz"
+              >
+                <MessageCircle className="size-4" aria-hidden />
+              </a>
+              <a
+                href={`tel:${lead.phone}`}
+                className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm transition-colors hover:text-brand-700"
+                aria-label="Ara"
+              >
+                <PhoneCall className="size-4" aria-hidden />
+              </a>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4">
-          <h3 className="text-body-sm leading-body-sm font-semibold text-neutral-900">
+          <h3 className="text-caption leading-caption font-semibold tracking-[0.1em] text-neutral-500 uppercase">
             Geçmiş / Akıbet
           </h3>
           {lead.activities.length === 0 ? (
             <p className="mt-3 text-body-sm text-neutral-400">Henüz kayıt yok.</p>
           ) : (
-            <ol className="mt-3 flex flex-col gap-4">
-              {lead.activities.map((activity) => {
+            <ol className="mt-3 flex flex-col">
+              {lead.activities.map((activity, index) => {
                 const Icon = ACTIVITY_ICON[activity.type];
+                const isLast = index === lead.activities.length - 1;
                 return (
                   <li key={activity.id} className="flex gap-3">
-                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-700">
-                      <Icon className="size-3.5" aria-hidden />
+                    <div className="flex flex-col items-center">
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white">
+                        <Icon className="size-3" aria-hidden />
+                      </div>
+                      {!isLast ? (
+                        <div className="w-px flex-1 bg-neutral-200" aria-hidden />
+                      ) : null}
                     </div>
-                    <div>
-                      <p className="text-body-sm leading-body-sm font-medium text-neutral-900">
+                    <div className={isLast ? "pb-1" : "pb-5"}>
+                      <p className="text-caption text-neutral-400">
+                        {formatDateTime(new Date(activity.createdAt))}
+                      </p>
+                      <p className="text-body-sm leading-body-sm font-semibold text-neutral-900">
                         {LEAD_ACTIVITY_TYPE_LABELS[activity.type]}
                       </p>
                       <p className="text-body-sm leading-body-sm text-neutral-600">
                         {activity.note}
-                      </p>
-                      <p className="mt-0.5 text-caption text-neutral-400">
-                        {formatDateTime(new Date(activity.createdAt))}
                       </p>
                     </div>
                   </li>

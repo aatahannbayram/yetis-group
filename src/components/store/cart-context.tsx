@@ -1,102 +1,86 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
-export type CartLine = {
-  productId: string;
-  name: string;
-  unitLabel: string;
-  /** Price snapshot at the moment the item was added — not re-priced live. */
-  priceKurus: number;
-  kgPerUnit: string;
-  quantity: number;
-};
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
+import {
+  addToCartAction,
+  fetchCartAction,
+  removeFromCartAction,
+  setCartQuantityAction,
+  type CartView,
+  type CartViewLine,
+} from "@/app/(store)/sepet/actions";
 
 type CartContextValue = {
-  lines: CartLine[];
+  lines: CartViewLine[];
   itemCount: number;
-  addLine: (line: Omit<CartLine, "quantity">, quantity?: number) => void;
-  removeLine: (productId: string) => void;
-  setQuantity: (productId: string, quantity: number) => void;
-  clear: () => void;
+  totalKurus: number;
   isOpen: boolean;
+  isPending: boolean;
   open: () => void;
   close: () => void;
+  addVariant: (variantId: string, quantity?: number) => void;
+  removeLine: (lineId: string) => void;
+  setQuantity: (lineId: string, quantity: number) => void;
+  refresh: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const STORAGE_KEY = "yetis-cart-v1";
-
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>([]);
+export function CartProvider({ children }: { children: ReactNode }) {
+  const [cart, setCart] = useState<CartView | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    // Must run post-mount: localStorage is a client-only external store, and
-    // reading it during render would mismatch the server-rendered (empty) markup.
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing from a client-only external store, not derivable any other way
-      if (raw) setLines(JSON.parse(raw));
-    } catch {
-      // ignore corrupt local storage
-    }
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
-  }, [lines, hydrated]);
-
-  const addLine = useCallback((line: Omit<CartLine, "quantity">, quantity = 1) => {
-    setLines((current) => {
-      const existing = current.find((l) => l.productId === line.productId);
-      if (existing) {
-        return current.map((l) =>
-          l.productId === line.productId ? { ...l, quantity: l.quantity + quantity } : l,
-        );
-      }
-      return [...current, { ...line, quantity }];
+  const refresh = useCallback(() => {
+    startTransition(async () => {
+      const next = await fetchCartAction();
+      setCart(next);
     });
-    setIsOpen(true);
   }, []);
 
-  const removeLine = useCallback((productId: string) => {
-    setLines((current) => current.filter((l) => l.productId !== productId));
-  }, []);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
-  const setQuantity = useCallback((productId: string, quantity: number) => {
-    setLines((current) =>
-      quantity <= 0
-        ? current.filter((l) => l.productId !== productId)
-        : current.map((l) => (l.productId === productId ? { ...l, quantity } : l)),
-    );
-  }, []);
+  const value: CartContextValue = {
+    lines: cart?.lines ?? [],
+    itemCount: cart?.itemCount ?? 0,
+    totalKurus: cart?.totalKurus ?? 0,
+    isOpen,
+    isPending,
+    open: () => setIsOpen(true),
+    close: () => setIsOpen(false),
+    addVariant: (variantId, quantity = 1) => {
+      startTransition(async () => {
+        const next = await addToCartAction(variantId, quantity);
+        setCart(next);
+        setIsOpen(true);
+      });
+    },
+    removeLine: (lineId) => {
+      startTransition(async () => {
+        const next = await removeFromCartAction(lineId);
+        setCart(next);
+      });
+    },
+    setQuantity: (lineId, quantity) => {
+      startTransition(async () => {
+        const next = await setCartQuantityAction(lineId, quantity);
+        setCart(next);
+      });
+    },
+    refresh,
+  };
 
-  const clear = useCallback(() => setLines([]), []);
-
-  const itemCount = useMemo(() => lines.reduce((sum, l) => sum + l.quantity, 0), [lines]);
-
-  return (
-    <CartContext.Provider
-      value={{
-        lines,
-        itemCount,
-        addLine,
-        removeLine,
-        setQuantity,
-        clear,
-        isOpen,
-        open: () => setIsOpen(true),
-        close: () => setIsOpen(false),
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {

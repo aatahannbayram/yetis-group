@@ -8,6 +8,7 @@ export default function AdminOrdersPage() {
       icon={ClipboardList}
       description="Sipariş akışı, durum makinesi (draft → submitted → ... → delivered) ve kredi limiti kontrolü M4 kapsamında eklenecek."
       badge="M4"
+      relatedLink={{ href: "/admin/bayi-adaylari", label: "Bayi Adaylarını Gör" }}
     />
   );
 }

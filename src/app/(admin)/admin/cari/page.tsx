@@ -8,6 +8,7 @@ export default function AdminLedgerPage() {
       icon={Wallet}
       description="Append-only cari ledger, vade takibi ve mutabakat M7 kapsamında eklenecek."
       badge="M7"
+      relatedLink={{ href: "/admin/bayiler", label: "Bayileri Gör" }}
     />
   );
 }

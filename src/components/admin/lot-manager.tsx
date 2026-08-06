@@ -34,7 +34,7 @@ type LotItem = {
   movements: Movement[];
 };
 
-function NewLotForm({ productId, slug }: { productId: string; slug: string }) {
+function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
   const [lotNumber, setLotNumber] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
   const [initialKg, setInitialKg] = useState("");
@@ -44,7 +44,7 @@ function NewLotForm({ productId, slug }: { productId: string; slug: string }) {
     event.preventDefault();
     if (!lotNumber || !expirationDate || !initialKg) return;
     startTransition(async () => {
-      await createLotAction(productId, slug, {
+      await createLotAction(variantId, slug, {
         lotNumber,
         expirationDate,
         initialKg: Number(initialKg),
@@ -160,11 +160,11 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
 }
 
 export function LotManager({
-  productId,
+  variantId,
   slug,
   lots,
 }: {
-  productId: string;
+  variantId: string;
   slug: string;
   lots: LotItem[];
 }) {
@@ -175,7 +175,7 @@ export function LotManager({
           <CardTitle className="text-h4 leading-h4">Yeni Lot</CardTitle>
         </CardHeader>
         <CardContent>
-          <NewLotForm productId={productId} slug={slug} />
+          <NewLotForm variantId={variantId} slug={slug} />
         </CardContent>
       </Card>
 

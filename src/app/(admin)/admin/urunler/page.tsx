@@ -1,86 +1,85 @@
-import Image from "next/image";
-import Link from "next/link";
 import { getProducts } from "@/infra/db/products";
-import { getStockSummaryByProduct } from "@/infra/db/inventory";
-import { EditablePrice } from "@/components/admin/editable-price";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatKg } from "@/lib/format/weight";
+import { getInventoryDashboardSummary, getStockSummaryByProduct } from "@/infra/db/inventory";
 import { zeroKg } from "@/domain/weight";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { updateProductPriceAction } from "./actions";
+import { PillButton, StatCard } from "@/components/admin/stat-card";
+import { ProductListSheet, type ProductRow } from "@/components/admin/product-list-sheet";
 
 export default async function AdminProductsPage() {
-  const [products, stockByProduct] = await Promise.all([getProducts(), getStockSummaryByProduct()]);
+  const [products, stockByProduct, { totalKg, lotCount, expiringSoonCount }] = await Promise.all([
+    getProducts(),
+    getStockSummaryByProduct(),
+    getInventoryDashboardSummary(),
+  ]);
+
+  const variantCount = products.reduce((sum, p) => sum + p.variants.length, 0);
+
+  const rows: ProductRow[] = products
+    .filter((p) => p.variants.length > 0)
+    .map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      imageUrl: p.imageUrl,
+      categoryName: p.primaryCategory.name,
+      stockKg: (stockByProduct.get(p.id) ?? zeroKg).toNumber(),
+      variants: p.variants.map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        packSize: v.packSize,
+        packagingType: v.packagingType,
+        baseUnit: v.baseUnit,
+        unitFactor: v.unitFactor.toString(),
+        vatRateBasisPoints: v.vatRateBasisPoints,
+        pricePerUnitKurus: v.pricePerUnitKurus,
+      })),
+      media: p.media.map((m) => ({ id: m.id, url: m.url, alt: m.alt, isPrimary: m.isPrimary })),
+    }));
 
   return (
     <div className="mx-auto max-w-6xl">
       <AdminPageHeader
         title="Ürünler"
-        description="Baz fiyatlar burada düzenlenir. Ürüne tıklayıp lot/SKT ve stok hareketlerini yönetin. Fiyat listesi bazlı farklar için Fiyat Listeleri sayfasına bakın."
+        description="Baz fiyatlar varsayılan varyant üzerinden düzenlenir. Lot/SKT varyant seviyesindedir."
+        actions={
+          <>
+            <PillButton href="/admin/fiyat-listeleri" variant="secondary">
+              Fiyat Listeleri
+            </PillButton>
+          </>
+        }
       />
 
-      <div className="mt-6 overflow-x-auto rounded-3xl border border-border bg-card shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead></TableHead>
-              <TableHead>Ürün</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Kategori</TableHead>
-              <TableHead>Stok</TableHead>
-              <TableHead className="text-right">Baz Fiyat</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  {product.imageUrl ? (
-                    <Image
-                      src={product.imageUrl}
-                      alt={product.name}
-                      width={36}
-                      height={36}
-                      className="rounded-md object-cover"
-                    />
-                  ) : (
-                    <div className="size-9 rounded-md bg-neutral-100" />
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={`/admin/urunler/${product.slug}`}
-                    className="font-medium text-neutral-900 hover:text-brand-700 hover:underline"
-                  >
-                    {product.name}
-                  </Link>
-                  <p className="text-caption text-neutral-400">{product.unitLabel}</p>
-                </TableCell>
-                <TableCell className="font-mono text-caption text-neutral-500">
-                  {product.sku}
-                </TableCell>
-                <TableCell className="text-neutral-500">{product.category}</TableCell>
-                <TableCell className="tabular-nums text-neutral-700">
-                  {formatKg(stockByProduct.get(product.id) ?? zeroKg)}
-                </TableCell>
-                <TableCell className="text-right">
-                  <EditablePrice
-                    priceKurus={product.pricePerUnitKurus}
-                    onSave={updateProductPriceAction.bind(null, product.id)}
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Toplam Ürün" value={products.length} href="#urun-listesi" featured />
+        <StatCard label="Toplam Varyant" value={variantCount} href="#urun-listesi" />
+        <StatCard
+          label="Toplam Stok"
+          value={Math.round(totalKg.toNumber())}
+          suffix=" kg"
+          href="#urun-listesi"
+        />
+        <StatCard
+          label="SKT Yaklaşan (14 gün)"
+          value={expiringSoonCount}
+          warn={expiringSoonCount > 0}
+          href="#urun-listesi"
+        />
       </div>
+
+      <div
+        id="urun-listesi"
+        className="mt-6 overflow-x-auto rounded-3xl border border-border bg-card shadow-sm"
+      >
+        <ProductListSheet products={rows} />
+      </div>
+
+      {lotCount === 0 ? (
+        <p className="mt-3 text-caption text-muted-foreground">
+          Henüz lot kaydı yok — ürün detayına girip lot ekleyin.
+        </p>
+      ) : null}
     </div>
   );
 }

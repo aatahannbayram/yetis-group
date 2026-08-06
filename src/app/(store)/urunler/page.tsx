@@ -1,47 +1,65 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import { auth } from "@/infra/auth/server";
 import { getProductsWithPricing } from "@/infra/db/pricing";
+import { listCategories } from "@/infra/db/categories";
 import { ProductGrid } from "@/components/store/product-grid";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
+import { Canvas, Slab } from "@/components/store/slab";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategori?: string }>;
+}) {
+  const { kategori } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
-  const products = await getProductsWithPricing(session?.user.id);
+  const [products, categories] = await Promise.all([
+    getProductsWithPricing(session?.user.id, kategori),
+    listCategories(),
+  ]);
+
+  const rootCategories = categories
+    .filter((c) => !c.parentId)
+    .map((c) => ({ slug: c.slug, name: c.name }));
 
   return (
-    <>
-      <SiteHeader />
-      <main className="flex-1">
-        <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
-          <p className="text-caption leading-caption font-semibold tracking-[0.18em] text-brand-600 uppercase">
-            Katalog
-          </p>
-          <h1 className="mt-3 text-h2 leading-h2 font-semibold text-neutral-900">Ürünler</h1>
-          <p className="mt-2 max-w-lg text-body leading-body text-neutral-500">
+    <Canvas>
+      <Slab>
+        <SiteHeader />
+        <div className="mkt-pad">
+          <p className="mkt-label text-mkt-green-text">Katalog</p>
+          <h1 className="mkt-h2 mt-3 text-balance text-mkt-ink">Ürünler</h1>
+          <p className="mkt-body mt-3 max-w-lg">
             {session
               ? "Hesabınıza tanımlı fiyat listesi aşağıda gösteriliyor."
               : "Fiyatlar bayi girişi yapıldığında hesabınıza özel listeye göre güncellenir."}
           </p>
 
           <div className="mt-10">
-            <ProductGrid
-              products={products.map((product) => ({
-                id: product.id,
-                sku: product.sku,
-                slug: product.slug,
-                name: product.name,
-                category: product.category,
-                imageUrl: product.imageUrl,
-                unitLabel: product.unitLabel,
-                kgPerUnit: product.kgPerUnit.toString(),
-                unitPrice: product.unitPrice,
-              }))}
-            />
+            <Suspense fallback={null}>
+              <ProductGrid
+                activeCategory={kategori}
+                categories={rootCategories}
+                products={products.map((product) => ({
+                  id: product.id,
+                  variantId: product.variantId,
+                  sku: product.sku,
+                  slug: product.slug,
+                  name: product.name,
+                  category: product.category,
+                  imageUrl: product.imageUrl,
+                  unitLabel: product.unitLabel,
+                  kgPerUnit: product.kgPerUnit.toString(),
+                  unitPrice: product.unitPrice,
+                }))}
+              />
+            </Suspense>
           </div>
         </div>
-      </main>
+      </Slab>
       <SiteFooter />
-    </>
+    </Canvas>
   );
 }

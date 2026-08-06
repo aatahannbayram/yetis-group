@@ -5,13 +5,16 @@ import { assertNotExpired, isLotExpired, type LotSummary } from "@/domain/invent
 function availableKgFromMovements(movements: { type: string; quantityKg: unknown }[]): Kg {
   return movements.reduce((total, movement) => {
     const quantity = kg(String(movement.quantityKg));
-    return movement.type === "GIRIS" ? add(total, quantity) : subtract(total, quantity);
+    if (movement.type === "GIRIS") return add(total, quantity);
+    if (movement.type === "CIKIS") return subtract(total, quantity);
+    // REPACK reserved — not applied to balance until M13+ implementation
+    return total;
   }, zeroKg);
 }
 
-export async function getLotsForProduct(productId: string) {
+export async function getLotsForVariant(variantId: string) {
   const lots = await prisma.lot.findMany({
-    where: { productId },
+    where: { variantId },
     include: { movements: true },
     orderBy: { expirationDate: "asc" },
   });
@@ -35,6 +38,19 @@ export async function getLotsForProduct(productId: string) {
   }));
 }
 
+/** @deprecated prefer getLotsForVariant — aggregates all variants of a product */
+export async function getLotsForProduct(productId: string) {
+  const variants = await prisma.productVariant.findMany({
+    where: { productId },
+    select: { id: true },
+  });
+  const lots = [];
+  for (const v of variants) {
+    lots.push(...(await getLotsForVariant(v.id)));
+  }
+  return lots.sort((a, b) => a.expirationDate.getTime() - b.expirationDate.getTime());
+}
+
 export async function getProductStockSummary(productId: string) {
   const lots = await getLotsForProduct(productId);
   const shippable: LotSummary[] = lots
@@ -49,6 +65,17 @@ export async function getProductStockSummary(productId: string) {
   return {
     totalKg: lots.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
     shippableKg: shippable.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
+    lotCount: lots.length,
+  };
+}
+
+export async function getVariantStockSummary(variantId: string) {
+  const lots = await getLotsForVariant(variantId);
+  return {
+    totalKg: lots.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
+    shippableKg: lots
+      .filter((lot) => !lot.expired)
+      .reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
     lotCount: lots.length,
   };
 }
@@ -72,26 +99,29 @@ export async function getInventoryDashboardSummary() {
 export async function getStockSummaryByProduct() {
   const products = await prisma.product.findMany({
     where: { active: true },
-    select: { id: true, lots: { include: { movements: true } } },
+    select: {
+      id: true,
+      variants: { select: { lots: { include: { movements: true } } } },
+    },
   });
 
   return new Map(
     products.map((product) => {
-      const allMovements = product.lots.flatMap((lot) => lot.movements);
+      const allMovements = product.variants.flatMap((v) => v.lots.flatMap((lot) => lot.movements));
       return [product.id, availableKgFromMovements(allMovements)];
     }),
   );
 }
 
 export async function createLot(input: {
-  productId: string;
+  variantId: string;
   lotNumber: string;
   expirationDate: Date;
   initialKg: number;
 }) {
   return prisma.lot.create({
     data: {
-      productId: input.productId,
+      variantId: input.variantId,
       lotNumber: input.lotNumber,
       expirationDate: input.expirationDate,
       movements: {

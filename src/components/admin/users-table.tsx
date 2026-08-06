@@ -27,6 +27,7 @@ type UserRow = {
   email: string;
   accountType: "STAFF" | "DEALER";
   priceListId: string | null;
+  dealerLabel: string | null;
 };
 
 export function UsersTable({
@@ -70,13 +71,14 @@ export function UsersTable({
               <TableHead>Kullanıcı</TableHead>
               <TableHead>E-posta</TableHead>
               <TableHead>Tip</TableHead>
+              <TableHead>Bayi</TableHead>
               <TableHead className="w-56">Fiyat Listesi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-neutral-400">
+                <TableCell colSpan={5} className="text-center text-neutral-400">
                   Sonuç bulunamadı.
                 </TableCell>
               </TableRow>
@@ -89,6 +91,9 @@ export function UsersTable({
                     <Badge variant={user.accountType === "STAFF" ? "default" : "secondary"}>
                       {user.accountType === "STAFF" ? "Yetiş" : "Bayi"}
                     </Badge>
+                  </TableCell>
+                  <TableCell className="text-caption text-neutral-500">
+                    {user.dealerLabel ?? "—"}
                   </TableCell>
                   <TableCell>
                     {user.accountType === "STAFF" ? (

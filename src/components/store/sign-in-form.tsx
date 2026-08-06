@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/infra/auth/client";
@@ -40,7 +40,9 @@ export function SignInForm() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email">E-posta</Label>
+        <Label htmlFor="email" className="mkt-label text-mkt-ink">
+          E-posta
+        </Label>
         <Input
           id="email"
           name="email"
@@ -50,11 +52,14 @@ export function SignInForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="ornek@bayi.com"
+          className="mkt-pill h-12 border-[color:var(--mkt-border)] bg-mkt-card-muted px-5"
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="password">Şifre</Label>
+        <Label htmlFor="password" className="mkt-label text-mkt-ink">
+          Şifre
+        </Label>
         <Input
           id="password"
           name="password"
@@ -64,19 +69,32 @@ export function SignInForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
+          className="mkt-pill h-12 border-[color:var(--mkt-border)] bg-mkt-card-muted px-5"
         />
       </div>
 
       {error ? (
-        <p className="rounded-md bg-danger-bg px-3 py-2 text-body-sm leading-body-sm text-danger-fg">
-          {error}
-        </p>
+        <p className="mkt-pill bg-danger-bg px-4 py-2.5 text-[13px] text-danger-fg">{error}</p>
       ) : null}
 
-      <Button type="submit" size="lg" className="h-11 text-base" disabled={isSubmitting}>
-        {isSubmitting ? <Loader2 className="animate-spin" aria-hidden /> : null}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="mkt-pill inline-flex h-12 items-center justify-center gap-2 bg-mkt-accent text-[15px] font-medium text-mkt-accent-ink hover:brightness-105 disabled:opacity-60"
+      >
+        {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
         Giriş Yap
-      </Button>
+      </button>
+
+      <p className="text-center text-[12px] text-mkt-ink-muted">
+        <Link href="/yasal/gizlilik-politikasi" className="hover:text-mkt-ink">
+          Gizlilik
+        </Link>
+        {" · "}
+        <Link href="/yasal/cerez-politikasi" className="hover:text-mkt-ink">
+          Çerezler
+        </Link>
+      </p>
     </form>
   );
 }

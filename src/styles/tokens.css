@@ -18,10 +18,32 @@
   --brand-900: #003d23;
 
   /* ---- Surface (warm bone/cream signature, not generic gray) ---- */
-  --surface-canvas: #faf8f3;
+  --surface-canvas: #f0eee8; /* marketing canvas — Farmora-style inset slabs */
   --surface-card: #ffffff;
-  --surface-sunken: #f2efe6;
+  --surface-sunken: #f5f3ed;
   --surface-overlay: rgba(38, 33, 24, 0.48);
+
+  /* Marketing / Farmora-language tokens */
+  --mkt-canvas: #f0eee8;
+  --mkt-slab: #ffffff;
+  --mkt-card-muted: #f5f3ed;
+  --mkt-accent: #30a369;
+  --mkt-accent-ink: #0a0a0a;
+  --mkt-ink: #0a0a0a;
+  --mkt-ink-muted: #6b6862;
+  --mkt-green-text: #00693e;
+  --mkt-border: rgba(10, 10, 10, 0.1);
+  --mkt-gutter: 1.5rem; /* 24px */
+  --mkt-gutter-lg: 2rem; /* 32px */
+  --mkt-slab-gap: 1.5rem;
+  --mkt-slab-radius: 1.5rem; /* 24px */
+  --mkt-pill: 999px;
+
+  /* ---- Admin-only light gray canvas + featured dark-green card (Donezo ref) ---- */
+  --surface-admin-canvas: #eef0ee;
+  --surface-admin-frame: #f7f8f7;
+  --brand-feature-start: #0f3d2a;
+  --brand-feature-end: #1f7a4d;
 
   /* ---- Neutral 50–900 (warm-leaning) ---- */
   --neutral-50: #faf9f6;
@@ -46,14 +68,14 @@
   --info-bg: #e8f0fc;
 
   /* ---- Typography ---- */
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", system-ui, sans-serif;
 
-  --text-display: 3rem;
-  --leading-display: 3.25rem;
+  --text-display: clamp(2.75rem, 5vw, 4.5rem);
+  --leading-display: 1.05;
   --text-h1: 2.25rem;
   --leading-h1: 2.625rem;
-  --text-h2: 1.75rem;
-  --leading-h2: 2.125rem;
+  --text-h2: clamp(2rem, 3vw, 2.75rem);
+  --leading-h2: 1.15;
   --text-h3: 1.375rem;
   --leading-h3: 1.75rem;
   --text-h4: 1.125rem;
@@ -61,11 +83,12 @@
   --text-body-lg: 1.0625rem;
   --leading-body-lg: 1.625rem;
   --text-body: 0.9375rem;
-  --leading-body: 1.5rem;
+  --leading-body: 1.6;
   --text-body-sm: 0.8125rem;
   --leading-body-sm: 1.25rem;
-  --text-caption: 0.75rem;
+  --text-caption: 0.8125rem;
   --leading-caption: 1rem;
+  --text-stat: clamp(2.5rem, 4vw, 3.5rem);
 
   /* ---- Radius ---- */
   --radius-sm: 8px;

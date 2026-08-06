@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, Search, User } from "lucide-react";
+import Link from "next/link";
+import { Bell, LogOut, Mail, Search, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,9 +35,11 @@ function initials(name: string) {
 
 export function AdminTopbar({
   userName,
+  userEmail,
   section = "Pano",
 }: {
   userName: string;
+  userEmail: string;
   section?: string;
 }) {
   const router = useRouter();
@@ -72,17 +75,41 @@ export function AdminTopbar({
         </kbd>
       </Button>
 
+      <Link
+        href="/admin/whatsapp"
+        className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Mesajlar"
+      >
+        <Mail className="size-4" aria-hidden />
+      </Link>
+      <button
+        type="button"
+        className="flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label="Bildirimler"
+      >
+        <Bell className="size-4" aria-hidden />
+      </button>
+
       <ThemeToggle />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted">
+          <button
+            type="button"
+            className="flex items-center gap-2 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-muted"
+          >
             <Avatar className="size-8">
               <AvatarFallback className="bg-brand-600 text-white">
                 {initials(userName) || <User className="size-4" />}
               </AvatarFallback>
             </Avatar>
-          </Button>
+            <span className="hidden text-left sm:block">
+              <span className="block text-body-sm leading-body-sm font-semibold text-foreground">
+                {userName}
+              </span>
+              <span className="block text-caption text-muted-foreground">{userEmail}</span>
+            </span>
+          </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel className="font-normal">

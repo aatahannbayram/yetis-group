@@ -6,6 +6,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -31,17 +32,56 @@ function HatchPatternDefs({ id }: { id: string }) {
   );
 }
 
+function PeakLabel({
+  x,
+  y,
+  width,
+  value,
+  total,
+}: {
+  x?: string | number;
+  y?: string | number;
+  width?: string | number;
+  value?: unknown;
+  total: number;
+}) {
+  if (x === undefined || y === undefined || width === undefined || value == null) return null;
+  const numX = Number(x);
+  const numY = Number(y);
+  const numWidth = Number(width);
+  const numValue = Number(value);
+  const percent = total > 0 ? Math.round((numValue / total) * 100) : 0;
+  const cx = numX + numWidth / 2;
+  return (
+    <g transform={`translate(${cx}, ${numY - 14})`}>
+      <rect x={-20} y={-12} width={40} height={22} rx={11} fill={BRAND_GREEN} />
+      <text x={0} y={4} textAnchor="middle" fontSize={11} fontWeight={700} fill="#ffffff">
+        {percent}%
+      </text>
+    </g>
+  );
+}
+
 export function StageFunnelChart({
   data,
 }: {
   data: { stage: string; label: string; count: number }[];
 }) {
   const hatchId = useId();
+  const gradientId = useId();
+  const total = data.reduce((sum, d) => sum + d.count, 0);
+  const maxCount = Math.max(...data.map((d) => d.count));
 
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+        <BarChart data={data} margin={{ top: 28, right: 8, left: -20, bottom: 0 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00693e" />
+              <stop offset="100%" stopColor="#30a369" />
+            </linearGradient>
+          </defs>
           <HatchPatternDefs id={hatchId} />
           <CartesianGrid strokeDasharray="4 6" stroke="#e6e1d6" vertical={false} />
           <XAxis
@@ -72,12 +112,29 @@ export function StageFunnelChart({
             }}
           />
           <Bar dataKey="count" name="Bayi Adayı" radius={[20, 20, 20, 20]} maxBarSize={28}>
-            {data.map((entry) => (
-              <Cell
-                key={entry.stage}
-                fill={entry.stage === "KAYBEDILDI" ? `url(#${hatchId})` : BRAND_GREEN}
-              />
-            ))}
+            {data.map((entry) => {
+              const isPeak = entry.count === maxCount && entry.count > 0;
+              return (
+                <Cell
+                  key={entry.stage}
+                  fill={
+                    entry.stage === "KAYBEDILDI"
+                      ? `url(#${hatchId})`
+                      : isPeak
+                        ? `url(#${gradientId})`
+                        : BRAND_GREEN_LIGHT
+                  }
+                />
+              );
+            })}
+            <LabelList
+              dataKey="count"
+              content={(props) => {
+                const entry = data[props.index ?? -1];
+                if (!entry || entry.count !== maxCount || entry.count === 0) return null;
+                return <PeakLabel {...props} total={total} />;
+              }}
+            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

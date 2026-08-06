@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
+import { getOpenLeadsCount } from "@/infra/db/leads";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminShell } from "@/components/admin/admin-theme-context";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
@@ -22,13 +23,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/");
   }
 
+  const openLeadsCount = await getOpenLeadsCount();
+
   return (
     <TooltipProvider delayDuration={200}>
       <AdminShell>
         <SidebarProvider>
-          <AdminSidebar />
+          <AdminSidebar openLeadsCount={openLeadsCount} />
           <SidebarInset className="bg-background">
-            <AdminTopbar userName={session.user.name} />
+            <AdminTopbar userName={session.user.name} userEmail={session.user.email} />
             <main className="flex-1 p-6">{children}</main>
           </SidebarInset>
           <CommandPalette />

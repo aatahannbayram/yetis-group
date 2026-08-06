@@ -21,7 +21,7 @@ const links = [
   { href: "/haberler", label: "Haberler" },
   { href: "/tarifler", label: "Tarifler" },
   { href: "/#hakkimizda", label: "Hakkımızda" },
-  { href: "/#iletisim", label: "İletişim" },
+  { href: "/iletisim", label: "İletişim" },
 ];
 
 export function MobileNav({

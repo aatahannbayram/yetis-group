@@ -31,7 +31,18 @@ export const LEAD_SOURCE_LABELS: Record<string, string> = {
   MANUEL: "Manuel",
 };
 
-export const LEAD_ACTIVITY_TYPES = ["ARAMA", "NOT", "TEKLIF", "TESLIMAT", "DURUM_DEGISIKLIGI"] as const;
+export const LEAD_ACTIVITY_TYPES = [
+  "ARAMA",
+  "NOT",
+  "TEKLIF",
+  "TESLIMAT",
+  "DURUM_DEGISIKLIGI",
+  "EMAIL",
+  "WHATSAPP",
+  "FORM",
+  "GOREV",
+  "HATIRLATMA",
+] as const;
 
 export const LEAD_ACTIVITY_TYPE_LABELS: Record<(typeof LEAD_ACTIVITY_TYPES)[number], string> = {
   ARAMA: "Arama",
@@ -39,6 +50,11 @@ export const LEAD_ACTIVITY_TYPE_LABELS: Record<(typeof LEAD_ACTIVITY_TYPES)[numb
   TEKLIF: "Teklif",
   TESLIMAT: "Teslimat",
   DURUM_DEGISIKLIGI: "Durum Değişikliği",
+  EMAIL: "E-posta",
+  WHATSAPP: "WhatsApp",
+  FORM: "Form",
+  GOREV: "Görev",
+  HATIRLATMA: "Hatırlatma",
 };
 
 export { LEAD_STAGES };

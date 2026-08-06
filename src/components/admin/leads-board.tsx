@@ -27,11 +27,22 @@ export type LeadItem = {
   companyName: string;
   contactName: string;
   phone: string;
+  email: string | null;
   city: string;
   channel: string;
+  source: string;
   stage: (typeof LEAD_STAGES)[number];
   estimatedMonthlyKg: string | null;
   note: string | null;
+  interestedCategory: string | null;
+  assigneeName: string | null;
+  fieldValues: { label: string; value: string }[];
+  tasks: {
+    id: string;
+    title: string;
+    dueAt: string | null;
+    doneAt: string | null;
+  }[];
   activities: {
     id: string;
     type: (typeof LEAD_ACTIVITY_TYPES)[number];

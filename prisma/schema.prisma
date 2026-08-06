@@ -43,6 +43,8 @@ model User {
   carts          Cart[]
   salesRepOf     Dealer[]         @relation("DealerSalesRep")
   stageAudits    LeadStageAudit[]
+  assignedLeads  Lead[]           @relation("LeadAssignee")
+  leadTasks      LeadTask[]       @relation("LeadTaskAssignee")
 
   @@map("user")
 }
@@ -188,25 +190,35 @@ enum LeadSource {
 }
 
 model Lead {
-  id                 String      @id @default(cuid())
-  companyName        String
-  contactName        String
-  phone              String
-  city               String
-  channel            LeadChannel
-  stage              LeadStage   @default(YENI)
-  source             LeadSource  @default(MANUEL)
-  estimatedMonthlyKg Decimal?    @db.Decimal(10, 3)
-  note               String?
-  lostReason         String?
-  convertedDealerId  String?
-  convertedDealer    Dealer?     @relation("LeadConvertedDealer", fields: [convertedDealerId], references: [id])
-  createdAt          DateTime    @default(now())
-  updatedAt          DateTime    @updatedAt
+  id                   String      @id @default(cuid())
+  companyName          String
+  contactName          String
+  phone                String
+  email                String?
+  city                 String
+  channel              LeadChannel
+  stage                LeadStage   @default(YENI)
+  source               LeadSource  @default(MANUEL)
+  estimatedMonthlyKg   Decimal?    @db.Decimal(10, 3)
+  note                 String?
+  lostReason           String?
+  interestedCategoryId String?
+  interestedCategory   Category?   @relation(fields: [interestedCategoryId], references: [id])
+  assigneeId           String?
+  assignee             User?       @relation("LeadAssignee", fields: [assigneeId], references: [id])
+  kvkkConsentAt        DateTime?
+  convertedDealerId    String?
+  convertedDealer      Dealer?     @relation("LeadConvertedDealer", fields: [convertedDealerId], references: [id])
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
-  activities LeadActivity[]
-  audits     LeadStageAudit[]
+  activities  LeadActivity[]
+  audits      LeadStageAudit[]
+  fieldValues LeadFieldValue[]
+  tasks       LeadTask[]
 
+  @@index([source, createdAt])
+  @@index([assigneeId])
   @@map("lead")
 }
 
@@ -216,6 +228,11 @@ enum LeadActivityType {
   TEKLIF
   TESLIMAT
   DURUM_DEGISIKLIGI
+  EMAIL
+  WHATSAPP
+  FORM
+  GOREV
+  HATIRLATMA
 }
 
 model LeadActivity {
@@ -241,6 +258,65 @@ model LeadStageAudit {
   createdAt  DateTime   @default(now())
 
   @@map("lead_stage_audit")
+}
+
+enum LeadFieldType {
+  TEXT
+  NUMBER
+  DATE
+  SELECT
+  MULTI_SELECT
+  BOOLEAN
+}
+
+model LeadFieldDefinition {
+  id          String        @id @default(cuid())
+  key         String        @unique
+  label       String
+  type        LeadFieldType @default(TEXT)
+  /// SELECT / MULTI_SELECT options as string[]
+  options     Json          @default("[]")
+  required    Boolean       @default(false)
+  formVisible Boolean       @default(true)
+  sortOrder   Int           @default(0)
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  values LeadFieldValue[]
+
+  @@map("lead_field_definition")
+}
+
+model LeadFieldValue {
+  id        String              @id @default(cuid())
+  leadId    String
+  lead      Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fieldId   String
+  field     LeadFieldDefinition @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  valueText String?
+  valueNum  Decimal?            @db.Decimal(14, 3)
+  valueDate DateTime?
+  valueJson Json?
+
+  @@unique([leadId, fieldId])
+  @@map("lead_field_value")
+}
+
+model LeadTask {
+  id         String    @id @default(cuid())
+  leadId     String
+  lead       Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  title      String
+  dueAt      DateTime?
+  doneAt     DateTime?
+  assigneeId String?
+  assignee   User?     @relation("LeadTaskAssignee", fields: [assigneeId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([leadId, doneAt])
+  @@map("lead_task")
 }
 
 // ---- Producer (public story) ----
@@ -283,6 +359,7 @@ model Category {
   productLinks     ProductCategory[]
   primaryProducts  Product[]         @relation("PrimaryCategory")
   attributes       CategoryAttribute[]
+  interestedLeads  Lead[]
 
   @@map("category")
 }

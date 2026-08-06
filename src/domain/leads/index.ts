@@ -19,3 +19,9 @@ export {
   type PromoteLeadInput,
   type PromoteLeadPlan,
 } from "@/domain/leads/promote";
+export {
+  contactLeadSchema,
+  computeSourceConversion,
+  type ContactLeadInput,
+  type SourceConversionRow,
+} from "@/domain/leads/intake";

@@ -3,8 +3,10 @@ import {
   LEAD_STAGES,
   LEAD_STAGE_LABELS,
   LEAD_CHANNEL_LABELS,
+  LEAD_SOURCE_LABELS,
   assertLeadTransition,
   planPromoteLeadToDealer,
+  computeSourceConversion,
   type LeadStage,
 } from "@/domain/leads";
 
@@ -16,6 +18,10 @@ export async function getLeads() {
     include: {
       activities: { orderBy: { createdAt: "desc" } },
       convertedDealer: true,
+      assignee: { select: { id: true, name: true, email: true } },
+      interestedCategory: { select: { id: true, name: true, slug: true } },
+      fieldValues: { include: { field: true } },
+      tasks: { orderBy: [{ doneAt: "asc" }, { dueAt: "asc" }] },
     },
   });
 }
@@ -26,7 +32,17 @@ export async function getOpenLeadsCount() {
 
 export async function addLeadActivity(
   leadId: string,
-  type: "ARAMA" | "NOT" | "TEKLIF" | "TESLIMAT" | "DURUM_DEGISIKLIGI",
+  type:
+    | "ARAMA"
+    | "NOT"
+    | "TEKLIF"
+    | "TESLIMAT"
+    | "DURUM_DEGISIKLIGI"
+    | "EMAIL"
+    | "WHATSAPP"
+    | "FORM"
+    | "GOREV"
+    | "HATIRLATMA",
   note: string,
 ) {
   return prisma.leadActivity.create({ data: { leadId, type, note } });
@@ -160,6 +176,11 @@ export async function getLeadDashboardData() {
     count: leads.filter((lead) => lead.channel === channel).length,
   }));
 
+  const sourceConversion = computeSourceConversion(
+    leads.map((l) => ({ source: l.source, stage: l.stage })),
+    LEAD_SOURCE_LABELS,
+  );
+
   return {
     totalLeads,
     openLeadsCount: openLeads.length,
@@ -167,5 +188,6 @@ export async function getLeadDashboardData() {
     openVolumeKg,
     stageCounts,
     channelCounts,
+    sourceConversion,
   };
 }

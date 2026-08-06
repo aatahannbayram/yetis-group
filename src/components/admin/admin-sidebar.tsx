@@ -20,6 +20,7 @@ import {
   Newspaper,
   ChefHat,
   SearchCheck,
+  FormInput,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,7 +40,10 @@ import { useAdminTheme } from "@/components/admin/admin-theme-context";
 
 const navItems = [{ href: "/admin", label: "Pano", icon: LayoutDashboard }];
 
-const crmItems = [{ href: "/admin/bayi-adaylari", label: "Bayi Adayları", icon: Target }];
+const crmItems = [
+  { href: "/admin/bayi-adaylari", label: "Bayi Adayları", icon: Target },
+  { href: "/admin/crm-alanlari", label: "CRM Alanları", icon: FormInput },
+];
 
 const managementItems = [
   { href: "/admin/urunler", label: "Ürünler", icon: Package },

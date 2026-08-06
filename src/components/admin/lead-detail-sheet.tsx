@@ -10,6 +10,9 @@ import {
   RefreshCcw,
   MessageCircle,
   PhoneCall,
+  Mail,
+  ListTodo,
+  Bell,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,12 +35,17 @@ import {
   LEAD_ACTIVITY_TYPES,
   LEAD_ACTIVITY_TYPE_LABELS,
   LEAD_CHANNEL_LABELS,
+  LEAD_SOURCE_LABELS,
   LEAD_STAGE_LABELS,
 } from "@/domain/leads";
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
 import { formatDateTime } from "@/lib/format/date";
 import { addLeadActivityAction, transitionLeadStageAction } from "@/app/(admin)/admin/bayi-adaylari/actions";
+import {
+  completeLeadTaskAction,
+  createLeadTaskAction,
+} from "@/app/(admin)/admin/crm-alanlari/actions";
 import { LEAD_STAGES, type LeadStage } from "@/domain/leads";
 import { Input } from "@/components/ui/input";
 import type { LeadItem } from "@/components/admin/leads-board";
@@ -48,6 +56,11 @@ const ACTIVITY_ICON: Record<(typeof LEAD_ACTIVITY_TYPES)[number], typeof Phone> 
   TEKLIF: Handshake,
   TESLIMAT: Truck,
   DURUM_DEGISIKLIGI: RefreshCcw,
+  EMAIL: Mail,
+  WHATSAPP: MessageCircle,
+  FORM: FileText,
+  GOREV: ListTodo,
+  HATIRLATMA: Bell,
 };
 
 export function LeadDetailSheet({
@@ -102,6 +115,9 @@ export function LeadDetailSheet({
             <Badge variant="outline" className="border-neutral-300 text-neutral-700">
               {LEAD_CHANNEL_LABELS[lead.channel]}
             </Badge>
+            <Badge variant="outline" className="border-neutral-300 text-neutral-700">
+              {LEAD_SOURCE_LABELS[lead.source] ?? lead.source}
+            </Badge>
           </SheetDescription>
         </SheetHeader>
 
@@ -154,6 +170,14 @@ export function LeadDetailSheet({
                 <MapPin className="size-3" aria-hidden />
                 {lead.city}
               </p>
+              {lead.email ? (
+                <p className="truncate text-caption text-neutral-500">{lead.email}</p>
+              ) : null}
+              {lead.interestedCategory ? (
+                <p className="truncate text-caption text-neutral-500">
+                  İlgi: {lead.interestedCategory}
+                </p>
+              ) : null}
             </div>
             <div className="flex shrink-0 gap-1.5">
               <a
@@ -174,6 +198,54 @@ export function LeadDetailSheet({
               </a>
             </div>
           </div>
+          {lead.fieldValues.length > 0 ? (
+            <ul className="mt-3 space-y-1 rounded-2xl border border-neutral-200 p-3 text-caption text-neutral-600">
+              {lead.fieldValues.map((fv) => (
+                <li key={fv.label}>
+                  <span className="font-medium text-neutral-800">{fv.label}:</span> {fv.value}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+
+        <div className="border-b border-neutral-100 px-4 py-3">
+          <h3 className="text-caption font-semibold tracking-[0.1em] text-neutral-500 uppercase">
+            Görevler
+          </h3>
+          <ul className="mt-2 space-y-2">
+            {lead.tasks.map((task) => (
+              <li
+                key={task.id}
+                className="flex items-center justify-between gap-2 rounded-xl border border-neutral-200 px-3 py-2 text-body-sm"
+              >
+                <div>
+                  <p className={task.doneAt ? "text-neutral-400 line-through" : ""}>{task.title}</p>
+                  {task.dueAt ? (
+                    <p className="text-caption text-neutral-400">
+                      Vade: {formatDateTime(new Date(task.dueAt))}
+                    </p>
+                  ) : null}
+                </div>
+                {!task.doneAt ? (
+                  <form action={completeLeadTaskAction}>
+                    <input type="hidden" name="id" value={task.id} />
+                    <Button type="submit" size="sm" variant="outline">
+                      Tamamla
+                    </Button>
+                  </form>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+          <form action={createLeadTaskAction} className="mt-3 flex gap-2">
+            <input type="hidden" name="leadId" value={lead.id} />
+            <Input name="title" placeholder="Yeni görev" className="h-9" required />
+            <Input name="dueAt" type="date" className="h-9 w-36" />
+            <Button type="submit" size="sm">
+              Ekle
+            </Button>
+          </form>
         </div>
 
         <div className="flex-1 overflow-y-auto px-4">

@@ -11,8 +11,9 @@ type PillCtaProps = {
 };
 
 /**
- * Farmora-language pill CTA.
- * Primary: accent fill + dark ink (never white on green).
+ * Primary CTA — accent fill + dark ink.
+ * Mobile: clean pill + inline arrow (no heavy black disc).
+ * Desktop: optional disc arrow for signature look.
  */
 export function PillCta({
   href,
@@ -22,7 +23,7 @@ export function PillCta({
   showArrow = true,
 }: PillCtaProps) {
   const base =
-    "mkt-pill inline-flex items-center gap-3 font-medium transition-transform active:scale-[0.98]";
+    "mkt-pill inline-flex items-center justify-center font-semibold transition-[transform,filter] active:scale-[0.98]";
 
   if (variant === "primary") {
     return (
@@ -30,15 +31,22 @@ export function PillCta({
         href={href}
         className={cn(
           base,
-          "bg-mkt-accent py-2.5 pr-2.5 pl-6 text-[15px] text-mkt-accent-ink hover:brightness-105",
+          "bg-mkt-accent text-mkt-accent-ink hover:brightness-105",
+          /* Mobile: balanced padding, inline arrow */
+          "h-11 gap-2 px-6 text-[14px]",
+          /* Desktop: slightly larger; disc arrow if enabled */
+          "sm:h-12 sm:gap-3 sm:pr-2.5 sm:pl-6 sm:text-[15px]",
           className,
         )}
       >
         <span>{children}</span>
         {showArrow ? (
-          <span className="flex size-9 items-center justify-center rounded-full bg-mkt-accent-ink text-white">
-            <ArrowUpRight className="size-4" aria-hidden />
-          </span>
+          <>
+            <ArrowUpRight className="size-4 sm:hidden" aria-hidden strokeWidth={2.25} />
+            <span className="hidden size-9 items-center justify-center rounded-full bg-mkt-accent-ink text-white sm:flex">
+              <ArrowUpRight className="size-4" aria-hidden />
+            </span>
+          </>
         ) : null}
       </Link>
     );
@@ -50,7 +58,7 @@ export function PillCta({
         href={href}
         className={cn(
           base,
-          "border border-[color:var(--mkt-border)] bg-transparent px-6 py-3 text-[15px] text-mkt-ink hover:bg-mkt-card-muted",
+          "h-11 border border-[color:var(--mkt-border)] bg-transparent px-5 text-[14px] text-mkt-ink hover:bg-mkt-card-muted sm:h-12 sm:px-6 sm:text-[15px]",
           className,
         )}
       >
@@ -62,7 +70,7 @@ export function PillCta({
   return (
     <Link
       href={href}
-      className={cn(base, "px-4 py-2 text-[15px] text-mkt-ink hover:opacity-70", className)}
+      className={cn(base, "px-4 py-2 text-[15px] font-medium text-mkt-ink hover:opacity-70", className)}
     >
       {children}
     </Link>

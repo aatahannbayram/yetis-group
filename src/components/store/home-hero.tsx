@@ -40,13 +40,13 @@ export function HomeHero({
       </motion.div>
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/52 to-black/40"
+        className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/35"
       />
 
       <div
         className={cn(
           "relative z-10 flex flex-col",
-          "px-4 pb-7 pt-[calc(4.5rem+env(safe-area-inset-top))] sm:px-6",
+          "px-4 pb-8 pt-[calc(4.25rem+env(safe-area-inset-top))] sm:px-6",
           "md:min-h-[min(82svh,880px)] md:justify-end md:px-10 md:pb-14 md:pt-28 lg:px-14",
         )}
       >
@@ -56,7 +56,7 @@ export function HomeHero({
               initial={reduced ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.05 }}
-              className="text-[12px] font-semibold tracking-[0.04em] text-white/70 uppercase"
+              className="hidden text-[12px] font-semibold tracking-[0.04em] text-white/70 uppercase sm:block"
             >
               Yöresel &amp; kırsal gıda
             </motion.p>
@@ -64,7 +64,7 @@ export function HomeHero({
               initial={reduced ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.1 }}
-              className="mkt-display mt-3 max-w-2xl text-balance text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.4)] md:mt-4"
+              className="mkt-display max-w-2xl text-balance text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.4)] sm:mt-3 md:mt-4"
             >
               Temiz gıdaya eriş, sağlıklı yetiş.
             </motion.h1>
@@ -72,57 +72,31 @@ export function HomeHero({
               initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.18 }}
-              className="mt-3 max-w-md text-[14px] leading-relaxed text-white/80 sm:mt-4 sm:text-[15px] md:text-base"
+              className="mt-3 hidden max-w-md text-[15px] leading-relaxed text-white/80 sm:block md:text-base"
             >
-              <span className="sm:hidden">Toptan tedarik. Net fiyat listesi, onaylı sipariş.</span>
-              <span className="hidden sm:inline">
-                Market, şarküteri ve mutfaklar için toptan tedarik. Fiyatın listende net; sipariş
-                onaydan sonra açılır.
-              </span>
+              Market, şarküteri ve mutfaklar için toptan tedarik. Fiyatın listende net; sipariş
+              onaydan sonra açılır.
             </motion.p>
 
-            {/* Mobile: one primary CTA + text link — fewer competing buttons */}
+            {/* Mobile: compact CTA row — not full-bleed clunky pill */}
             <motion.div
               initial={reduced ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.26 }}
-              className="mt-6 flex flex-col gap-4 sm:mt-7 sm:flex-row sm:items-center sm:gap-4"
+              className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7"
             >
-              <PillCta href="/auth" className="h-12 w-full justify-center sm:h-[3.25rem] sm:w-auto">
+              <PillCta href="/auth" className="w-auto min-w-[10.5rem]">
                 Bayi Girişi
               </PillCta>
               <Link
                 href="/auth?tab=uye"
-                className="inline-flex items-center justify-center gap-1.5 text-[15px] font-semibold text-white underline-offset-4 hover:underline sm:justify-start"
+                className="text-[14px] font-semibold text-white/90 underline-offset-4 hover:text-white hover:underline"
               >
                 Üye ol
-                <ArrowUpRight className="size-3.5 opacity-80" aria-hidden />
               </Link>
             </motion.div>
-
-            {/* Mobile shortcuts: text row, not a button stack */}
-            <motion.nav
-              aria-label="Hızlı linkler"
-              initial={reduced ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 0.34 }}
-              className="mt-7 flex flex-wrap items-center gap-x-1 gap-y-2 border-t border-white/15 pt-5 text-[13px] lg:hidden"
-            >
-              {shortcuts.map((link, i) => (
-                <span key={link.href} className="inline-flex items-center">
-                  {i > 0 ? <span className="mx-2 text-white/25" aria-hidden>·</span> : null}
-                  <Link
-                    href={link.href}
-                    className="font-medium text-white/75 underline-offset-2 hover:text-white hover:underline"
-                  >
-                    {link.label}
-                  </Link>
-                </span>
-              ))}
-            </motion.nav>
           </div>
 
-          {/* Desktop / large tablet only — keeps hero calm on phones */}
           <motion.aside
             initial={reduced ? false : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}

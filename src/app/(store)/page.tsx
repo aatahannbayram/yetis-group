@@ -458,59 +458,57 @@ export default function StoreHomePage() {
               aria-hidden
               className="absolute inset-0 bg-gradient-to-t from-[#0c1812]/80 via-[#0c1812]/25 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:via-[#0c1812]/20 lg:to-[#0c1812]/90"
             />
-            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:hidden">
-              <p className="text-[13px] font-semibold tracking-wide text-mkt-accent uppercase">
+            <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:hidden">
+              <p className="text-[1.2rem] font-semibold tracking-[-0.02em] text-white">
                 Bayi hesabı
-              </p>
-              <p className="mt-2 text-[1.35rem] font-semibold tracking-[-0.02em] text-white">
-                Onaylı hesap = katalog + fiyat listesi
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center bg-[#0c1812] px-5 py-10 text-white sm:px-8 sm:py-12 md:px-10 lg:px-12 lg:py-16">
+          <div className="flex flex-col justify-center bg-[#0c1812] px-5 py-8 text-white sm:px-8 sm:py-12 md:px-10 lg:px-12 lg:py-16">
             <Reveal>
               <p className="mkt-label hidden text-mkt-accent lg:block">Bayi hesabı</p>
               <h2 className="mkt-h2 mt-0 max-w-md text-balance text-white lg:mt-3">
-                Hesabın hazırsa siparişe geç.
+                <span className="sm:hidden">Siparişe geç.</span>
+                <span className="hidden sm:inline">Hesabın hazırsa siparişe geç.</span>
               </h2>
-              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
+              <p className="mt-3 hidden max-w-md text-[15px] leading-relaxed text-white/75 sm:mt-4 sm:block">
                 Üyelik başvurun incelenir; onaydan sonra fiyat listen açılır. Takıldığın yerde satış
                 ekibine yazman yeterli.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <PillCta href="/auth" className="w-full justify-center sm:w-auto">
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-8">
+                <PillCta href="/auth" className="w-auto min-w-[9.5rem]">
                   Giriş yap
                 </PillCta>
                 <Link
                   href="/auth?tab=uye"
-                  className="mkt-pill inline-flex h-12 w-full items-center justify-center bg-white px-6 text-[15px] font-semibold text-[#0a0a0a] hover:bg-white/92 sm:h-[3.25rem] sm:w-auto"
+                  className="text-[14px] font-semibold text-white/90 underline-offset-4 hover:text-white hover:underline"
                 >
                   Üye ol
                 </Link>
               </div>
 
-              <p className="mt-6 text-[14px] text-white/60">
-                <Link href="/urunler" className="font-semibold text-white underline-offset-2 hover:underline">
-                  Kataloğu incele
+              <p className="mt-5 text-[13px] text-white/55 sm:mt-6 sm:text-[14px]">
+                <Link href="/urunler" className="font-medium text-white/80 underline-offset-2 hover:text-white hover:underline">
+                  Katalog
                 </Link>
-                <span className="mx-2 text-white/30">·</span>
-                <Link href="/iletisim" className="font-semibold text-white underline-offset-2 hover:underline">
-                  Satışa yaz
+                <span className="mx-2 text-white/25">·</span>
+                <Link href="/iletisim" className="font-medium text-white/80 underline-offset-2 hover:text-white hover:underline">
+                  İletişim
                 </Link>
               </p>
 
-              <ul className="mt-8 grid gap-3 border-t border-white/10 pt-6 text-[13px] text-white/70 sm:grid-cols-3 sm:gap-4">
-                <li className="flex items-center gap-2">
+              <ul className="mt-6 hidden gap-4 border-t border-white/10 pt-6 text-[13px] text-white/70 sm:mt-8 sm:flex">
+                <li className="inline-flex items-center gap-2">
                   <Snowflake className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
                   SKT / lot
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="inline-flex items-center gap-2">
                   <ClipboardList className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
                   Net fiyat
                 </li>
-                <li className="flex items-center gap-2">
+                <li className="inline-flex items-center gap-2">
                   <MessageCircleMore className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
                   WhatsApp
                 </li>

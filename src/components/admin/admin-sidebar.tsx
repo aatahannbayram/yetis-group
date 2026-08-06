@@ -19,6 +19,7 @@ import {
   Shapes,
   Newspaper,
   ChefHat,
+  SearchCheck,
 } from "lucide-react";
 import {
   Sidebar,
@@ -46,6 +47,7 @@ const managementItems = [
   { href: "/admin/nitelikler", label: "Nitelikler", icon: Shapes },
   { href: "/admin/icerikler", label: "Haberler", icon: Newspaper },
   { href: "/admin/tarifler", label: "Tarifler", icon: ChefHat },
+  { href: "/admin/seo", label: "SEO / AEO", icon: SearchCheck },
   { href: "/admin/fiyat-listeleri", label: "Fiyat Listeleri", icon: Tags },
   { href: "/admin/kullanicilar", label: "Kullanıcılar", icon: UserCog },
   { href: "/admin/bayiler", label: "Bayiler", icon: Users2 },

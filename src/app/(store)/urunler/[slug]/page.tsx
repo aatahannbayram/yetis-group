@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { auth } from "@/infra/auth/server";
 import { getProductBySlugWithPricing, getProductsWithPricing } from "@/infra/db/pricing";
+import { getProductBySlug } from "@/infra/db/products";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductDetailActions } from "@/components/store/product-detail-actions";
 import { ProductGallery } from "@/components/store/product-gallery";
@@ -11,9 +13,30 @@ import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { Reveal } from "@/components/store/reveal";
+import { ViewItemTracker } from "@/components/store/view-item-tracker";
 import { listRecipesForProduct } from "@/infra/db/content";
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { JsonLdScript, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await getProductBySlug(slug);
+  if (!product) return {};
+  return buildPageMetadata({
+    title: product.name,
+    description:
+      product.description.slice(0, 160) ||
+      `${product.name} — Yetiş Grup B2B katalogunda yöresel/kırsal ürün.`,
+    path: `/urunler/${product.slug}`,
+    image: product.imageUrl,
+  });
+}
 
 export default async function ProductDetailPage({
   params,
@@ -50,6 +73,18 @@ export default async function ProductDetailPage({
         sku={product.sku}
         priceKurus={product.unitPrice}
         brand={product.producer.name}
+      />
+      <JsonLdScript
+        data={breadcrumbJsonLd([
+          { name: "Ana sayfa", path: "/" },
+          { name: "Ürünler", path: "/urunler" },
+          { name: product.name, path: `/urunler/${product.slug}` },
+        ])}
+      />
+      <ViewItemTracker
+        itemId={product.sku}
+        itemName={product.name}
+        priceKurus={product.unitPrice}
       />
       <Slab>
         <SiteHeader />

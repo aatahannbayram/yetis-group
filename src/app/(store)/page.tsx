@@ -15,6 +15,40 @@ import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { AboutTabs } from "@/components/store/about-tabs";
 import { Reveal } from "@/components/store/reveal";
+import {
+  JsonLdScript,
+  faqPageJsonLd,
+  localBusinessJsonLd,
+  organizationJsonLd,
+} from "@/lib/seo/json-ld";
+import type { Metadata } from "next";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { SITE } from "@/lib/site";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: SITE.name,
+  description: SITE.description,
+  path: "/",
+  image: "/hero-dairy.jpg",
+});
+
+const homeFaqs = [
+  {
+    question: "Yetiş Grup kimlere satış yapar?",
+    answer:
+      "Market, şarküteri, HORECA ve ara toptancılara B2B satış yaparız. Tüketiciye perakende pazaryeri değiliz; onaylı bayi hesabı ile katalog, fiyat listesi ve sipariş açılır.",
+  },
+  {
+    question: "Toptan yöresel gıda tedarikçisi olarak ne sunarsınız?",
+    answer:
+      "Yöresel ve kırsal ürün kataloğu, soğuk zincir/lot-SKT takibi, kredi limiti kontrollü sepet, FEFO sevkiyat ve WhatsApp bildirimlerini tek platformda birleştiririz.",
+  },
+  {
+    question: "Bayilik nasıl alınır?",
+    answer:
+      "Satış ekibimize başvurursunuz; ticari değerlendirme ve onay sonrası kullanıcı hesabı, fiyat listesi ve varsa kredi limiti tanımlanır. Süreç detayı /haberler altında bayilik rehberinde anlatılır.",
+  },
+];
 
 const aboutTabs = [
   {
@@ -105,6 +139,7 @@ const processTabs = [
 export default function StoreHomePage() {
   return (
     <Canvas>
+      <JsonLdScript data={[organizationJsonLd(), localBusinessJsonLd(), faqPageJsonLd(homeFaqs)]} />
       <Slab className="relative min-h-[72vh] overflow-hidden md:min-h-[85vh]">
         <Image
           src="/hero-dairy.jpg"
@@ -361,6 +396,25 @@ export default function StoreHomePage() {
           >
             info@yetisgrup.com
           </a>
+        </div>
+      </Slab>
+
+      <Slab className="mkt-pad">
+        <Reveal>
+          <p className="mkt-label text-mkt-green-text">Sık sorulanlar</p>
+          <h2 className="mkt-h2 mt-3 max-w-xl text-balance text-mkt-ink">
+            Bayiler için net cevaplar.
+          </h2>
+        </Reveal>
+        <div className="mt-8 grid gap-3 md:grid-cols-3 md:gap-4">
+          {homeFaqs.map((faq) => (
+            <div key={faq.question} className="rounded-[1.25rem] bg-mkt-card-muted p-5 md:p-6">
+              <h3 className="text-[1.05rem] font-medium tracking-[-0.015em] text-mkt-ink">
+                {faq.question}
+              </h3>
+              <p className="mkt-body mt-3 text-[13px]">{faq.answer}</p>
+            </div>
+          ))}
         </div>
       </Slab>
 

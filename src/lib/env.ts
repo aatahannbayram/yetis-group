@@ -15,6 +15,13 @@ const envSchema = z
     WHATSAPP_META_WEBHOOK_SECRET: z.string().optional(),
 
     APP_TIMEZONE: z.string().default("Europe/Istanbul"),
+
+    /** Public site origin for sitemap/canonical (defaults to BETTER_AUTH_URL). */
+    NEXT_PUBLIC_SITE_URL: z.url().optional(),
+    NEXT_PUBLIC_GTM_ID: z.string().optional(),
+    NEXT_PUBLIC_GA4_ID: z.string().optional(),
+    NEXT_PUBLIC_META_PIXEL_ID: z.string().optional(),
+    NEXT_PUBLIC_GSC_VERIFICATION: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.WHATSAPP_PROVIDER === "meta") {

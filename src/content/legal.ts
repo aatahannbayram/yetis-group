@@ -212,12 +212,14 @@ export const legalDocs: LegalDoc[] = [
         heading: "2. Kullandığımız çerezler",
         paragraphs: [
           "Zorunlu çerezler: oturum (auth), güvenlik ve sepet/işlem sürekliliği için gereklidir; Platform’un çalışması bunlara bağlıdır.",
-          "İşlevsel / analitik çerezler: deneyimi iyileştirmek için kullanılabilir. Zorunlu olmayan çerezler için mümkün olduğunca tercih sunulur.",
+          "Analitik çerezler (ör. Google Analytics 4 / Google Tag Manager): yalnızca açık rızanızdan sonra yüklenir. Rıza öncesi izleme script’i çalışmaz.",
+          "Pazarlama çerezleri (ör. Meta Pixel): yalnızca pazarlama kategorisine rıza verdiğinizde yüklenir.",
         ],
       },
       {
         heading: "3. Yönetim",
         paragraphs: [
+          "İlk ziyarette çerez bandından “Tümünü kabul et”, “Yalnızca zorunlu” veya “Tercihler” ile kategorileri yönetebilirsiniz. Tercihler tarayıcınızda saklanır.",
           "Tarayıcı ayarlarından çerezleri silebilir veya engelleyebilirsiniz. Zorunlu çerezler engellenirse giriş ve sipariş işlevleri çalışmayabilir.",
         ],
       },

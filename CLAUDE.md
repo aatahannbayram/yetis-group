@@ -243,6 +243,7 @@ Milestone ilerledikçe klasörler dolar; M0’da iskelet + token + auth.
 | **M13** | Kategori/nitelik UI + ürün detay derinleştirme | Ağaç, attribute, galeri, Schema.org — **UI + şema tamam** |
 | **M14–M23** | Blog/reçete, SEO, CRM, self-serve, promo, SKT motoru, maliyet hesaplayıcı, AI, sözleşme | Milestone başına yeşil test |
 | **M14** | Blog/haber + reçete + 8 başlangıç yazısı | Schema.org Article/Recipe, RSS, admin — **UI + seed tamam** |
+| **M15** | SEO/AEO + analytics + çerez rızası | sitemap/robots/llms.txt, consent-gated GA4/GTM/Pixel, 301 admin — **UI + test tamam** |
 
 **Kural:** Bir milestone bitmeden diğerine geçilmez. **M12.5 bitmeden M13 yok.** Her milestone sonunda testler yeşil.
 

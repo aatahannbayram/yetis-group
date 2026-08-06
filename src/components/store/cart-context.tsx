@@ -17,6 +17,7 @@ import {
   type CartView,
   type CartViewLine,
 } from "@/app/(store)/sepet/actions";
+import { canTrackAnalytics, trackEcommerce } from "@/lib/analytics/adapter";
 
 type CartContextValue = {
   lines: CartViewLine[];
@@ -56,13 +57,41 @@ export function CartProvider({ children }: { children: ReactNode }) {
     totalKurus: cart?.totalKurus ?? 0,
     isOpen,
     isPending,
-    open: () => setIsOpen(true),
+    open: () => {
+      setIsOpen(true);
+      if (canTrackAnalytics() && (cart?.itemCount ?? 0) > 0) {
+        trackEcommerce("begin_checkout", {
+          value: (cart?.totalKurus ?? 0) / 100,
+          items: (cart?.lines ?? []).map((l) => ({
+            item_id: l.variantId,
+            item_name: l.name,
+            price: l.unitPriceKurus / 100,
+            quantity: l.quantity,
+          })),
+        });
+      }
+    },
     close: () => setIsOpen(false),
     addVariant: (variantId, quantity = 1) => {
       startTransition(async () => {
         const next = await addToCartAction(variantId, quantity);
+        if (!next) return;
         setCart(next);
         setIsOpen(true);
+        if (canTrackAnalytics()) {
+          const line = next.lines.find((l) => l.variantId === variantId);
+          trackEcommerce("add_to_cart", {
+            value: ((line?.unitPriceKurus ?? 0) * quantity) / 100,
+            items: [
+              {
+                item_id: variantId,
+                item_name: line?.name ?? variantId,
+                price: (line?.unitPriceKurus ?? 0) / 100,
+                quantity,
+              },
+            ],
+          });
+        }
       });
     },
     removeLine: (lineId) => {

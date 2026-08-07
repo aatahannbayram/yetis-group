@@ -224,6 +224,32 @@ body {
   font-feature-settings: "ss01" on, "cv11" on;
 }
 
+@keyframes home-hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.home-hero-enter {
+  animation: home-hero-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-hero-enter-delay {
+  animation-delay: 0.12s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-enter,
+  .home-hero-enter-delay {
+    animation: none;
+  }
+}
+
 .mkt-h2 {
   font-size: var(--text-h2);
   line-height: var(--leading-h2);

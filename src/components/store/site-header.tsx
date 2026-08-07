@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
@@ -17,14 +18,69 @@ const nav = [
   { href: "/iletisim", label: "İletişim" },
 ];
 
-export async function SiteHeader({
+function AuthActionsFallback({ isOverlay }: { isOverlay: boolean }) {
+  return (
+    <>
+      <div className="hidden items-center gap-2 sm:flex" aria-hidden>
+        <span
+          className={cn(
+            "mkt-pill inline-flex h-[42px] w-[5.5rem] animate-pulse",
+            isOverlay ? "bg-white/25" : "bg-stone-200/80",
+          )}
+        />
+        <span className="mkt-pill inline-flex h-[42px] w-[6.5rem] animate-pulse bg-mkt-accent/50" />
+      </div>
+      <span
+        className={cn(
+          "flex size-10 animate-pulse rounded-lg md:hidden",
+          isOverlay ? "bg-white/20" : "bg-stone-200/80",
+        )}
+        aria-hidden
+      />
+    </>
+  );
+}
+
+async function HeaderAuthActions({ isOverlay }: { isOverlay: boolean }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isStaff = session ? await isStaffUser(session.user.id) : false;
+
+  return (
+    <>
+      {session ? (
+        <StoreUserMenu userName={session.user.name} isStaff={isStaff} />
+      ) : (
+        <div className="hidden items-center gap-2 sm:flex">
+          <Link
+            href="/auth?tab=uye"
+            className={cn(
+              "mkt-pill inline-flex items-center justify-center px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em]",
+              isOverlay
+                ? "bg-white text-[#0a0a0a] shadow-sm hover:bg-white/92"
+                : "border border-[color:var(--mkt-border)] bg-white text-mkt-ink hover:bg-mkt-card-muted",
+            )}
+          >
+            Üye ol
+          </Link>
+          <Link
+            href="/auth"
+            className="mkt-pill bg-mkt-accent px-5 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-mkt-accent-ink hover:brightness-105"
+          >
+            Bayi Girişi
+          </Link>
+        </div>
+      )}
+      <MobileNav isLoggedIn={!!session} isStaff={isStaff} overlay={isOverlay} />
+    </>
+  );
+}
+
+export function SiteHeader({
   variant = "canvas",
 }: {
   /** overlay = transparent over hero photo; canvas = solid on marketing canvas */
   variant?: "overlay" | "canvas";
 }) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const isStaff = session ? await isStaffUser(session.user.id) : false;
   const isOverlay = variant === "overlay";
 
   const inner = (
@@ -77,30 +133,9 @@ export async function SiteHeader({
         <div className={cn(isOverlay && "[&_button]:text-white [&_button]:hover:bg-white/15")}>
           <CartTriggerButton />
         </div>
-        {session ? (
-          <StoreUserMenu userName={session.user.name} isStaff={isStaff} />
-        ) : (
-          <div className="hidden items-center gap-2 sm:flex">
-            <Link
-              href="/auth?tab=uye"
-              className={cn(
-                "mkt-pill inline-flex items-center justify-center px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em]",
-                isOverlay
-                  ? "bg-white text-[#0a0a0a] shadow-sm hover:bg-white/92"
-                  : "border border-[color:var(--mkt-border)] bg-white text-mkt-ink hover:bg-mkt-card-muted",
-              )}
-            >
-              Üye ol
-            </Link>
-            <Link
-              href="/auth"
-              className="mkt-pill bg-mkt-accent px-5 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-mkt-accent-ink hover:brightness-105"
-            >
-              Bayi Girişi
-            </Link>
-          </div>
-        )}
-        <MobileNav isLoggedIn={!!session} isStaff={isStaff} overlay={isOverlay} />
+        <Suspense fallback={<AuthActionsFallback isOverlay={isOverlay} />}>
+          <HeaderAuthActions isOverlay={isOverlay} />
+        </Suspense>
       </div>
     </div>
   );

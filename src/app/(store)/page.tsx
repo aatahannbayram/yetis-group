@@ -255,7 +255,7 @@ export default function StoreHomePage() {
               <SceneImage
                 id="offer-board"
                 fill
-                quality={70}
+                quality={55}
                 sizes="(min-width: 1024px) 40vw, 90vw"
               />
             </div>
@@ -287,9 +287,9 @@ export default function StoreHomePage() {
                   <SceneImage
                     id={item.imageSlot}
                     fill
-                    quality={70}
+                    quality={55}
                     className="transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(min-width: 1024px) 22vw, 50vw"
+                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
                   />
                   <span className="absolute top-3 left-3 flex size-10 items-center justify-center rounded-full bg-white/90 text-mkt-green-text shadow-sm backdrop-blur-sm">
                     <item.icon className="size-4" aria-hidden />
@@ -330,7 +330,7 @@ export default function StoreHomePage() {
                     <SceneImage
                       id={product.slot}
                       fill
-                      quality={70}
+                      quality={55}
                       className="transition-transform duration-500 group-hover:scale-105"
                       sizes="(min-width: 768px) 20vw, 42vw"
                     />
@@ -390,7 +390,7 @@ export default function StoreHomePage() {
             <SceneImage
               id="cta-final"
               fill
-              quality={75}
+              quality={60}
               className="object-center"
               sizes="(min-width: 1024px) 55vw, 100vw"
             />

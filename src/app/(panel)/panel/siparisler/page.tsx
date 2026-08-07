@@ -49,7 +49,9 @@ export default async function AdminOrdersPage() {
     (r) => !["DELIVERED", "REJECTED", "CANCELLED"].includes(r.status),
   ).length;
   const deliveredCount = rows.filter((r) => r.status === "DELIVERED").length;
-  const totalKurus = rows.reduce((sum, r) => sum + r.totalKurus, 0);
+  const totalKurus = rows
+    .filter((r) => r.status !== "REJECTED" && r.status !== "CANCELLED")
+    .reduce((sum, r) => sum + r.totalKurus, 0);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">

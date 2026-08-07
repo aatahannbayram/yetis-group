@@ -59,7 +59,8 @@ function toView(cart: NonNullable<Awaited<ReturnType<typeof getOrCreateCart>>>):
 
 export async function fetchCartAction(): Promise<CartView | null> {
   const { userId, dealerId } = await sessionContext();
-  const cart = await getOrCreateCart({ userId, dealerId, createGuest: true });
+  // Read-only: do not create guest carts on every page view (Neon write cost).
+  const cart = await getOrCreateCart({ userId, dealerId, createGuest: false });
   return cart ? toView(cart) : null;
 }
 
@@ -75,7 +76,8 @@ export async function addToCartAction(variantId: string, quantity = 1) {
   });
   revalidatePath("/");
   revalidatePath("/urunler");
-  return fetchCartAction();
+  const next = await getOrCreateCart({ userId, dealerId, createGuest: false });
+  return next ? toView(next) : null;
 }
 
 export async function setCartQuantityAction(lineId: string, quantity: number) {

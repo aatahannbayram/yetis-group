@@ -48,7 +48,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) refresh();
+    };
+
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(run, { timeout: 2000 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+
+    const t = window.setTimeout(run, 800);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
   }, [refresh]);
 
   const value: CartContextValue = {
@@ -59,6 +76,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     isPending,
     open: () => {
       setIsOpen(true);
+      if (!cart) refresh();
       if (canTrackAnalytics() && (cart?.itemCount ?? 0) > 0) {
         trackEcommerce("begin_checkout", {
           value: (cart?.totalKurus ?? 0) / 100,

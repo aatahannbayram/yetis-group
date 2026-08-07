@@ -1,13 +1,8 @@
-"use client";
-
-import { motion } from "motion/react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { PillCta } from "@/components/store/pill-cta";
 import { SceneImage } from "@/components/store/scene-image";
 import { cn } from "@/lib/utils";
-import { MOTION } from "@/lib/motion";
-import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 
 const shortcuts = [
   { href: "/urunler", label: "Kataloğa bak" },
@@ -15,9 +10,11 @@ const shortcuts = [
   { href: "/iletisim?konu=numune", label: "Numune iste" },
 ] as const;
 
+/**
+ * Server-friendly hero: no motion/react on the LCP path.
+ * Soft entrance via CSS only when motion is allowed.
+ */
 export function HomeHero() {
-  const reduced = usePrefersReducedMotion();
-
   return (
     <div
       className={cn(
@@ -31,7 +28,7 @@ export function HomeHero() {
           id="hero"
           fill
           priority
-          quality={60}
+          quality={55}
           className="object-[center_42%] md:object-center"
           sizes="100vw"
         />
@@ -56,20 +53,12 @@ export function HomeHero() {
         )}
       >
         <div className="grid lg:grid-cols-[minmax(0,1.3fr)_minmax(16rem,0.7fr)] lg:items-end lg:gap-10">
-          <div className="min-w-0">
-            <motion.p
-              initial={reduced ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: MOTION.normal / 1000, delay: 0.05, ease: MOTION.ease }}
-              className="hidden text-[12px] font-semibold tracking-[0.06em] text-white/65 uppercase sm:block"
-            >
+          <div className="home-hero-enter min-w-0">
+            <p className="hidden text-[12px] font-semibold tracking-[0.06em] text-white/65 uppercase sm:block">
               Yöresel &amp; kırsal gıda
-            </motion.p>
+            </p>
 
-            <motion.h1
-              initial={reduced ? false : { opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.55, delay: 0.08, ease: MOTION.ease }}
+            <h1
               className={cn(
                 "mkt-display max-w-[14ch] text-balance text-white",
                 "text-[clamp(2.35rem,9.5vw,3.25rem)] leading-[1.06] tracking-[-0.03em]",
@@ -80,24 +69,14 @@ export function HomeHero() {
             >
               Temiz gıdaya eriş,
               <br className="sm:hidden" /> sağlıklı yetiş.
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              initial={reduced ? false : { opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: MOTION.normal / 1000, delay: 0.16, ease: MOTION.ease }}
-              className="mt-3 hidden max-w-md text-[15px] leading-relaxed text-white/80 sm:block md:text-base"
-            >
+            <p className="mt-3 hidden max-w-md text-[15px] leading-relaxed text-white/80 sm:block md:text-base">
               Market, şarküteri ve mutfaklar için toptan tedarik. Fiyatın listende net; sipariş
               onaydan sonra açılır.
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={reduced ? false : { opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: MOTION.normal / 1000, delay: 0.22, ease: MOTION.ease }}
-              className="mt-8 flex flex-col gap-4 sm:mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3"
-            >
+            <div className="mt-8 flex flex-col gap-4 sm:mt-7 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3">
               <PillCta
                 href="/auth"
                 className="w-full justify-center sm:w-auto sm:min-w-[11rem] sm:justify-start"
@@ -110,15 +89,10 @@ export function HomeHero() {
               >
                 Üye ol
               </Link>
-            </motion.div>
+            </div>
           </div>
 
-          <motion.aside
-            initial={reduced ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.32, ease: MOTION.ease }}
-            className="mt-8 hidden rounded-[1.35rem] border border-white/20 bg-white/10 p-5 text-white backdrop-blur-xl lg:mt-0 lg:block lg:p-6"
-          >
+          <aside className="home-hero-enter home-hero-enter-delay mt-8 hidden rounded-[1.35rem] border border-white/20 bg-white/10 p-5 text-white backdrop-blur-xl lg:mt-0 lg:block lg:p-6">
             <p className="text-[12px] font-semibold tracking-wide text-white/70 uppercase">
               Bugün ne lazım?
             </p>
@@ -138,7 +112,7 @@ export function HomeHero() {
                 </li>
               ))}
             </ul>
-          </motion.aside>
+          </aside>
         </div>
       </div>
     </div>

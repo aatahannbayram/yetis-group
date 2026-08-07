@@ -62,7 +62,7 @@ export function AboutTabs({
           key={current.imageSlot}
           id={current.imageSlot}
           fill
-          quality={70}
+          quality={55}
           className="transition-opacity duration-500"
           sizes="(min-width: 768px) 28vw, 90vw"
         />

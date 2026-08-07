@@ -27,6 +27,26 @@ export async function listShipments() {
   });
 }
 
+export async function listShipmentsForDealer(dealerId: string) {
+  return prisma.shipment.findMany({
+    where: { dealerId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      variant: {
+        select: {
+          id: true,
+          sku: true,
+          packSize: true,
+          packagingType: true,
+          product: { select: { name: true, imageUrl: true } },
+        },
+      },
+      allocations: { include: { lot: { select: { lotNumber: true, expirationDate: true } } } },
+      order: { select: { id: true, status: true } },
+    },
+  });
+}
+
 export async function createShipment(input: {
   dealerId: string;
   variantId: string;

@@ -4,6 +4,7 @@ import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
 import { countUnreadDealer } from "@/infra/db/notifications";
+import { getOrCreateCart } from "@/infra/db/cart";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { ImpersonationBanner } from "@/components/workspace/impersonation-banner";
 import { WorkspaceShell } from "@/components/workspace/workspace-shell";
@@ -42,18 +43,31 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
   });
   if (!dealer) redirect(staff ? "/panel" : "/");
 
-  const unreadNotifications = await countUnreadDealer(dealer.id);
+  const [unreadNotifications, cart] = await Promise.all([
+    countUnreadDealer(dealer.id),
+    getOrCreateCart({
+      userId: impersonating ? null : session.user.id,
+      dealerId: dealer.id,
+      createGuest: false,
+    }),
+  ]);
+
+  const cartCount = cart?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0;
 
   return (
     <TooltipProvider delayDuration={200}>
       <WorkspaceShell
         defaultDensity="comfortable"
-        className="panel-shell dealer-shell min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary-subtle)_45%,var(--panel-canvas))_0%,var(--panel-canvas)_420px)] text-foreground"
+        className="panel-shell dealer-shell min-h-screen bg-[var(--panel-canvas)] text-foreground"
       >
         {impersonating ? (
           <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
         ) : null}
-        <DealerNav dealerName={dealer.unvan} unreadNotifications={unreadNotifications} />
+        <DealerNav
+          dealerName={dealer.unvan}
+          unreadNotifications={unreadNotifications}
+          cartCount={cartCount}
+        />
         <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-7">{children}</main>
       </WorkspaceShell>
     </TooltipProvider>

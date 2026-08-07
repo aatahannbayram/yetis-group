@@ -129,6 +129,63 @@ export async function createOrder(input: {
   return order;
 }
 
+export type DealerPaymentMethod = "BANK_TRANSFER" | "ON_ACCOUNT";
+
+/** Converts a server cart into a SUBMITTED order and clears cart lines. */
+export async function createOrderFromCart(input: {
+  cartId: string;
+  dealerId: string;
+  note?: string;
+  paymentMethod?: DealerPaymentMethod;
+}) {
+  const cart = await prisma.cart.findUnique({
+    where: { id: input.cartId },
+    include: { lines: true },
+  });
+  if (!cart) throw new Error("Sepet bulunamadı");
+  if (cart.dealerId && cart.dealerId !== input.dealerId) {
+    throw new Error("Sepet bu bayiye ait değil");
+  }
+  if (cart.lines.length === 0) throw new Error("Sepet boş");
+
+  const paymentLabel =
+    input.paymentMethod === "BANK_TRANSFER"
+      ? "Ödeme: Banka havalesi / EFT"
+      : input.paymentMethod === "ON_ACCOUNT"
+        ? "Ödeme: Cari hesap"
+        : null;
+  const note = [paymentLabel, input.note?.trim()].filter(Boolean).join("\n") || undefined;
+
+  const order = await createOrder({
+    dealerId: input.dealerId,
+    lines: cart.lines.map((line) => ({
+      variantId: line.variantId,
+      quantity: line.quantity,
+    })),
+    note,
+  });
+
+  await prisma.cartLine.deleteMany({ where: { cartId: cart.id } });
+  return order;
+}
+
+export async function listOrdersForDealer(dealerId: string) {
+  return prisma.order.findMany({
+    where: { dealerId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      lines: {
+        include: {
+          variant: {
+            include: { product: { select: { name: true, imageUrl: true } } },
+          },
+        },
+      },
+      events: { orderBy: { createdAt: "desc" }, take: 1 },
+    },
+  });
+}
+
 /**
  * Statü geçişi + değişmez olay kaydı. Teslim edildiğinde cari borç kaydı
  * otomatik açılır (siparişten cariye gerçek entegrasyon).

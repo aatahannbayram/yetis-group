@@ -57,6 +57,20 @@ export async function listProformas() {
   });
 }
 
+export async function listProformasForDealer(dealerId: string) {
+  return prisma.proformaInvoice.findMany({
+    where: {
+      status: { in: ["ISSUED", "VOID"] },
+      order: { dealerId },
+    },
+    orderBy: { issuedAt: "desc" },
+    include: {
+      order: { select: { id: true, status: true, createdAt: true } },
+      lines: { orderBy: { sortOrder: "asc" }, take: 5 },
+    },
+  });
+}
+
 export async function getActiveProformaForOrder(orderId: string) {
   return prisma.proformaInvoice.findFirst({
     where: { orderId, status: "ISSUED" },

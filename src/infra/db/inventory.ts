@@ -121,6 +121,29 @@ export async function getStockSummaryByProduct() {
   );
 }
 
+/** Sevkiyat edilebilir (SKT geçmemiş) stok kg, varyant bazında. */
+export async function getShippableStockByVariant() {
+  const variants = await prisma.productVariant.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      lots: {
+        include: { movements: true },
+      },
+    },
+  });
+
+  const now = new Date();
+  return new Map(
+    variants.map((variant) => {
+      const shippable = variant.lots
+        .filter((lot) => lot.expirationDate >= now)
+        .flatMap((lot) => lot.movements);
+      return [variant.id, availableKgFromMovements(shippable)];
+    }),
+  );
+}
+
 export async function createLot(input: {
   variantId: string;
   lotNumber: string;

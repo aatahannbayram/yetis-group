@@ -115,23 +115,28 @@ function NavGroup({
   openLeadsCount,
   collapsed,
   onToggle,
+  isFirst,
 }: {
   group: PanelNavGroup;
   openLeadsCount: number;
   collapsed: boolean;
   onToggle: () => void;
+  isFirst: boolean;
 }) {
   const ready = group.items.filter((i) => i.status === "ready");
   const soon = group.items.filter((i) => i.status === "soon");
   const visible = collapsed ? [] : [...ready, ...soon];
 
   return (
-    <SidebarGroup className="px-2 py-1">
+    <SidebarGroup className={cn("px-2 pb-1", isFirst ? "pt-1.5" : "pt-4")}>
       <SidebarGroupLabel asChild>
         <button
           type="button"
           onClick={onToggle}
-          className="mb-0.5 flex h-7 w-full items-center gap-1.5 px-2.5 text-[11px] font-semibold tracking-[0.06em] text-sidebar-foreground/45 uppercase hover:text-sidebar-foreground/75"
+          className={cn(
+            "mb-1.5 flex h-7 w-full items-center gap-1.5 px-2.5 text-[11px] font-bold tracking-[0.08em] text-sidebar-foreground/60 uppercase hover:text-sidebar-foreground/90",
+            isFirst ? "pt-0" : "border-t border-sidebar-border/70 pt-3",
+          )}
           aria-expanded={!collapsed}
           aria-controls={`nav-group-${group.id}`}
         >
@@ -144,7 +149,7 @@ function NavGroup({
           />
           <span className="truncate">{group.label}</span>
           {collapsed && ready.length > 0 ? (
-            <span className="ml-auto font-normal tracking-normal text-sidebar-foreground/30 tabular-nums">
+            <span className="ml-auto font-normal tracking-normal text-sidebar-foreground/40 tabular-nums">
               {ready.length}
             </span>
           ) : null}
@@ -218,13 +223,14 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
           hydrated && "opacity-100 transition-opacity duration-150",
         )}
       >
-        {PANEL_NAV_GROUPS.map((group) => (
+        {PANEL_NAV_GROUPS.map((group, index) => (
           <NavGroup
             key={group.id}
             group={group}
             openLeadsCount={openLeadsCount}
             collapsed={Boolean(collapsedGroups[group.id])}
             onToggle={() => toggleGroup(group.id)}
+            isFirst={index === 0}
           />
         ))}
       </SidebarContent>

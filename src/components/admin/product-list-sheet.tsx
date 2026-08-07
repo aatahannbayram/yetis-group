@@ -268,7 +268,22 @@ export function ProductListSheet({
       {viewMode === "cards" ? (
         <div className="bg-stone-50/60 p-3 sm:p-4 dark:bg-zinc-950/40">
           {filtered.length === 0 ? (
-            <EmptyState onCreate={openCreate} />
+            categoryFilter || search.trim() ? (
+              <FilterEmptyState
+                title={
+                  categoryFilter
+                    ? `"${categoryFilter}" kategorisinde ürün yok`
+                    : "Arama sonucu boş"
+                }
+                description="Filtreyi veya aramayı temizleyip tekrar deneyin."
+                onClear={() => {
+                  setCategoryFilter(null);
+                  setSearch("");
+                }}
+              />
+            ) : (
+              <EmptyState onCreate={openCreate} />
+            )
           ) : (
             <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((product) => (
@@ -293,13 +308,37 @@ export function ProductListSheet({
           search=""
           globalFilterFn={globalFilterFn}
           onRowOpen={(row) => openDetail(row.id)}
-          emptyTitle="Ürün yok"
-          emptyDescription="Yeni ürün ekleyerek kataloğu doldurun."
+          emptyTitle={
+            categoryFilter || search.trim()
+              ? "Filtre sonucu boş"
+              : "Ürün yok"
+          }
+          emptyDescription={
+            categoryFilter || search.trim()
+              ? "Kategori veya aramayı temizleyip tekrar deneyin."
+              : "Yeni ürün ekleyerek kataloğu doldurun."
+          }
+          filterEmptyTitle="Filtre sonucu boş"
+          filterEmptyDescription="Kategori veya aramayı temizleyip tekrar deneyin."
           emptyAction={
-            <Button type="button" onClick={openCreate} className="gap-1.5">
-              <Plus className="size-4" aria-hidden />
-              Yeni ürün
-            </Button>
+            categoryFilter || search.trim() ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setCategoryFilter(null);
+                  setSearch("");
+                }}
+                className="gap-1.5"
+              >
+                Filtreyi temizle
+              </Button>
+            ) : (
+              <Button type="button" onClick={openCreate} className="gap-1.5">
+                <Plus className="size-4" aria-hidden />
+                Yeni ürün
+              </Button>
+            )
           }
         />
       )}
@@ -700,6 +739,29 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       >
         <Plus className="size-4" />
         Yeni ürün
+      </Button>
+    </div>
+  );
+}
+
+function FilterEmptyState({
+  title,
+  description,
+  onClear,
+}: {
+  title: string;
+  description: string;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-16 text-center dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400 dark:bg-zinc-800">
+        <PackageSearch className="size-6" />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-stone-800 dark:text-zinc-100">{title}</p>
+      <p className="mt-1 max-w-xs text-sm text-stone-500">{description}</p>
+      <Button type="button" variant="outline" onClick={onClear} className="mt-5 gap-1.5">
+        Filtreyi temizle
       </Button>
     </div>
   );

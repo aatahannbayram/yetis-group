@@ -66,7 +66,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
       { href: "/panel/sevkiyat", label: "Sevkiyat", icon: Truck, status: "ready" },
       { href: "/panel/b2b/sepetler", label: "Açık sepetler", icon: ShoppingCart, status: "ready" },
       { href: "/panel/bildirimler", label: "Bildirimler", icon: Bell, status: "ready" },
-      { href: "/panel/onay-kuyrugu", label: "Onay kuyruğu", icon: ClipboardCheck, status: "soon" },
+      { href: "/panel/onay-kuyrugu", label: "Onay kuyruğu", icon: ClipboardCheck, status: "ready" },
     ],
   },
   {
@@ -81,8 +81,8 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
         badgeKey: "leads",
         status: "ready",
       },
-      { href: "/panel/teklifler", label: "Teklifler", icon: FileText, status: "soon" },
-      { href: "/panel/kampanyalar", label: "Kampanyalar", icon: Megaphone, status: "soon" },
+      { href: "/panel/teklifler", label: "Teklifler", icon: FileText, status: "ready" },
+      { href: "/panel/kampanyalar", label: "Kampanyalar", icon: Megaphone, status: "ready" },
     ],
   },
   {
@@ -94,7 +94,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
       { href: "/panel/fiyat-listeleri", label: "Fiyat listeleri", icon: Tags, status: "ready" },
       { href: "/panel/nitelikler", label: "Ürün özellikleri", icon: Shapes, status: "ready" },
       { href: "/panel/stok", label: "Stok & lot", icon: CheckSquare, status: "ready" },
-      { href: "/panel/ureticiler", label: "Üreticiler", icon: Boxes, status: "soon" },
+      { href: "/panel/ureticiler", label: "Üreticiler", icon: Boxes, status: "ready" },
     ],
   },
   {
@@ -103,7 +103,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
     items: [
       { href: "/panel/cari", label: "Cari", icon: Wallet, status: "ready" },
       { href: "/panel/faturalar", label: "Faturalar", icon: Receipt, status: "ready" },
-      { href: "/panel/tahsilat", label: "Tahsilat", icon: Wallet, status: "soon" },
+      { href: "/panel/tahsilat", label: "Tahsilat", icon: Wallet, status: "ready" },
     ],
   },
   {
@@ -113,7 +113,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
     items: [
       { href: "/panel/icerikler", label: "İçerik & blog", icon: Newspaper, status: "ready" },
       { href: "/panel/tarifler", label: "Reçeteler", icon: ChefHat, status: "ready" },
-      { href: "/panel/whatsapp", label: "WhatsApp", icon: MessageCircleMore, status: "soon" },
+      { href: "/panel/whatsapp", label: "WhatsApp", icon: MessageCircleMore, status: "ready" },
     ],
   },
   {
@@ -121,7 +121,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
     label: "Saha",
     defaultCollapsed: true,
     items: [
-      { href: "/panel/plasiyerler", label: "Plasiyerler", icon: UserRound, status: "soon" },
+      { href: "/panel/plasiyerler", label: "Plasiyerler", icon: UserRound, status: "ready" },
       { href: "/panel/rotalar", label: "Rotalar", icon: Route, status: "soon" },
       { href: "/panel/ziyaretler", label: "Ziyaretler", icon: MapPin, status: "soon" },
     ],
@@ -136,7 +136,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
       { href: "/panel/crm-alanlari", label: "CRM alanları", icon: FormInput, status: "ready" },
       { href: "/panel/analytics", label: "Analytics", icon: ChartColumn, status: "ready" },
       { href: "/panel/seo", label: "SEO", icon: SearchCheck, status: "ready" },
-      { href: "/panel/entegrasyonlar", label: "Entegrasyonlar", icon: Plug, status: "soon" },
+      { href: "/panel/entegrasyonlar", label: "Entegrasyonlar", icon: Plug, status: "ready" },
     ],
   },
 ];

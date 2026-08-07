@@ -20,14 +20,14 @@ enum UserAccountType {
 }
 
 model User {
-  id            String          @id @default(cuid())
+  id            String   @id @default(cuid())
   name          String
-  email         String          @unique
-  emailVerified Boolean         @default(false)
+  email         String   @unique
+  emailVerified Boolean  @default(false)
   image         String?
-  phoneNumber   String?         @unique
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  phoneNumber   String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   accountType UserAccountType @default(DEALER)
   /// Legacy per-user price list; prefer Dealer.priceListId. Kept for STAFF tooling.
@@ -37,14 +37,14 @@ model User {
   dealerId String?
   dealer   Dealer? @relation(fields: [dealerId], references: [id])
 
-  sessions       Session[]
-  accounts       Account[]
-  dealerRoles    DealerUserRole[]
-  carts          Cart[]
-  salesRepOf     Dealer[]         @relation("DealerSalesRep")
-  stageAudits    LeadStageAudit[]
-  assignedLeads  Lead[]           @relation("LeadAssignee")
-  leadTasks      LeadTask[]       @relation("LeadTaskAssignee")
+  sessions      Session[]
+  accounts      Account[]
+  dealerRoles   DealerUserRole[]
+  carts         Cart[]
+  salesRepOf    Dealer[]         @relation("DealerSalesRep")
+  stageAudits   LeadStageAudit[]
+  assignedLeads Lead[]           @relation("LeadAssignee")
+  leadTasks     LeadTask[]       @relation("LeadTaskAssignee")
 
   @@map("user")
 }
@@ -133,39 +133,40 @@ enum DealerPaymentMethod {
 }
 
 model Dealer {
-  id                   String               @id @default(cuid())
-  unvan                String
-  vergiNo              String?
-  vergiDairesi         String?
-  dealerType           DealerType
-  status               DealerStatus         @default(BASVURU)
-  membershipTier       MembershipTier?
-  email                String?
-  phone                String?
-  addressLine          String?
-  city                 String?
-  district             String?
-  deliveryAddressLine  String?
-  paymentMethod        DealerPaymentMethod?
-  iban                 String?
-  creditLimitKurus     Int?
-  paymentTermDays      Int?
-  deliveryZoneCode     String?
-  priceListId          String?
-  priceList            PriceList?           @relation(fields: [priceListId], references: [id])
-  salesRepId           String?
-  salesRep             User?                @relation("DealerSalesRep", fields: [salesRepId], references: [id])
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  id                  String               @id @default(cuid())
+  unvan               String
+  vergiNo             String?
+  vergiDairesi        String?
+  dealerType          DealerType
+  status              DealerStatus         @default(BASVURU)
+  membershipTier      MembershipTier?
+  email               String?
+  phone               String?
+  addressLine         String?
+  city                String?
+  district            String?
+  deliveryAddressLine String?
+  paymentMethod       DealerPaymentMethod?
+  iban                String?
+  creditLimitKurus    Int?
+  paymentTermDays     Int?
+  deliveryZoneCode    String?
+  priceListId         String?
+  priceList           PriceList?           @relation(fields: [priceListId], references: [id])
+  salesRepId          String?
+  salesRep            User?                @relation("DealerSalesRep", fields: [salesRepId], references: [id])
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
-  users         User[]
-  roles         DealerUserRole[]
-  carts         Cart[]
-  fromLeads     Lead[]          @relation("LeadConvertedDealer")
-  ledgerEntries LedgerEntry[]
-  shipments     Shipment[]
-  orders        Order[]
-  notifications Notification[]
+  users            User[]
+  roles            DealerUserRole[]
+  carts            Cart[]
+  fromLeads        Lead[]                  @relation("LeadConvertedDealer")
+  ledgerEntries    LedgerEntry[]
+  shipments        Shipment[]
+  orders           Order[]
+  notifications    Notification[]
+  whatsappMessages WhatsAppOutboxMessage[]
 
   @@map("dealer")
 }
@@ -295,15 +296,15 @@ model LeadActivity {
 }
 
 model LeadStageAudit {
-  id         String     @id @default(cuid())
-  leadId     String
-  lead       Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  fromStage  LeadStage?
-  toStage    LeadStage
-  reason     String?
-  actorId    String?
-  actor      User?      @relation(fields: [actorId], references: [id])
-  createdAt  DateTime   @default(now())
+  id        String     @id @default(cuid())
+  leadId    String
+  lead      Lead       @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  fromStage LeadStage?
+  toStage   LeadStage
+  reason    String?
+  actorId   String?
+  actor     User?      @relation(fields: [actorId], references: [id])
+  createdAt DateTime   @default(now())
 
   @@map("lead_stage_audit")
 }
@@ -404,10 +405,10 @@ model Category {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  productLinks     ProductCategory[]
-  primaryProducts  Product[]         @relation("PrimaryCategory")
-  attributes       CategoryAttribute[]
-  interestedLeads  Lead[]
+  productLinks    ProductCategory[]
+  primaryProducts Product[]           @relation("PrimaryCategory")
+  attributes      CategoryAttribute[]
+  interestedLeads Lead[]
 
   @@map("category")
 }
@@ -456,12 +457,12 @@ model Product {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  categories       ProductCategory[]
-  variants         ProductVariant[]
-  media            ProductMedia[]
-  attributeValues  ProductAttributeValue[]
-  postLinks        ContentPostProduct[]
-  recipeLinks      RecipeProduct[]
+  categories      ProductCategory[]
+  variants        ProductVariant[]
+  media           ProductMedia[]
+  attributeValues ProductAttributeValue[]
+  postLinks       ContentPostProduct[]
+  recipeLinks     RecipeProduct[]
 
   @@map("product")
 }
@@ -566,16 +567,16 @@ model CategoryAttribute {
 }
 
 model ProductAttributeValue {
-  id            String              @id @default(cuid())
-  productId     String
-  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
-  attributeId   String
-  attribute     AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  valueText     String?
-  valueNumber   Decimal?            @db.Decimal(12, 3)
-  valueBoolean  Boolean?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id           String              @id @default(cuid())
+  productId    String
+  product      Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeId  String
+  attribute    AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  valueText    String?
+  valueNumber  Decimal?            @db.Decimal(12, 3)
+  valueBoolean Boolean?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
 
   selectedOptions ProductAttributeSelectedOption[]
 
@@ -584,11 +585,11 @@ model ProductAttributeValue {
 }
 
 model ProductAttributeSelectedOption {
-  id      String                @id @default(cuid())
-  valueId String
-  value   ProductAttributeValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
+  id       String                @id @default(cuid())
+  valueId  String
+  value    ProductAttributeValue @relation(fields: [valueId], references: [id], onDelete: Cascade)
   optionId String
-  option  AttributeOption       @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  option   AttributeOption       @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
   @@unique([valueId, optionId])
   @@map("product_attribute_selected_option")
@@ -829,30 +830,30 @@ enum InvoiceKind {
 }
 
 model ProformaInvoice {
-  id                 String         @id @default(cuid())
-  orderId            String
-  order              Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  kind               InvoiceKind    @default(PROFORMA)
-  number             String         @unique
-  status             ProformaStatus @default(ISSUED)
-  version            Int            @default(1)
-  buyerUnvan         String
-  buyerVergiNo       String?
-  buyerVergiDairesi  String?
-  buyerAddress       String?
-  buyerEmail         String?
-  sellerName         String
-  sellerEmail        String?
-  sellerPhone        String?
-  subtotalKurus      Int
-  vatKurus           Int
-  totalKurus         Int
-  note               String?
-  pdfPath            String?
-  issuedAt           DateTime       @default(now())
-  sentAt             DateTime?
-  createdAt          DateTime       @default(now())
-  updatedAt          DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  orderId           String
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind              InvoiceKind    @default(PROFORMA)
+  number            String         @unique
+  status            ProformaStatus @default(ISSUED)
+  version           Int            @default(1)
+  buyerUnvan        String
+  buyerVergiNo      String?
+  buyerVergiDairesi String?
+  buyerAddress      String?
+  buyerEmail        String?
+  sellerName        String
+  sellerEmail       String?
+  sellerPhone       String?
+  subtotalKurus     Int
+  vatKurus          Int
+  totalKurus        Int
+  note              String?
+  pdfPath           String?
+  issuedAt          DateTime       @default(now())
+  sentAt            DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   lines ProformaLine[]
 
@@ -935,26 +936,26 @@ model ContentPostRecipe {
 }
 
 model Recipe {
-  id           String           @id @default(cuid())
-  title        String
-  slug         String           @unique
-  excerpt      String           @default("")
-  coverUrl     String?
-  servings     Int              @default(4)
-  prepMinutes  Int              @default(15)
-  cookMinutes  Int              @default(30)
-  difficulty   RecipeDifficulty @default(MEDIUM)
+  id          String           @id @default(cuid())
+  title       String
+  slug        String           @unique
+  excerpt     String           @default("")
+  coverUrl    String?
+  servings    Int              @default(4)
+  prepMinutes Int              @default(15)
+  cookMinutes Int              @default(30)
+  difficulty  RecipeDifficulty @default(MEDIUM)
   /// JSON: [{ name, amount, unit, productSlug? }]
-  ingredients  Json             @default("[]")
+  ingredients Json             @default("[]")
   /// JSON: string[]
-  steps        Json             @default("[]")
-  tips         String           @default("")
-  authorName   String           @default("Yetiş Grup")
-  isOfficial   Boolean          @default(true)
-  status       ContentStatus    @default(DRAFT)
-  publishedAt  DateTime?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  steps       Json             @default("[]")
+  tips        String           @default("")
+  authorName  String           @default("Yetiş Grup")
+  isOfficial  Boolean          @default(true)
+  status      ContentStatus    @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   products RecipeProduct[]
   posts    ContentPostRecipe[]
@@ -1017,4 +1018,46 @@ model Notification {
 
   @@index([audience, dealerId, readAt, createdAt])
   @@map("notification")
+}
+
+// ---- Campaigns (lightweight MVP; not wired to pricing engine - see M18) ----
+
+model Campaign {
+  id        String    @id @default(cuid())
+  name      String
+  note      String    @default("")
+  startDate DateTime?
+  endDate   DateTime?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("campaign")
+}
+
+// ---- WhatsApp outbox (mock provider only; idempotent, per-message cost/status tracked) ----
+
+enum WhatsAppMessageStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model WhatsAppOutboxMessage {
+  id               String                @id @default(cuid())
+  dealerId         String?
+  dealer           Dealer?               @relation(fields: [dealerId], references: [id], onDelete: SetNull)
+  toPhone          String
+  templateName     String
+  variables        Json
+  status           WhatsAppMessageStatus @default(QUEUED)
+  attempts         Int                   @default(0)
+  providerResponse String?
+  costKurus        Int?
+  idempotencyKey   String                @unique
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([status, createdAt])
+  @@map("whatsapp_outbox_message")
 }

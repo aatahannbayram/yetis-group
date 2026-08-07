@@ -41,9 +41,10 @@ export async function fillPriceListAction(formData: FormData) {
   await requireStaff();
   const priceListId = String(formData.get("priceListId") ?? "").trim();
   if (!priceListId) throw new Error("Liste gerekli");
-  await fillPriceListFromCatalog(priceListId);
+  const result = await fillPriceListFromCatalog(priceListId);
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
+  return result;
 }
 
 export async function addVariantToPriceListAction(formData: FormData) {
@@ -57,4 +58,5 @@ export async function addVariantToPriceListAction(formData: FormData) {
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
   revalidatePath("/urunler");
+  return { ok: true as const };
 }

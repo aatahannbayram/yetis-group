@@ -40,6 +40,27 @@ export async function listSalesRepOptions() {
   });
 }
 
+/** Plasiyer atamaları: staff kullanıcı + Dealer.salesRepId ile eşleşen bayiler. */
+export async function listSalesRepsWithAssignments() {
+  const [reps, unassignedCount] = await Promise.all([
+    prisma.user.findMany({
+      where: { accountType: "STAFF" },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        salesRepOf: {
+          orderBy: { unvan: "asc" },
+          select: { id: true, unvan: true, city: true, status: true },
+        },
+      },
+    }),
+    prisma.dealer.count({ where: { salesRepId: null } }),
+  ]);
+  return { reps, unassignedCount };
+}
+
 /** Lightweight list for command palette / impersonation */
 export async function listDealerOptions() {
   return prisma.dealer.findMany({

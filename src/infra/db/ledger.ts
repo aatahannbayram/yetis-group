@@ -28,6 +28,15 @@ export async function listDealerBalances() {
   }));
 }
 
+export async function listRecentPayments(limit = 20) {
+  return prisma.ledgerEntry.findMany({
+    where: { type: "ODEME" },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { dealer: { select: { id: true, unvan: true } } },
+  });
+}
+
 export async function addLedgerEntry(input: {
   dealerId: string;
   type: "BORC" | "ODEME";

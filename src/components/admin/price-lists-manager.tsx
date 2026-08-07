@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus, PackagePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,9 +140,26 @@ function PriceListCard({
   list: PriceListView;
   variantOptions: VariantOption[];
 }) {
-  const [showAdd, setShowAdd] = useState(false);
+  const router = useRouter();
+  const [showAdd, setShowAdd] = useState(
+    list.items.length === 0 && variantOptions.length > 0,
+  );
   const [isPending, startTransition] = useTransition();
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const addRef = useRef<HTMLFormElement>(null);
+  const addSectionRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showAdd) return;
+    addSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [showAdd]);
+
+  function openAddForm() {
+    setShowAdd(true);
+    setMessage(null);
+    setError(null);
+  }
 
   return (
     <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -159,8 +177,20 @@ function PriceListCard({
         <div className="flex flex-wrap gap-2">
           <form
             action={(fd) => {
+              setMessage(null);
+              setError(null);
               startTransition(async () => {
-                await fillPriceListAction(fd);
+                try {
+                  const result = await fillPriceListAction(fd);
+                  setMessage(
+                    result.added > 0
+                      ? `${result.added} SKU eklendi`
+                      : "Eksik SKU yok; liste zaten güncel",
+                  );
+                  router.refresh();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "SKU’lar doldurulamadı.");
+                }
               });
             }}
           >
@@ -181,7 +211,13 @@ function PriceListCard({
             size="sm"
             variant="outline"
             className="h-8 gap-1.5 border-stone-200"
-            onClick={() => setShowAdd((v) => !v)}
+            onClick={() => {
+              if (showAdd) {
+                setShowAdd(false);
+                return;
+              }
+              openAddForm();
+            }}
           >
             <Plus className="size-3.5" />
             Kalem ekle
@@ -189,63 +225,87 @@ function PriceListCard({
         </div>
       </div>
 
-      {showAdd && variantOptions.length > 0 ? (
-        <form
-          ref={addRef}
-          className="grid gap-3 border-b border-stone-100 bg-stone-50/80 px-4 py-3 sm:grid-cols-[1fr_8rem_auto] dark:border-zinc-800 dark:bg-zinc-950/40"
-          action={(fd) => {
-            startTransition(async () => {
-              await addVariantToPriceListAction(fd);
-              addRef.current?.reset();
-              setShowAdd(false);
-            });
-          }}
+      {message || error ? (
+        <p
+          className={cn(
+            "border-b border-stone-100 px-4 py-2 text-sm dark:border-zinc-800",
+            error ? "text-red-600 dark:text-red-400" : "text-[#1B5E3A]",
+          )}
+          role="status"
         >
-          <input type="hidden" name="priceListId" value={list.id} />
-          <label className="space-y-1">
-            <span className="text-xs font-medium text-stone-500">Varyant</span>
-            <select
-              name="variantId"
-              required
-              className="h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-sm dark:border-zinc-800 dark:bg-zinc-950"
-              defaultValue=""
-              onChange={(e) => {
-                const opt = variantOptions.find((v) => v.id === e.target.value);
-                const el = addRef.current?.querySelector<HTMLInputElement>('input[name="priceTl"]');
-                if (opt && el) el.value = opt.basePriceTl;
-              }}
-            >
-              <option value="" disabled>
-                Seçin
-              </option>
-              {variantOptions.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs font-medium text-stone-500">Fiyat (₺)</span>
-            <Input name="priceTl" type="number" step="0.01" min="0" required className="h-9" />
-          </label>
-          <div className="flex items-end">
-            <Button
-              type="submit"
-              disabled={isPending}
-              className="h-9 w-full bg-[#1B5E3A] text-white hover:bg-[#164e31] sm:w-auto"
-            >
-              Ekle
-            </Button>
-          </div>
-        </form>
-      ) : null}
-
-      {showAdd && variantOptions.length === 0 ? (
-        <p className="border-b border-stone-100 px-4 py-3 text-sm text-stone-500 dark:border-zinc-800">
-          Tüm aktif varyantlar bu listede. Yeni paket için ürün detayından varyant ekleyin.
+          {error ?? message}
         </p>
       ) : null}
+
+      <div ref={addSectionRef}>
+        {showAdd && variantOptions.length > 0 ? (
+          <form
+            ref={addRef}
+            className="grid gap-3 border-b border-stone-100 bg-stone-50/80 px-4 py-3 sm:grid-cols-[1fr_8rem_auto] dark:border-zinc-800 dark:bg-zinc-950/40"
+            action={(fd) => {
+              setMessage(null);
+              setError(null);
+              startTransition(async () => {
+                try {
+                  await addVariantToPriceListAction(fd);
+                  addRef.current?.reset();
+                  setShowAdd(false);
+                  setMessage("Kalem eklendi");
+                  router.refresh();
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Kalem eklenemedi.");
+                }
+              });
+            }}
+          >
+            <input type="hidden" name="priceListId" value={list.id} />
+            <label className="space-y-1">
+              <span className="text-xs font-medium text-stone-500">Varyant</span>
+              <select
+                name="variantId"
+                required
+                className="h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-sm dark:border-zinc-800 dark:bg-zinc-950"
+                defaultValue=""
+                onChange={(e) => {
+                  const opt = variantOptions.find((v) => v.id === e.target.value);
+                  const el = addRef.current?.querySelector<HTMLInputElement>(
+                    'input[name="priceTl"]',
+                  );
+                  if (opt && el) el.value = opt.basePriceTl;
+                }}
+              >
+                <option value="" disabled>
+                  Seçin
+                </option>
+                {variantOptions.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium text-stone-500">Fiyat (₺)</span>
+              <Input name="priceTl" type="number" step="0.01" min="0" required className="h-9" />
+            </label>
+            <div className="flex items-end">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="h-9 w-full bg-[#1B5E3A] text-white hover:bg-[#164e31] sm:w-auto"
+              >
+                Ekle
+              </Button>
+            </div>
+          </form>
+        ) : null}
+
+        {showAdd && variantOptions.length === 0 ? (
+          <p className="border-b border-stone-100 px-4 py-3 text-sm text-stone-500 dark:border-zinc-800">
+            Tüm aktif varyantlar bu listede. Yeni paket için ürün detayından varyant ekleyin.
+          </p>
+        ) : null}
+      </div>
 
       {list.items.length === 0 ? (
         <p className="px-4 py-10 text-center text-sm text-stone-500">

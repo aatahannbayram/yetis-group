@@ -144,6 +144,9 @@ export async function createLotAction(
     initialKg: input.initialKg,
   });
   revalidatePath(`/panel/urunler/${slug}`);
+  revalidatePath("/panel/stok");
+  revalidatePath("/panel");
+  revalidatePath("/bayi/siparis");
 }
 
 export async function addStockMovementAction(
@@ -152,6 +155,9 @@ export async function addStockMovementAction(
 ) {
   await addStockMovement(input);
   revalidatePath(`/panel/urunler/${slug}`);
+  revalidatePath("/panel/stok");
+  revalidatePath("/panel");
+  revalidatePath("/bayi/siparis");
 }
 
 export async function addMediaAction(formData: FormData) {

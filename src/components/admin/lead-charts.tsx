@@ -102,14 +102,17 @@ export function StageFunnelChart({
             width={28}
           />
           <Tooltip
-            cursor={{ fill: "#f2efe8" }}
+            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
             contentStyle={{
               borderRadius: 12,
-              border: "1px solid #e6e1d6",
-              background: "#ffffff",
-              boxShadow: "0 8px 24px rgb(33 28 22 / 0.08)",
+              border: "1px solid rgb(63 63 70)",
+              background: "rgb(24 24 27)",
+              color: "rgb(250 250 250)",
+              boxShadow: "0 8px 24px rgb(24 24 27 / 0.35)",
               fontSize: 12,
             }}
+            itemStyle={{ color: "rgb(250 250 250)" }}
+            labelStyle={{ color: "rgb(161 161 170)" }}
           />
           <Bar dataKey="count" name="Bayi Adayı" radius={[20, 20, 20, 20]} maxBarSize={28}>
             {data.map((entry) => {
@@ -201,11 +204,14 @@ export function ChannelDistributionChart({
             <Tooltip
               contentStyle={{
                 borderRadius: 12,
-                border: "1px solid #e6e1d6",
-                background: "#ffffff",
-                boxShadow: "0 8px 24px rgb(33 28 22 / 0.08)",
+                border: "1px solid rgb(63 63 70)",
+                background: "rgb(24 24 27)",
+                color: "rgb(250 250 250)",
+                boxShadow: "0 8px 24px rgb(24 24 27 / 0.35)",
                 fontSize: 12,
               }}
+              itemStyle={{ color: "rgb(250 250 250)" }}
+              labelStyle={{ color: "rgb(161 161 170)" }}
             />
           </PieChart>
         </ResponsiveContainer>

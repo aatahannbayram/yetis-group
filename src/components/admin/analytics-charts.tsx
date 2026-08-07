@@ -205,13 +205,16 @@ export function OutcomeBars({
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: "#f2efe8" }}
+            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
             contentStyle={{
               borderRadius: 12,
-              border: "1px solid #e6e1d6",
-              background: "#ffffff",
+              border: "1px solid rgb(63 63 70)",
+              background: "rgb(24 24 27)",
+              color: "rgb(250 250 250)",
               fontSize: 12,
             }}
+            itemStyle={{ color: "rgb(250 250 250)" }}
+            labelStyle={{ color: "rgb(161 161 170)" }}
           />
           <Bar dataKey="value" name="Adet" radius={[0, 10, 10, 0]} maxBarSize={22}>
             {rows.map((row) => (

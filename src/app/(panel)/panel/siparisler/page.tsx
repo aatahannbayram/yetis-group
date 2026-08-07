@@ -77,18 +77,26 @@ export default async function AdminOrdersPage() {
       />
 
       <section aria-label="Özet" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Toplam sipariş" value={rows.length} href="#siparis-panosu" />
+        <StatCard
+          label="Toplam sipariş"
+          value={rows.length}
+          href="/panel/siparisler?gorunum=all#siparis-panosu"
+        />
         <StatCard
           label="Aktif"
           value={activeCount}
-          href="#siparis-panosu"
+          href="/panel/siparisler?gorunum=active#siparis-panosu"
           tone={activeCount > 0 ? "info" : "neutral"}
         />
-        <StatCard label="Teslim edilen" value={deliveredCount} href="#siparis-panosu" />
+        <StatCard
+          label="Teslim edilen"
+          value={deliveredCount}
+          href="/panel/siparisler?gorunum=delivered#siparis-panosu"
+        />
         <StatCard
           label="Toplam ciro"
           value={formatMoney(money(totalKurus))}
-          href="#siparis-panosu"
+          href="/panel/siparisler?gorunum=all#siparis-panosu"
         />
       </section>
 

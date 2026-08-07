@@ -93,7 +93,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
       { href: "/panel/kategoriler", label: "Kategoriler", icon: FolderTree, status: "ready" },
       { href: "/panel/fiyat-listeleri", label: "Fiyat listeleri", icon: Tags, status: "ready" },
       { href: "/panel/nitelikler", label: "Ürün özellikleri", icon: Shapes, status: "ready" },
-      { href: "/panel/stok", label: "Stok & lot", icon: CheckSquare, status: "soon" },
+      { href: "/panel/stok", label: "Stok & lot", icon: CheckSquare, status: "ready" },
       { href: "/panel/ureticiler", label: "Üreticiler", icon: Boxes, status: "soon" },
     ],
   },

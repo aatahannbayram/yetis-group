@@ -341,7 +341,7 @@ export function PanoLeadTrend({ data, weekOverWeek }: { data: DayPoint[]; weekOv
               stroke={G2}
               strokeWidth={2.25}
               fill={`url(#${fillId})`}
-              activeDot={{ r: 4, fill: G2, stroke: "#fff", strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: G2, stroke: G1, strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -380,7 +380,7 @@ export function PanoPipeline({ data }: { data: StagePoint[] }) {
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: GRID }}
+            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
             content={({ active, payload }) => (
               <Tip
                 active={active}
@@ -447,7 +447,7 @@ export function PanoReceivables({ data }: { data: ReceivablePoint[] }) {
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: GRID }}
+            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
             content={({ active, payload }) => {
               const row = payload?.[0]?.payload as ReceivablePoint | undefined;
               return (
@@ -566,7 +566,7 @@ export function PanoChannel({
             width={24}
           />
           <Tooltip
-            cursor={{ fill: GRID }}
+            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
             content={({ active, payload }) => (
               <Tip
                 active={active}

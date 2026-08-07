@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
@@ -11,10 +11,26 @@ import { BulkActionBar } from "@/components/ui/bulk-action-bar";
 import { StatusPill } from "@/components/ui/status-pill";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LeadDetailSheet } from "@/components/admin/lead-detail-sheet";
 import { LeadsKanban } from "@/components/admin/leads-kanban";
 import type { LeadItem } from "@/components/admin/leads-board";
-import { LEAD_STAGE_LABELS } from "@/domain/leads";
+import { LEAD_STAGE_LABELS, LEAD_STAGES, type LeadStage } from "@/domain/leads";
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
 import {
@@ -26,6 +42,7 @@ import {
 import type { Density } from "@/components/ui/density-toggle";
 import type { ViewMode } from "@/components/ui/view-switcher";
 import { cn } from "@/lib/utils";
+import { bulkTransitionLeadStageAction } from "@/app/(panel)/panel/bayi-adaylari/actions";
 
 export type LeadListItem = LeadItem & { updatedAt: string };
 
@@ -48,6 +65,16 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
   const [metricFilter, setMetricFilter] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [stageDialogOpen, setStageDialogOpen] = useState(false);
+  const [bulkStage, setBulkStage] = useState<LeadStage>("ILETISIMDE");
+  const [bulkLostReason, setBulkLostReason] = useState("");
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkPending, startBulk] = useTransition();
+
+  const selectedIds = useMemo(
+    () => Object.keys(rowSelection).filter((k) => rowSelection[k]),
+    [rowSelection],
+  );
 
   const openLeads = useMemo(
     () => leads.filter((l) => l.stage !== "KAZANILDI" && l.stage !== "KAYBEDILDI"),
@@ -320,16 +347,123 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
       </div>
 
       <BulkActionBar
-        count={Object.keys(rowSelection).filter((k) => rowSelection[k]).length}
+        count={selectedIds.length}
         onClear={() => setRowSelection({})}
       >
-        <Button size="sm" variant="secondary">
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={selectedIds.length === 0}
+          onClick={() => {
+            setBulkError(null);
+            setBulkLostReason("");
+            setBulkStage("ILETISIMDE");
+            setStageDialogOpen(true);
+          }}
+        >
           Aşama değiştir
         </Button>
-        <Button size="sm" variant="secondary">
-          Sahip ata
-        </Button>
       </BulkActionBar>
+
+      <Dialog open={stageDialogOpen} onOpenChange={setStageDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Aşama değiştir</DialogTitle>
+            <DialogDescription>
+              Seçili {selectedIds.length} aday için hedef aşamayı seçin. Geçersiz
+              geçişler atlanır.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-stone-500">Hedef aşama</span>
+              <Select
+                value={bulkStage}
+                onValueChange={(v) => setBulkStage(v as LeadStage)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STAGES.map((stage) => (
+                    <SelectItem key={stage} value={stage}>
+                      {LEAD_STAGE_LABELS[stage]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </label>
+            {bulkStage === "KAYBEDILDI" ? (
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-stone-500">Kayıp nedeni</span>
+                <Input
+                  value={bulkLostReason}
+                  onChange={(e) => setBulkLostReason(e.target.value)}
+                  placeholder="Örn. fiyat, rakip, zamanlama"
+                  required
+                />
+              </label>
+            ) : null}
+            {bulkError ? (
+              <p className="text-sm text-red-600 dark:text-red-400">{bulkError}</p>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setStageDialogOpen(false)}
+              disabled={bulkPending}
+            >
+              Vazgeç
+            </Button>
+            <Button
+              type="button"
+              disabled={
+                bulkPending ||
+                selectedIds.length === 0 ||
+                (bulkStage === "KAYBEDILDI" && !bulkLostReason.trim())
+              }
+              onClick={() => {
+                setBulkError(null);
+                startBulk(async () => {
+                  try {
+                    const result = await bulkTransitionLeadStageAction({
+                      leadIds: selectedIds,
+                      toStage: bulkStage,
+                      lostReason:
+                        bulkStage === "KAYBEDILDI" ? bulkLostReason.trim() : null,
+                    });
+                    if (result.failed > 0 && result.updated === 0) {
+                      setBulkError(
+                        result.errors[0] ??
+                          `${result.failed} aday güncellenemedi.`,
+                      );
+                      return;
+                    }
+                    if (result.failed > 0) {
+                      setBulkError(
+                        `${result.updated} güncellendi, ${result.failed} atlandı${
+                          result.errors[0] ? `: ${result.errors[0]}` : "."
+                        }`,
+                      );
+                      return;
+                    }
+                    setRowSelection({});
+                    setStageDialogOpen(false);
+                  } catch (err) {
+                    setBulkError(
+                      err instanceof Error ? err.message : "Aşama güncellenemedi.",
+                    );
+                  }
+                });
+              }}
+            >
+              {bulkPending ? "Güncelleniyor…" : "Uygula"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <LeadDetailSheet
         lead={selectedLead}

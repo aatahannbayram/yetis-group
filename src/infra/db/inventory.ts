@@ -104,6 +104,125 @@ export async function getInventoryDashboardSummary() {
   };
 }
 
+export type StockBoardLot = {
+  id: string;
+  lotNumber: string;
+  expirationDate: string;
+  expired: boolean;
+  daysToExpiry: number;
+  availableKg: number;
+  movements: Array<{
+    id: string;
+    type: "GIRIS" | "CIKIS" | "REPACK";
+    quantityKg: number;
+    note: string | null;
+    createdAt: string;
+  }>;
+};
+
+export type StockBoardRow = {
+  variantId: string;
+  sku: string;
+  packSize: string | null;
+  packagingType: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  imageUrl: string | null;
+  productActive: boolean;
+  totalKg: number;
+  shippableKg: number;
+  lotCount: number;
+  nearestExpiry: string | null;
+  lots: StockBoardLot[];
+};
+
+/** All active variants with lots + balances for /panel/stok. */
+export async function getStockBoard(): Promise<StockBoardRow[]> {
+  const variants = await prisma.productVariant.findMany({
+    where: { isActive: true },
+    orderBy: [{ product: { name: "asc" } }, { sortOrder: "asc" }],
+    include: {
+      product: {
+        select: { id: true, name: true, slug: true, imageUrl: true, active: true },
+      },
+      lots: {
+        include: { movements: true },
+        orderBy: { expirationDate: "asc" },
+      },
+    },
+  });
+
+  const now = Date.now();
+  const dayMs = 24 * 60 * 60 * 1000;
+
+  return variants.map((v) => {
+    const lots: StockBoardLot[] = v.lots.map((lot) => {
+      const available = availableKgFromMovements(lot.movements);
+      const expMs = lot.expirationDate.getTime();
+      const expired = expMs < now;
+      return {
+        id: lot.id,
+        lotNumber: lot.lotNumber,
+        expirationDate: lot.expirationDate.toISOString(),
+        expired,
+        daysToExpiry: Math.ceil((expMs - now) / dayMs),
+        availableKg: available.toNumber(),
+        movements: lot.movements
+          .slice()
+          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+          .map((m) => ({
+            id: m.id,
+            type: m.type as "GIRIS" | "CIKIS" | "REPACK",
+            quantityKg: Number(m.quantityKg),
+            note: m.note,
+            createdAt: m.createdAt.toISOString(),
+          })),
+      };
+    });
+
+    const totalKg = lots.reduce((s, l) => s + l.availableKg, 0);
+    const shippableKg = lots.filter((l) => !l.expired).reduce((s, l) => s + l.availableKg, 0);
+    const nearest = lots.find((l) => !l.expired && l.availableKg > 0);
+
+    return {
+      variantId: v.id,
+      sku: v.sku,
+      packSize: v.packSize,
+      packagingType: v.packagingType,
+      productId: v.product.id,
+      productName: v.product.name,
+      productSlug: v.product.slug,
+      imageUrl: v.product.imageUrl,
+      productActive: v.product.active,
+      totalKg,
+      shippableKg,
+      lotCount: lots.length,
+      nearestExpiry: nearest?.expirationDate ?? null,
+      lots,
+    };
+  });
+}
+
+export async function listVariantsForStockPicker() {
+  const variants = await prisma.productVariant.findMany({
+    where: { isActive: true, product: { active: true } },
+    orderBy: [{ product: { name: "asc" } }, { sortOrder: "asc" }],
+    select: {
+      id: true,
+      sku: true,
+      packSize: true,
+      packagingType: true,
+      product: { select: { name: true, slug: true } },
+    },
+  });
+  return variants.map((v) => ({
+    id: v.id,
+    slug: v.product.slug,
+    label: `${v.product.name} · ${v.packSize ?? v.packagingType} (${v.sku})`,
+  }));
+}
+
 export async function getStockSummaryByProduct() {
   const products = await prisma.product.findMany({
     where: { active: true },

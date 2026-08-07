@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   MapPin,
   Phone,
@@ -78,6 +78,13 @@ export function LeadDetailSheet({
   const [lostReason, setLostReason] = useState("");
   const [stageError, setStageError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (!lead) return;
+    setToStage(lead.stage);
+    setLostReason("");
+    setStageError(null);
+  }, [lead?.id, lead?.stage]);
 
   if (!lead) return null;
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Plus,
@@ -920,6 +921,13 @@ function QuickAddDealerDialog({
   );
 }
 
+const ORDER_VIEWS = new Set(["all", "active", "review", "delivered"]);
+
+function parseOrderGorunum(raw: string | null): string {
+  if (raw && ORDER_VIEWS.has(raw)) return raw;
+  return "all";
+}
+
 export function OrderBoard({
   orders,
   dealers,
@@ -931,11 +939,28 @@ export function OrderBoard({
   variants: { id: string; label: string }[];
   priceLists?: { id: string; name: string }[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [mode, setMode] = useState<"closed" | "create" | "detail">("closed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [density, setDensity] = useState<Density>("compact");
-  const [viewFilter, setViewFilter] = useState("all");
+  const [viewFilter, setViewFilter] = useState(() => parseOrderGorunum(searchParams.get("gorunum")));
+
+  useEffect(() => {
+    setViewFilter(parseOrderGorunum(searchParams.get("gorunum")));
+  }, [searchParams]);
+
+  function selectView(id: string) {
+    setViewFilter(id);
+    const params = new URLSearchParams(searchParams.toString());
+    if (id === "all") params.delete("gorunum");
+    else params.set("gorunum", id);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
   const selected = orders.find((o) => o.id === selectedId) ?? null;
 
@@ -1088,7 +1113,7 @@ export function OrderBoard({
           { id: "delivered", label: "Teslim" },
         ]}
         activeViewId={viewFilter}
-        onViewSelect={setViewFilter}
+        onViewSelect={selectView}
         density={density}
         onDensityChange={setDensity}
         trailing={

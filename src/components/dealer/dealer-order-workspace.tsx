@@ -25,6 +25,7 @@ import {
 } from "@/app/(dealer-portal)/bayi/siparis/actions";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
+import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
 import { cn } from "@/lib/utils";
 
 const PACK_LABEL: Record<string, string> = {
@@ -44,9 +45,8 @@ type PaymentInfo = {
 };
 
 function stockLabel(kg: number) {
-  if (kg <= 0) return { text: "Stok yok", tone: "empty" as const };
-  if (kg < 50) return { text: `${formatKg(kg)} kg`, tone: "low" as const };
-  return { text: `${formatKg(kg)} kg`, tone: "ok" as const };
+  const tone = stockTone(kg);
+  return { text: stockAvailabilityLabel(kg), tone };
 }
 
 function formatKg(n: number) {
@@ -269,7 +269,7 @@ export function DealerOrderWorkspace({
                           stock.tone === "ok" && "text-[var(--primary-text)]",
                         )}
                       >
-                        Stok: {stock.text}
+                        {stock.text}
                       </span>
                       <span>%{(v.vatRateBasisPoints / 100).toString()} KDV</span>
                     </div>
@@ -313,7 +313,7 @@ export function DealerOrderWorkspace({
                         className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary-solid)] px-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-40"
                       >
                         <Plus className="size-3.5" aria-hidden />
-                        Ekle
+                        {v.stockKg <= 0 ? "Stok yok" : "Ekle"}
                       </button>
                     </div>
                   </div>

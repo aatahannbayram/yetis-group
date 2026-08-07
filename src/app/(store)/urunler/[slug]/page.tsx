@@ -62,6 +62,7 @@ export default async function ProductDetailPage({
     sku: v.sku,
     packLabel: v.packSize ?? v.packagingType,
     unitPrice: v.unitPrice,
+    stockKg: v.stockKg,
   }));
 
   return (
@@ -241,6 +242,7 @@ export default async function ProductDetailPage({
                         unitPrice: p.unitPrice,
                         moq: p.moq,
                         vatRateBasisPoints: p.vatRateBasisPoints,
+                        stockKg: p.stockKg,
                       }}
                     />
                   </Reveal>

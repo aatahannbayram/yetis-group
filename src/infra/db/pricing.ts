@@ -1,5 +1,6 @@
 import { prisma } from "@/infra/db/client";
 import { getProductBySlug, getProducts, defaultVariant } from "@/infra/db/products";
+import { getShippableStockByVariant } from "@/infra/db/inventory";
 import { money } from "@/domain/money";
 import { slugifyTr } from "@/domain/catalog/slug";
 
@@ -25,15 +26,17 @@ async function getPriceOverrides(priceListId: string | null) {
 }
 
 export async function getProductsWithPricing(userId?: string, categorySlug?: string) {
-  const [products, priceListId] = await Promise.all([
+  const [products, priceListId, stockByVariant] = await Promise.all([
     getProducts(categorySlug ? { categorySlug } : undefined),
     resolvePriceListId(userId),
+    getShippableStockByVariant(),
   ]);
   const overrides = await getPriceOverrides(priceListId);
 
   return products.flatMap((product) => {
     const variant = defaultVariant(product);
     if (!variant) return [];
+    const stock = stockByVariant.get(variant.id);
     return [
       {
         id: product.id,
@@ -52,15 +55,17 @@ export async function getProductsWithPricing(userId?: string, categorySlug?: str
         vatRateBasisPoints: variant.vatRateBasisPoints,
         variantId: variant.id,
         unitPrice: money(overrides.get(variant.id) ?? variant.pricePerUnitKurus),
+        stockKg: stock ? stock.toNumber() : 0,
       },
     ];
   });
 }
 
 export async function getProductBySlugWithPricing(slug: string, userId?: string) {
-  const [product, priceListId] = await Promise.all([
+  const [product, priceListId, stockByVariant] = await Promise.all([
     getProductBySlug(slug),
     resolvePriceListId(userId),
+    getShippableStockByVariant(),
   ]);
   if (!product) return null;
   const variant = defaultVariant(product);
@@ -83,10 +88,14 @@ export async function getProductBySlugWithPricing(slug: string, userId?: string)
     techSheetUrl: product.techSheetUrl,
     media: product.media,
     attributeValues: product.attributeValues,
-    variants: product.variants.map((v) => ({
-      ...v,
-      unitPrice: money(overrides.get(v.id) ?? v.pricePerUnitKurus),
-    })),
+    variants: product.variants.map((v) => {
+      const stock = stockByVariant.get(v.id);
+      return {
+        ...v,
+        unitPrice: money(overrides.get(v.id) ?? v.pricePerUnitKurus),
+        stockKg: stock ? stock.toNumber() : 0,
+      };
+    }),
     sku: variant.sku,
     unitLabel: variant.packSize ?? variant.packagingType,
     kgPerUnit: variant.unitFactor,
@@ -95,6 +104,10 @@ export async function getProductBySlugWithPricing(slug: string, userId?: string)
     vatRateBasisPoints: variant.vatRateBasisPoints,
     variantId: variant.id,
     unitPrice: money(overrides.get(variant.id) ?? variant.pricePerUnitKurus),
+    stockKg: (() => {
+      const s = stockByVariant.get(variant.id);
+      return s ? s.toNumber() : 0;
+    })(),
   };
 }
 

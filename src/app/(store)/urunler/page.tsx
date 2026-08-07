@@ -80,6 +80,7 @@ export default async function ProductsPage({
                   unitPrice: product.unitPrice,
                   moq: product.moq,
                   vatRateBasisPoints: product.vatRateBasisPoints,
+                  stockKg: product.stockKg,
                 }))}
               />
             </Suspense>

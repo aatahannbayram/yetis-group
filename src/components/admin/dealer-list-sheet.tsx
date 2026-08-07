@@ -150,25 +150,22 @@ export function DealerListSheet({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const openId = searchParams.get("open");
+  const openDealer = openId ? (dealers.find((d) => d.id === openId) ?? null) : null;
+
   const [search, setSearch] = useState("");
-  const [mode, setMode] = useState<"closed" | "create" | "edit">("closed");
-  const [editing, setEditing] = useState<DealerRow | null>(null);
+  const [mode, setMode] = useState<"closed" | "create" | "edit">(() =>
+    openDealer ? "edit" : "closed",
+  );
+  const [editing, setEditing] = useState<DealerRow | null>(() => openDealer);
   const [saving, startSaving] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  const openId = searchParams.get("open");
   useEffect(() => {
-    if (!openId) return;
-    const dealer = dealers.find((d) => d.id === openId);
-    if (dealer) {
-      setEditing(dealer);
-      setSaveError(null);
-      setMode("edit");
-    }
-    router.replace("/panel/bayiler", { scroll: false });
-    // Only reacts to the incoming param, not every dealers/router identity change.
+    if (openId) router.replace("/panel/bayiler", { scroll: false });
+    // Runs once on mount to strip the incoming ?open= param; state itself is seeded via lazy init above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [openId]);
+  }, []);
 
   function openCreate() {
     setEditing(null);

@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "demo:passwords": "tsx scripts/set-demo-passwords.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

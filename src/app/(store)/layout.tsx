@@ -4,6 +4,7 @@ import { CartSheet } from "@/components/store/cart-sheet";
 import { ConsentProvider } from "@/components/store/consent-provider";
 import { CookieBanner } from "@/components/store/cookie-banner";
 import { AnalyticsLoader } from "@/components/store/analytics-loader";
+import { RouteProgress } from "@/components/motion/motion-shell";
 import { getPaymentSettings } from "@/infra/db/payment-settings";
 
 async function DeferredCartSheet() {
@@ -28,6 +29,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
   return (
     <ConsentProvider>
       <CartProvider>
+        <RouteProgress />
         {children}
         <Suspense fallback={null}>
           <DeferredCartSheet />

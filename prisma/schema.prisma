@@ -165,6 +165,7 @@ model Dealer {
   ledgerEntries LedgerEntry[]
   shipments     Shipment[]
   orders        Order[]
+  notifications Notification[]
 
   @@map("dealer")
 }
@@ -781,6 +782,7 @@ model Order {
   lines     OrderLine[]
   events    OrderEvent[]
   shipments Shipment[]
+  proformas ProformaInvoice[]
 
   @@index([dealerId, createdAt])
   @@map("order")
@@ -810,6 +812,66 @@ model OrderEvent {
   createdAt DateTime    @default(now())
 
   @@map("order_event")
+}
+
+// ---- Proforma (commercial offer; not e-Fatura) ----
+
+enum ProformaStatus {
+  DRAFT
+  ISSUED
+  VOID
+}
+
+enum InvoiceKind {
+  PROFORMA
+  /// Reserved for future GİB / özel entegratör e-Fatura
+  E_FATURA
+}
+
+model ProformaInvoice {
+  id                 String         @id @default(cuid())
+  orderId            String
+  order              Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind               InvoiceKind    @default(PROFORMA)
+  number             String         @unique
+  status             ProformaStatus @default(ISSUED)
+  version            Int            @default(1)
+  buyerUnvan         String
+  buyerVergiNo       String?
+  buyerVergiDairesi  String?
+  buyerAddress       String?
+  buyerEmail         String?
+  sellerName         String
+  sellerEmail        String?
+  sellerPhone        String?
+  subtotalKurus      Int
+  vatKurus           Int
+  totalKurus         Int
+  note               String?
+  pdfPath            String?
+  issuedAt           DateTime       @default(now())
+  sentAt             DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  lines ProformaLine[]
+
+  @@index([orderId, status])
+  @@map("proforma_invoice")
+}
+
+model ProformaLine {
+  id                 String          @id @default(cuid())
+  proformaId         String
+  proforma           ProformaInvoice @relation(fields: [proformaId], references: [id], onDelete: Cascade)
+  description        String
+  quantity           Int
+  unitPriceKurus     Int
+  vatRateBasisPoints Int
+  lineTotalKurus     Int
+  sortOrder          Int             @default(0)
+
+  @@map("proforma_line")
 }
 
 // ---- M14 Content: blog + recipes ----
@@ -926,4 +988,33 @@ model SeoRedirect {
 
   @@index([active])
   @@map("seo_redirect")
+}
+
+// ---- Notifications (order created / status changed; staff = global, dealer = scoped) ----
+
+enum NotificationAudience {
+  STAFF
+  DEALER
+}
+
+enum NotificationType {
+  ORDER_CREATED
+  ORDER_STATUS_CHANGED
+}
+
+model Notification {
+  id        String               @id @default(cuid())
+  audience  NotificationAudience
+  /// Set only when audience = DEALER; scopes visibility to that dealer.
+  dealerId  String?
+  dealer    Dealer?              @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime             @default(now())
+
+  @@index([audience, dealerId, readAt, createdAt])
+  @@map("notification")
 }

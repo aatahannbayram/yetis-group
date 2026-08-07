@@ -4,7 +4,13 @@ import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Maximize2, PackageSearch, Plus } from "lucide-react";
+import {
+  ArrowUpRight,
+  Maximize2,
+  PackageSearch,
+  Plus,
+  Boxes,
+} from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +24,11 @@ import {
   updateProductDescriptionAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import type { Density } from "@/components/ui/density-toggle";
+import type { ViewMode } from "@/components/ui/view-switcher";
+import { cn } from "@/lib/utils";
+import { Stagger, StaggerItem } from "@/components/motion/fade-up";
+import { HoverLift } from "@/components/motion/hover-lift";
+import { ProductExcelToolbar } from "@/components/admin/product-excel-toolbar";
 
 const kgFormatter = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 0,
@@ -36,7 +47,7 @@ const PACKAGING_TYPES = [
 ] as const;
 
 const selectClass =
-  "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+  "h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
 
 export type ProductRowVariant = {
   id: string;
@@ -61,6 +72,12 @@ export type ProductRow = {
   media: Array<{ id: string; url: string; alt: string | null; isPrimary: boolean }>;
 };
 
+function stockTone(kg: number): "ok" | "low" | "empty" {
+  if (kg <= 0) return "empty";
+  if (kg < 50) return "low";
+  return "ok";
+}
+
 export function ProductListSheet({
   products,
   categories,
@@ -73,7 +90,9 @@ export function ProductListSheet({
   const [mode, setMode] = useState<"closed" | "create" | "detail">("closed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [density, setDensity] = useState<Density>("compact");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [density, setDensity] = useState<Density>("comfortable");
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const selected = products.find((p) => p.id === selectedId) ?? null;
 
   function openCreate() {
@@ -91,40 +110,39 @@ export function ProductListSheet({
     setSelectedId(null);
   }
 
-  const getRowId = useCallback((r: ProductRow) => r.id, []);
-  const globalFilterFn = useCallback(
-    (row: ProductRow, q: string) => {
+  const categoryNames = useMemo(() => {
+    const set = new Set(products.map((p) => p.categoryName));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
+  }, [products]);
+
+  const filtered = useMemo(() => {
+    let rows = products;
+    if (categoryFilter) {
+      rows = rows.filter((p) => p.categoryName === categoryFilter);
+    }
+    const q = search.trim().toLocaleLowerCase("tr-TR");
+    if (!q) return rows;
+    return rows.filter((row) => {
       const variant = row.variants[0];
       return (
         row.name.toLocaleLowerCase("tr-TR").includes(q) ||
         row.categoryName.toLocaleLowerCase("tr-TR").includes(q) ||
         (variant?.sku.toLocaleLowerCase("tr-TR").includes(q) ?? false)
       );
-    },
-    [],
-  );
+    });
+  }, [products, search, categoryFilter]);
+
+  const getRowId = useCallback((r: ProductRow) => r.id, []);
+  const globalFilterFn = useCallback(() => true, []);
 
   const columns = useMemo<ColumnDef<ProductRow, unknown>[]>(
     () => [
       {
         id: "thumb",
         header: "",
-        size: 48,
+        size: 56,
         enableSorting: false,
-        cell: ({ row }) =>
-          row.original.imageUrl ? (
-            <Image
-              src={row.original.imageUrl}
-              alt=""
-              width={40}
-              height={40}
-              className="size-10 rounded-[var(--radius-sm)] object-cover"
-            />
-          ) : (
-            <div className="flex size-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-3)] text-[var(--text-muted)]">
-              <PackageSearch className="size-4" aria-hidden />
-            </div>
-          ),
+        cell: ({ row }) => <ProductThumb product={row.original} size={44} />,
       },
       {
         accessorKey: "name",
@@ -134,51 +152,30 @@ export function ProductListSheet({
           const variant = row.original.variants[0];
           return (
             <div className="min-w-0 max-w-[280px]">
-              <p className="truncate font-medium text-[var(--text-primary)]" title={row.original.name}>
+              <p className="truncate font-medium text-stone-900 dark:text-zinc-50" title={row.original.name}>
                 {row.original.name}
               </p>
-              <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
-                {variant?.packSize ?? variant?.packagingType ?? "-"}
+              <p className="truncate text-xs text-stone-500">
+                {variant?.packSize ?? variant?.packagingType ?? "—"}
               </p>
             </div>
           );
         },
       },
       {
-        id: "sku",
-        header: "SKU",
-        cell: ({ row }) => (
-          <span className="font-mono text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
-            {row.original.variants[0]?.sku ?? "-"}
-          </span>
-        ),
-      },
-      {
         accessorKey: "categoryName",
         header: "Kategori",
         cell: ({ getValue }) => (
-          <span className="text-[var(--text-secondary)]">{String(getValue())}</span>
+          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {String(getValue())}
+          </span>
         ),
-      },
-      {
-        id: "vat",
-        header: "KDV",
-        cell: ({ row }) => {
-          const bp = row.original.variants[0]?.vatRateBasisPoints;
-          return (
-            <span className="tabular-nums text-[var(--text-secondary)]">
-              {bp != null ? `%${(bp / 100).toString()}` : "-"}
-            </span>
-          );
-        },
       },
       {
         accessorKey: "stockKg",
         header: "Stok",
         cell: ({ row }) => (
-          <span className="tabular-nums text-[var(--text-primary)]">
-            {formatStockKg(row.original.stockKg)}
-          </span>
+          <StockBadge kg={row.original.stockKg} />
         ),
       },
       {
@@ -187,12 +184,9 @@ export function ProductListSheet({
         enableSorting: false,
         cell: ({ row }) => {
           const variant = row.original.variants[0];
-          if (!variant) return "-";
+          if (!variant) return "—";
           return (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
+            <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
               <EditablePrice
                 priceKurus={variant.pricePerUnitKurus}
                 onSave={(kurus) => updateVariantPriceAction(variant.id, kurus)}
@@ -209,12 +203,12 @@ export function ProductListSheet({
         cell: ({ row }) => (
           <Link
             href={`/panel/urunler/${row.original.slug}`}
-            className="inline-flex size-8 items-center justify-center rounded-[var(--radius-sm)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--primary-text)]"
-            title="Tam ekranda aç"
-            aria-label={`${row.original.name} tam ekranda aç`}
+            className="inline-flex size-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-[#1B5E3A]"
+            title="Detay"
+            aria-label={`${row.original.name} detay`}
             onClick={(e) => e.stopPropagation()}
           >
-            <Maximize2 className="size-3.5" />
+            <ArrowUpRight className="size-3.5" />
           </Link>
         ),
       },
@@ -223,47 +217,101 @@ export function ProductListSheet({
   );
 
   return (
-    <div className="space-y-3" data-density={density}>
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Ürün, SKU veya kategori ara…"
-        density={density}
-        onDensityChange={setDensity}
-        trailing={
-          <Button type="button" onClick={openCreate} className="h-8 gap-1.5">
-            <Plus className="size-4" aria-hidden />
-            Yeni ürün
-          </Button>
-        }
-      />
+    <div
+      className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+      data-density={density}
+    >
+      <div className="border-b border-stone-100 px-3 py-2.5 dark:border-zinc-800">
+        <ListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Ürün, SKU veya kategori ara…"
+          density={density}
+          onDensityChange={setDensity}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          viewModes={["cards", "table"]}
+          filters={
+            <div className="flex max-w-full gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <FilterChip
+                label="Tümü"
+                active={!categoryFilter}
+                onClick={() => setCategoryFilter(null)}
+              />
+              {categoryNames.map((name) => (
+                <FilterChip
+                  key={name}
+                  label={name}
+                  active={categoryFilter === name}
+                  onClick={() => setCategoryFilter(name)}
+                />
+              ))}
+            </div>
+          }
+          trailing={
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <ProductExcelToolbar />
+              <Button
+                type="button"
+                onClick={openCreate}
+                className="h-8 gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]"
+              >
+                <Plus className="size-4" aria-hidden />
+                Yeni ürün
+              </Button>
+            </div>
+          }
+          className="!static !mx-0 !border-0 !bg-transparent !p-0 !backdrop-blur-none"
+        />
+      </div>
 
-      <DataTable
-        data={products}
-        columns={columns}
-        getRowId={getRowId}
-        storageKey="panel-products"
-        search={search}
-        globalFilterFn={globalFilterFn}
-        onRowOpen={(row) => openDetail(row.id)}
-        emptyTitle="Ürün yok"
-        emptyDescription="Yeni ürün ekleyerek kataloğu doldurun."
-        emptyAction={
-          <Button type="button" onClick={openCreate} className="gap-1.5">
-            <Plus className="size-4" aria-hidden />
-            Yeni ürün
-          </Button>
-        }
-      />
+      {viewMode === "cards" ? (
+        <div className="bg-stone-50/60 p-3 sm:p-4 dark:bg-zinc-950/40">
+          {filtered.length === 0 ? (
+            <EmptyState onCreate={openCreate} />
+          ) : (
+            <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filtered.map((product) => (
+                <StaggerItem key={product.id}>
+                  <HoverLift>
+                    <ProductCard
+                      product={product}
+                      onOpen={() => openDetail(product.id)}
+                    />
+                  </HoverLift>
+                </StaggerItem>
+              ))}
+            </Stagger>
+          )}
+        </div>
+      ) : (
+        <DataTable
+          data={filtered}
+          columns={columns}
+          getRowId={getRowId}
+          storageKey="panel-products"
+          search=""
+          globalFilterFn={globalFilterFn}
+          onRowOpen={(row) => openDetail(row.id)}
+          emptyTitle="Ürün yok"
+          emptyDescription="Yeni ürün ekleyerek kataloğu doldurun."
+          emptyAction={
+            <Button type="button" onClick={openCreate} className="gap-1.5">
+              <Plus className="size-4" aria-hidden />
+              Yeni ürün
+            </Button>
+          }
+        />
+      )}
 
       <Sheet open={mode !== "closed"} onOpenChange={(open) => !open && close()}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="w-full overflow-y-auto border-stone-200 sm:max-w-lg dark:border-zinc-800">
           {mode === "create" ? (
             <>
               <SheetHeader>
                 <SheetTitle>Yeni ürün</SheetTitle>
                 <SheetDescription>
-                  Ürün ve varsayılan varyant birlikte oluşturulur. Lot ve görselleri sonra ekleyebilirsiniz.
+                  Ürün ve varsayılan paket birlikte oluşur. Fotoğraf ve lotu sonra ekleyebilirsiniz.
                 </SheetDescription>
               </SheetHeader>
 
@@ -273,23 +321,23 @@ export function ProductListSheet({
                 className="flex-1 space-y-4 overflow-y-auto px-4 pb-4"
               >
                 <div className="space-y-1">
-                  <label className="text-caption text-muted-foreground">Ürün adı</label>
-                  <Input name="name" required placeholder="Örn. Beyaz Peynir 17 kg Teneke" />
+                  <label className="text-xs font-medium text-stone-500">Ürün adı</label>
+                  <Input name="name" required placeholder="Örn. Beyaz Peynir 17 kg Teneke" className="h-10" />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-caption text-muted-foreground">Açıklama</label>
+                  <label className="text-xs font-medium text-stone-500">Açıklama</label>
                   <textarea
                     name="description"
                     rows={3}
-                    className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    className={cn(selectClass, "min-h-[5rem] py-2")}
                     placeholder="Mağazada görünecek kısa açıklama"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">Kategori</label>
+                    <label className="text-xs font-medium text-stone-500">Kategori</label>
                     <select name="primaryCategoryId" required className={selectClass} defaultValue="">
                       <option value="" disabled>
                         Seçin
@@ -302,7 +350,7 @@ export function ProductListSheet({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">Üretici</label>
+                    <label className="text-xs font-medium text-stone-500">Üretici</label>
                     <select name="producerId" required className={selectClass} defaultValue="">
                       <option value="" disabled>
                         Seçin
@@ -318,11 +366,11 @@ export function ProductListSheet({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">SKU</label>
-                    <Input name="sku" placeholder="Boş bırakılırsa otomatik" />
+                    <label className="text-xs font-medium text-stone-500">SKU</label>
+                    <Input name="sku" placeholder="Boş = otomatik" className="h-10" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">Ambalaj tipi</label>
+                    <label className="text-xs font-medium text-stone-500">Ambalaj</label>
                     <select name="packagingType" className={selectClass} defaultValue="KOLI">
                       {PACKAGING_TYPES.map((t) => (
                         <option key={t.value} value={t.value}>
@@ -334,13 +382,13 @@ export function ProductListSheet({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-caption text-muted-foreground">Paket boyutu</label>
-                  <Input name="packSize" placeholder="Örn. 17 kg teneke" />
+                  <label className="text-xs font-medium text-stone-500">Paket boyutu</label>
+                  <Input name="packSize" placeholder="Örn. 17 kg teneke" className="h-10" />
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">Birim (kg)</label>
+                    <label className="text-xs font-medium text-stone-500">Birim (kg)</label>
                     <Input
                       name="unitFactor"
                       type="number"
@@ -348,10 +396,11 @@ export function ProductListSheet({
                       min="0.001"
                       defaultValue="1"
                       required
+                      className="h-10"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">Baz fiyat (₺)</label>
+                    <label className="text-xs font-medium text-stone-500">Fiyat (₺)</label>
                     <Input
                       name="priceTl"
                       type="number"
@@ -359,15 +408,16 @@ export function ProductListSheet({
                       min="0"
                       required
                       placeholder="0,00"
+                      className="h-10"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-caption text-muted-foreground">KDV %</label>
-                    <Input name="vatPercent" type="number" step="0.01" min="0" defaultValue="1" />
+                    <label className="text-xs font-medium text-stone-500">KDV %</label>
+                    <Input name="vatPercent" type="number" step="0.01" min="0" defaultValue="1" className="h-10" />
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="h-10 w-full bg-[#1B5E3A] text-white hover:bg-[#164e31]">
                   Ürünü oluştur
                 </Button>
               </form>
@@ -378,19 +428,7 @@ export function ProductListSheet({
             <>
               <SheetHeader>
                 <div className="flex items-start gap-3">
-                  {selected.imageUrl ? (
-                    <Image
-                      src={selected.imageUrl}
-                      alt={selected.name}
-                      width={48}
-                      height={48}
-                      className="rounded-xl object-cover"
-                    />
-                  ) : (
-                    <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
-                      <PackageSearch className="size-5 text-muted-foreground" />
-                    </div>
-                  )}
+                  <ProductThumb product={selected} size={56} className="rounded-xl" />
                   <div className="min-w-0">
                     <SheetTitle className="truncate">{selected.name}</SheetTitle>
                     <SheetDescription>{selected.categoryName}</SheetDescription>
@@ -399,10 +437,16 @@ export function ProductListSheet({
               </SheetHeader>
 
               <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-4">
+                <div className="flex flex-wrap gap-2">
+                  <StockBadge kg={selected.stockKg} />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    <Boxes className="size-3" />
+                    {selected.variants.length} paket tipi
+                  </span>
+                </div>
+
                 <div>
-                  <p className="mb-1.5 text-caption font-medium text-muted-foreground">
-                    Açıklama
-                  </p>
+                  <p className="mb-1.5 text-xs font-medium text-stone-500">Açıklama</p>
                   <EditableTextarea
                     value={selected.description}
                     placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
@@ -413,23 +457,18 @@ export function ProductListSheet({
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-caption font-medium text-muted-foreground">
-                    Varyantlar
-                  </p>
+                  <p className="mb-1.5 text-xs font-medium text-stone-500">Paketler / fiyat</p>
                   <div className="space-y-2">
                     {selected.variants.map((v) => (
                       <div
                         key={v.id}
-                        className="flex items-center justify-between rounded-xl border border-border/70 px-3 py-2"
+                        className="flex items-center justify-between rounded-xl border border-stone-200 px-3 py-2.5 dark:border-zinc-800"
                       >
                         <div className="min-w-0">
-                          <p className="truncate font-mono text-caption text-neutral-500">
-                            {v.sku}
+                          <p className="text-sm font-medium text-stone-800 dark:text-zinc-100">
+                            {v.packSize ?? v.packagingType}
                           </p>
-                          <p className="text-body-sm text-neutral-700">
-                            {v.packSize ?? v.packagingType} &middot; {v.baseUnit} &middot; %
-                            {(v.vatRateBasisPoints / 100).toString()} KDV
-                          </p>
+                          <p className="truncate font-mono text-[11px] text-stone-400">{v.sku}</p>
                         </div>
                         <EditablePrice
                           priceKurus={v.pricePerUnitKurus}
@@ -442,14 +481,12 @@ export function ProductListSheet({
 
                 {selected.media.length > 0 ? (
                   <div>
-                    <p className="mb-1.5 text-caption font-medium text-muted-foreground">
-                      Görseller
-                    </p>
+                    <p className="mb-1.5 text-xs font-medium text-stone-500">Görseller</p>
                     <div className="flex flex-wrap gap-2">
                       {selected.media.map((m) => (
                         <div
                           key={m.id}
-                          className="relative size-16 overflow-hidden rounded-lg bg-muted"
+                          className="relative size-16 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800"
                         >
                           <Image
                             src={m.url}
@@ -464,10 +501,10 @@ export function ProductListSheet({
                   </div>
                 ) : null}
 
-                <Button asChild className="w-full">
+                <Button asChild className="h-10 w-full gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]">
                   <Link href={`/panel/urunler/${selected.slug}`}>
                     <Maximize2 className="size-3.5" />
-                    Tam ekranda aç &amp; düzenle
+                    Tam ekranda düzenle
                   </Link>
                 </Button>
               </div>
@@ -475,6 +512,195 @@ export function ProductListSheet({
           ) : null}
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+function FilterChip({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-[#1B5E3A] text-white"
+          : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-zinc-800 dark:text-zinc-300",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function StockBadge({ kg }: { kg: number }) {
+  const tone = stockTone(kg);
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
+        tone === "ok" && "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
+        tone === "low" && "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
+        tone === "empty" && "bg-stone-100 text-stone-500 dark:bg-zinc-800 dark:text-zinc-400",
+      )}
+    >
+      {formatStockKg(kg)}
+    </span>
+  );
+}
+
+function ProductThumb({
+  product,
+  size,
+  className,
+}: {
+  product: ProductRow;
+  size: number;
+  className?: string;
+}) {
+  const src = product.imageUrl ?? product.media.find((m) => m.isPrimary)?.url ?? product.media[0]?.url;
+  if (src) {
+    return (
+      <div
+        style={{ width: size, height: size }}
+        className={cn("relative shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800", className)}
+      >
+        <Image src={src} alt="" fill className="object-cover" sizes={`${size}px`} />
+      </div>
+    );
+  }
+  return (
+    <div
+      style={{ width: size, height: size }}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-400 dark:bg-zinc-800",
+        className,
+      )}
+    >
+      <PackageSearch className="size-5" aria-hidden />
+    </div>
+  );
+}
+
+function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => void }) {
+  const variant = product.variants[0];
+  const cover =
+    product.imageUrl ?? product.media.find((m) => m.isPrimary)?.url ?? product.media[0]?.url ?? null;
+
+  return (
+    <article
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white",
+        "shadow-sm transition-[transform,box-shadow,border-color] duration-200",
+        "hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md",
+        "dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700",
+      )}
+    >
+      <button type="button" onClick={onOpen} className="block w-full text-left">
+        <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-zinc-800">
+          {cover ? (
+            <Image
+              src={cover}
+              alt=""
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+              sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
+            />
+          ) : (
+            <div className="flex size-full items-center justify-center text-stone-300">
+              <PackageSearch className="size-10" aria-hidden />
+            </div>
+          )}
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
+            <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-stone-700 shadow-sm backdrop-blur-sm dark:bg-zinc-900/90 dark:text-zinc-200">
+              {product.categoryName}
+            </span>
+            <StockBadge kg={product.stockKg} />
+          </div>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-2 p-3.5">
+          <div className="min-w-0">
+            <h3
+              className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.01em] text-stone-900 dark:text-zinc-50"
+              title={product.name}
+            >
+              {product.name}
+            </h3>
+            <p className="mt-1 truncate text-xs text-stone-500">
+              {variant?.packSize ?? variant?.packagingType ?? "Paket yok"}
+              {product.variants.length > 1 ? ` · +${product.variants.length - 1} paket` : ""}
+            </p>
+          </div>
+
+          <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+            <div
+              className="min-w-0"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            >
+              <p className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">
+                Baz fiyat
+              </p>
+              {variant ? (
+                <EditablePrice
+                  priceKurus={variant.pricePerUnitKurus}
+                  onSave={(kurus) => updateVariantPriceAction(variant.id, kurus)}
+                />
+              ) : (
+                <p className="text-base font-semibold text-stone-400">—</p>
+              )}
+            </div>
+            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-500 transition-colors group-hover:bg-[#1B5E3A] group-hover:text-white dark:bg-zinc-800">
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            </span>
+          </div>
+        </div>
+      </button>
+
+      <div className="flex items-center justify-between gap-2 border-t border-stone-100 px-3 py-2 dark:border-zinc-800">
+        <p className="truncate font-mono text-[11px] text-stone-400">
+          {variant?.sku ?? "SKU yok"}
+        </p>
+        <Link
+          href={`/panel/urunler/${product.slug}`}
+          className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-medium text-stone-500 hover:bg-stone-50 hover:text-[#1B5E3A] dark:hover:bg-zinc-800"
+          onClick={(e) => e.stopPropagation()}
+        >
+          Düzenle
+          <ArrowUpRight className="size-3" />
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+function EmptyState({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-16 text-center dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400 dark:bg-zinc-800">
+        <PackageSearch className="size-6" />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-stone-800 dark:text-zinc-100">Katalog boş</p>
+      <p className="mt-1 max-w-xs text-sm text-stone-500">
+        İlk ürünü ekleyin; fotoğraf, fiyat ve stok buradan yönetilir.
+      </p>
+      <Button
+        type="button"
+        onClick={onCreate}
+        className="mt-5 gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]"
+      >
+        <Plus className="size-4" />
+        Yeni ürün
+      </Button>
     </div>
   );
 }

@@ -39,6 +39,61 @@ export async function createAttributeDefinition(input: {
   });
 }
 
+export async function updateAttributeDefinition(input: {
+  id: string;
+  name: string;
+  type: AttributeType;
+  options?: { value: string; label: string }[];
+}) {
+  const name = input.name.trim();
+  if (!name) throw new Error("Ad gerekli");
+
+  return prisma.$transaction(async (tx) => {
+    await tx.attributeDefinition.update({
+      where: { id: input.id },
+      data: { name, type: input.type },
+    });
+
+    const isSelect = input.type === "SELECT" || input.type === "MULTI_SELECT";
+    if (!isSelect) {
+      await tx.attributeOption.deleteMany({ where: { attributeId: input.id } });
+    } else {
+      const options = input.options ?? [];
+      const keepValues = options.map((o) => o.value);
+      await tx.attributeOption.deleteMany({
+        where: {
+          attributeId: input.id,
+          ...(keepValues.length ? { value: { notIn: keepValues } } : {}),
+        },
+      });
+      for (let i = 0; i < options.length; i++) {
+        const o = options[i]!;
+        await tx.attributeOption.upsert({
+          where: {
+            attributeId_value: { attributeId: input.id, value: o.value },
+          },
+          create: {
+            attributeId: input.id,
+            value: o.value,
+            label: o.label,
+            sortOrder: i,
+          },
+          update: { label: o.label, sortOrder: i },
+        });
+      }
+    }
+
+    return tx.attributeDefinition.findUniqueOrThrow({
+      where: { id: input.id },
+      include: { options: { orderBy: { sortOrder: "asc" } } },
+    });
+  });
+}
+
+export async function deleteAttributeDefinition(id: string) {
+  return prisma.attributeDefinition.delete({ where: { id } });
+}
+
 export async function getProductAttributeValues(productId: string) {
   return prisma.productAttributeValue.findMany({
     where: { productId },

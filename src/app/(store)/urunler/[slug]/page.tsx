@@ -73,6 +73,8 @@ export default async function ProductDetailPage({
         sku={product.sku}
         priceKurus={product.unitPrice}
         brand={product.producer.name}
+        path={`/urunler/${product.slug}`}
+        category={product.category}
       />
       <JsonLdScript
         data={breadcrumbJsonLd([

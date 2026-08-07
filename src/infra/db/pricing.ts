@@ -1,6 +1,7 @@
 import { prisma } from "@/infra/db/client";
 import { getProductBySlug, getProducts, defaultVariant } from "@/infra/db/products";
 import { money } from "@/domain/money";
+import { slugifyTr } from "@/domain/catalog/slug";
 
 async function resolvePriceListId(userId: string | undefined) {
   if (!userId) return null;
@@ -128,16 +129,114 @@ export async function upsertPriceListItem(
   variantId: string,
   priceKurus: number,
 ) {
+  if (!Number.isFinite(priceKurus) || priceKurus < 0) {
+    throw new Error("Geçerli bir fiyat girin");
+  }
   return prisma.priceListItem.upsert({
     where: { priceListId_variantId: { priceListId, variantId } },
-    update: { priceKurus },
-    create: { priceListId, variantId, priceKurus },
+    update: { priceKurus: Math.round(priceKurus) },
+    create: { priceListId, variantId, priceKurus: Math.round(priceKurus) },
   });
 }
 
 export async function updateVariantBasePrice(variantId: string, priceKurus: number) {
+  if (!Number.isFinite(priceKurus) || priceKurus < 0) {
+    throw new Error("Geçerli bir fiyat girin");
+  }
   return prisma.productVariant.update({
     where: { id: variantId },
-    data: { pricePerUnitKurus: priceKurus },
+    data: { pricePerUnitKurus: Math.round(priceKurus) },
+  });
+}
+
+export async function createPriceList(input: { name: string; slug?: string }) {
+  const name = input.name.trim();
+  if (!name) throw new Error("Liste adı gerekli");
+  const root = slugifyTr(input.slug?.trim() || name) || "fiyat-listesi";
+  let slug = root;
+  let n = 0;
+  while (await prisma.priceList.findUnique({ where: { slug }, select: { id: true } })) {
+    n += 1;
+    slug = `${root}-${n}`;
+  }
+  return prisma.priceList.create({ data: { name, slug } });
+}
+
+/** Group prices for product variants across all price lists (dealer / customer groups). */
+export async function getGroupPricesForVariants(variantIds: string[]) {
+  const [lists, items] = await Promise.all([
+    prisma.priceList.findMany({
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: { select: { dealers: true } },
+      },
+    }),
+    variantIds.length === 0
+      ? Promise.resolve([])
+      : prisma.priceListItem.findMany({
+          where: { variantId: { in: variantIds } },
+          select: { priceListId: true, variantId: true, priceKurus: true },
+        }),
+  ]);
+
+  const priceByKey = new Map(
+    items.map((i) => [`${i.priceListId}:${i.variantId}`, i.priceKurus] as const),
+  );
+
+  return {
+    lists: lists.map((l) => ({
+      id: l.id,
+      name: l.name,
+      slug: l.slug,
+      dealerCount: l._count.dealers,
+    })),
+    /** Returns override kuruş or null if not set (falls back to base). */
+    getPrice(priceListId: string, variantId: string): number | null {
+      return priceByKey.get(`${priceListId}:${variantId}`) ?? null;
+    },
+  };
+}
+
+/** Ensure every active variant has a row in the given price list (uses base price). */
+export async function fillPriceListFromCatalog(priceListId: string) {
+  const [variants, existing] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: { isActive: true, product: { active: true } },
+      select: { id: true, pricePerUnitKurus: true },
+    }),
+    prisma.priceListItem.findMany({
+      where: { priceListId },
+      select: { variantId: true },
+    }),
+  ]);
+  const have = new Set(existing.map((e) => e.variantId));
+  const missing = variants.filter((v) => !have.has(v.id));
+  if (missing.length === 0) return { added: 0 };
+  await prisma.priceListItem.createMany({
+    data: missing.map((v) => ({
+      priceListId,
+      variantId: v.id,
+      priceKurus: v.pricePerUnitKurus,
+    })),
+    skipDuplicates: true,
+  });
+  return { added: missing.length };
+}
+
+export async function listActiveVariantsForPicker() {
+  return prisma.productVariant.findMany({
+    where: { isActive: true, product: { active: true } },
+    orderBy: [{ product: { name: "asc" } }, { sortOrder: "asc" }],
+    select: {
+      id: true,
+      sku: true,
+      packSize: true,
+      packagingType: true,
+      pricePerUnitKurus: true,
+      product: { select: { name: true, imageUrl: true } },
+    },
   });
 }

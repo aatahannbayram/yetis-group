@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { auth } from "@/infra/auth/server";
 import { getProductsWithPricing } from "@/infra/db/pricing";
@@ -7,6 +8,15 @@ import { ProductGrid } from "@/components/store/product-grid";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { JsonLdScript, breadcrumbJsonLd, itemListJsonLd } from "@/lib/seo/json-ld";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Ürün kataloğu | Toptan yöresel gıda",
+  description:
+    "Yetiş Grup B2B ürün kataloğu: peynir, süt ürünleri ve yöresel gıdalar. Bayi hesabıyla net fiyat listesi ve sipariş.",
+  path: "/urunler",
+});
 
 export default async function ProductsPage({
   searchParams,
@@ -24,8 +34,23 @@ export default async function ProductsPage({
     .filter((c) => !c.parentId)
     .map((c) => ({ slug: c.slug, name: c.name }));
 
+  const listItems = products.slice(0, 40).map((p) => ({
+    name: p.name,
+    path: `/urunler/${p.slug}`,
+    image: p.imageUrl,
+  }));
+
   return (
     <Canvas>
+      <JsonLdScript
+        data={[
+          breadcrumbJsonLd([
+            { name: "Ana sayfa", path: "/" },
+            { name: "Ürünler", path: "/urunler" },
+          ]),
+          itemListJsonLd(listItems, "Yetiş Grup ürün kataloğu"),
+        ]}
+      />
       <Slab>
         <SiteHeader />
         <div className="mkt-pad">

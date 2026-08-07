@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { Loader2, MoreHorizontal, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,21 +149,59 @@ export function DealerListSheet({
   salesRepOptions: { id: string; name: string; email: string }[];
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"closed" | "create" | "edit">("closed");
   const [editing, setEditing] = useState<DealerRow | null>(null);
+  const [saving, startSaving] = useTransition();
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const openId = searchParams.get("open");
+  useEffect(() => {
+    if (!openId) return;
+    const dealer = dealers.find((d) => d.id === openId);
+    if (dealer) {
+      setEditing(dealer);
+      setSaveError(null);
+      setMode("edit");
+    }
+    router.replace("/panel/bayiler", { scroll: false });
+    // Only reacts to the incoming param, not every dealers/router identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openId]);
 
   function openCreate() {
     setEditing(null);
+    setSaveError(null);
     setMode("create");
   }
   function openEdit(dealer: DealerRow) {
     setEditing(dealer);
+    setSaveError(null);
     setMode("edit");
   }
   function close() {
     setMode("closed");
     setEditing(null);
+    setSaveError(null);
+  }
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    setSaveError(null);
+    startSaving(async () => {
+      try {
+        if (mode === "edit") {
+          await updateDealerAction(formData);
+        } else {
+          await createDealerAction(formData);
+        }
+        close();
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : "Kaydedilemedi");
+      }
+    });
   }
 
   function impersonate(dealer: DealerRow) {
@@ -366,8 +404,7 @@ export function DealerListSheet({
 
           <form
             key={editing?.id ?? "create"}
-            action={mode === "edit" ? updateDealerAction : createDealerAction}
-            onSubmit={close}
+            onSubmit={handleSubmit}
             className="flex min-h-0 flex-1 flex-col"
           >
             {mode === "edit" && editing ? (
@@ -620,16 +657,28 @@ export function DealerListSheet({
             </div>
 
             <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t border-stone-200 bg-white px-5 py-3.5 dark:border-zinc-800 dark:bg-zinc-950">
+              {saveError ? (
+                <p className="mr-auto text-sm text-red-600 dark:text-red-400" role="status">
+                  {saveError}
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="ghost"
                 onClick={close}
+                disabled={saving}
                 className="h-10 text-stone-600 hover:text-stone-900"
               >
                 İptal
               </Button>
-              <Button type="submit" className="h-10 min-w-[6.5rem]">
-                {mode === "edit" ? "Kaydet" : "Oluştur"}
+              <Button type="submit" disabled={saving} className="h-10 min-w-[6.5rem]">
+                {saving ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : mode === "edit" ? (
+                  "Kaydet"
+                ) : (
+                  "Oluştur"
+                )}
               </Button>
             </div>
           </form>

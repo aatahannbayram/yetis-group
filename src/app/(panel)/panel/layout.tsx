@@ -4,6 +4,7 @@ import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
 import { getOpenLeadsCount } from "@/infra/db/leads";
 import { listDealerOptions } from "@/infra/db/dealers";
+import { listStaffNotifications, countUnreadStaff } from "@/infra/db/notifications";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminShell } from "@/components/admin/admin-theme-context";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
@@ -13,6 +14,12 @@ import { ImpersonationBanner } from "@/components/workspace/impersonation-banner
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { MotionShell } from "@/components/motion/motion-shell";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -25,9 +32,11 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     redirect("/");
   }
 
-  const [openLeadsCount, dealers] = await Promise.all([
+  const [openLeadsCount, dealers, notifications, unreadCount] = await Promise.all([
     getOpenLeadsCount(),
     listDealerOptions(),
+    listStaffNotifications(8),
+    countUnreadStaff(),
   ]);
 
   const jar = await cookies();
@@ -45,8 +54,22 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             {impersonated ? (
               <ImpersonationBanner dealerId={impersonated.id} dealerName={impersonated.unvan} />
             ) : null}
-            <AdminTopbar userName={session.user.name} userEmail={session.user.email} />
-            <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:p-6">{children}</main>
+            <AdminTopbar
+              userName={session.user.name}
+              userEmail={session.user.email}
+              notifications={notifications.map((n) => ({
+                id: n.id,
+                title: n.title,
+                body: n.body,
+                link: n.link,
+                readAt: n.readAt?.toISOString() ?? null,
+                createdAt: n.createdAt.toISOString(),
+              }))}
+              unreadCount={unreadCount}
+            />
+            <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:p-6">
+              <MotionShell>{children}</MotionShell>
+            </main>
           </SidebarInset>
           <CommandPalette
             dealers={dealers.map((d) => ({ id: d.id, unvan: d.unvan }))}

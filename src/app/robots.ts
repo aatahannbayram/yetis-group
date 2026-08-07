@@ -8,7 +8,18 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/panel/", "/api/", "/sepet"],
+        disallow: [
+          "/panel/",
+          "/bayi/",
+          "/api/",
+          "/sepet",
+          "/sepet/",
+        ],
+      },
+      {
+        userAgent: "GPTBot",
+        allow: ["/", "/urunler", "/haberler", "/tarifler", "/hakkimizda", "/iletisim", "/llms.txt"],
+        disallow: ["/panel/", "/bayi/", "/api/", "/sepet"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

@@ -81,6 +81,22 @@ export async function createDealerAction(formData: FormData) {
   if (!input.unvan) throw new Error("Ünvan gerekli");
   await createDealer(input);
   revalidatePath("/panel/bayiler");
+  revalidatePath("/panel/siparisler");
+}
+
+/** Quick create from order sheet — returns the new dealer for immediate selection. */
+export async function createDealerQuickAction(
+  formData: FormData,
+): Promise<{ id: string; unvan: string }> {
+  await requireStaff();
+  if (!formData.get("status")) formData.set("status", "AKTIF");
+  if (!formData.get("dealerType")) formData.set("dealerType", "BAYI");
+  const input = readDealerInput(formData);
+  if (!input.unvan) throw new Error("Ünvan gerekli");
+  const dealer = await createDealer(input);
+  revalidatePath("/panel/bayiler");
+  revalidatePath("/panel/siparisler");
+  return { id: dealer.id, unvan: dealer.unvan };
 }
 
 export async function updateDealerAction(formData: FormData) {
@@ -91,4 +107,5 @@ export async function updateDealerAction(formData: FormData) {
   if (!input.unvan) throw new Error("Ünvan gerekli");
   await updateDealer(id, input);
   revalidatePath("/panel/bayiler");
+  revalidatePath("/panel/siparisler");
 }

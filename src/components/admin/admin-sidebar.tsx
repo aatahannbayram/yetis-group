@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -22,110 +22,140 @@ import { BrandMark, Logo } from "@/components/ui/logo";
 import { useAdminTheme } from "@/components/admin/admin-theme-context";
 import {
   PANEL_NAV_GROUPS,
+  type PanelNavGroup,
   type PanelNavItem,
 } from "@/components/admin/panel-nav";
 import { cn } from "@/lib/utils";
 
-const GROUP_COLLAPSE_KEY = "yetis-panel-nav-groups";
+const GROUP_COLLAPSE_KEY = "yetis-panel-nav-groups-v2";
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
   if (exact || href === "/panel") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function defaultCollapsedMap() {
+  return Object.fromEntries(
+    PANEL_NAV_GROUPS.filter((g) => g.defaultCollapsed).map((g) => [g.id, true]),
+  ) as Record<string, boolean>;
+}
+
+function NavItem({
+  item,
+  openLeadsCount,
+}: {
+  item: PanelNavItem;
+  openLeadsCount: number;
+}) {
+  const pathname = usePathname();
+  const { setOpenMobile, isMobile } = useSidebar();
+  const { href, label, icon: Icon, badgeKey, exact, status } = item;
+  const active = status === "ready" && isActivePath(pathname, href, exact);
+  const soon = status === "soon";
+  const showBadge = badgeKey === "leads" && openLeadsCount > 0 && !soon;
+
+  if (soon) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          disabled
+          tooltip={`${label} — yakında`}
+          className="h-9 cursor-not-allowed rounded-lg px-2.5 text-sidebar-foreground/40 opacity-70"
+          aria-disabled
+        >
+          <Icon className="!size-[18px] stroke-[1.5] opacity-70" aria-hidden />
+          <span className="flex-1 truncate font-normal">{label}</span>
+          <span className="text-[10px] font-medium text-sidebar-foreground/35">Yakında</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={active}
+        tooltip={label}
+        className={cn(
+          "h-9 rounded-lg px-2.5 transition-colors duration-150",
+          active
+            ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            : "font-normal text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+        )}
+      >
+        <Link
+          href={href}
+          aria-current={active ? "page" : undefined}
+          onClick={() => {
+            if (isMobile) setOpenMobile(false);
+          }}
+        >
+          <Icon
+            className={cn(
+              "!size-[18px] stroke-[1.5]",
+              active ? "text-sidebar-primary" : "text-sidebar-foreground/45",
+            )}
+            aria-hidden
+          />
+          <span className="truncate">{label}</span>
+        </Link>
+      </SidebarMenuButton>
+      {showBadge ? (
+        <SidebarMenuBadge className="right-2 rounded-full bg-sidebar-primary text-[10px] font-semibold text-sidebar-primary-foreground tabular-nums">
+          {openLeadsCount > 99 ? "99+" : openLeadsCount}
+        </SidebarMenuBadge>
+      ) : null}
+    </SidebarMenuItem>
+  );
+}
+
 function NavGroup({
-  groupId,
-  label,
-  items,
+  group,
   openLeadsCount,
   collapsed,
   onToggle,
 }: {
-  groupId: string;
-  label: string;
-  items: PanelNavItem[];
+  group: PanelNavGroup;
   openLeadsCount: number;
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const pathname = usePathname();
-  const { setOpenMobile, isMobile } = useSidebar();
+  const ready = group.items.filter((i) => i.status === "ready");
+  const soon = group.items.filter((i) => i.status === "soon");
+  const visible = collapsed ? [] : [...ready, ...soon];
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="px-2 py-1">
       <SidebarGroupLabel asChild>
         <button
           type="button"
           onClick={onToggle}
-          className="flex w-full items-center justify-between gap-2"
+          className="mb-0.5 flex h-7 w-full items-center gap-1.5 px-2.5 text-[11px] font-semibold tracking-[0.06em] text-sidebar-foreground/45 uppercase hover:text-sidebar-foreground/75"
           aria-expanded={!collapsed}
-          aria-controls={`nav-group-${groupId}`}
+          aria-controls={`nav-group-${group.id}`}
         >
-          <span>{label}</span>
-          <ChevronDown
+          <ChevronRight
             className={cn(
-              "size-3.5 transition-transform",
-              collapsed && "-rotate-90",
+              "size-3 shrink-0 transition-transform duration-200",
+              !collapsed && "rotate-90",
             )}
             aria-hidden
           />
+          <span className="truncate">{group.label}</span>
+          {collapsed && ready.length > 0 ? (
+            <span className="ml-auto font-normal tracking-normal text-sidebar-foreground/30 tabular-nums">
+              {ready.length}
+            </span>
+          ) : null}
         </button>
       </SidebarGroupLabel>
       {!collapsed ? (
-        <SidebarGroupContent id={`nav-group-${groupId}`}>
-          <SidebarMenu>
-            {items.map((item) => {
-              const { href, label: itemLabel, icon: Icon, badgeKey, exact, status } = item;
-              const active = status === "ready" && isActivePath(pathname, href, exact);
-              const soon = status === "soon";
-
-              return (
-                <SidebarMenuItem key={href}>
-                  {soon ? (
-                    <SidebarMenuButton
-                      disabled
-                      tooltip={`${itemLabel} (yakında)`}
-                      className="cursor-not-allowed rounded-lg border-l-[3px] border-transparent pl-2.5 opacity-55"
-                      aria-disabled
-                    >
-                      <Icon />
-                      <span className="flex-1 truncate">{itemLabel}</span>
-                      <span className="rounded-full bg-[var(--neutral-subtle)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-muted)]">
-                        Yakında
-                      </span>
-                    </SidebarMenuButton>
-                  ) : (
-                    <SidebarMenuButton
-                      asChild
-                      isActive={active}
-                      tooltip={itemLabel}
-                      className={cn(
-                        "rounded-lg border-l-[3px] pl-2.5",
-                        active
-                          ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)] font-semibold text-[var(--primary-text)] hover:bg-[var(--primary-subtle)] hover:text-[var(--primary-text)]"
-                          : "border-transparent",
-                      )}
-                    >
-                      <Link
-                        href={href}
-                        aria-current={active ? "page" : undefined}
-                        onClick={() => {
-                          if (isMobile) setOpenMobile(false);
-                        }}
-                      >
-                        <Icon />
-                        <span>{itemLabel}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  )}
-                  {badgeKey === "leads" && openLeadsCount > 0 && !soon ? (
-                    <SidebarMenuBadge className="rounded-full bg-[var(--primary-subtle)] text-[var(--primary-text)]">
-                      {openLeadsCount}
-                    </SidebarMenuBadge>
-                  ) : null}
-                </SidebarMenuItem>
-              );
-            })}
+        <SidebarGroupContent id={`nav-group-${group.id}`}>
+          <SidebarMenu className="gap-0.5">
+            {visible.map((item) => (
+              <NavItem key={item.href} item={item} openLeadsCount={openLeadsCount} />
+            ))}
           </SidebarMenu>
         </SidebarGroupContent>
       ) : null}
@@ -136,15 +166,19 @@ function NavGroup({
 export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
   const { theme } = useAdminTheme();
   const { setOpenMobile, isMobile } = useSidebar();
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(defaultCollapsedMap);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(GROUP_COLLAPSE_KEY);
-      if (raw) setCollapsedGroups(JSON.parse(raw) as Record<string, boolean>);
+      if (raw) {
+        setCollapsedGroups({ ...defaultCollapsedMap(), ...(JSON.parse(raw) as Record<string, boolean>) });
+      }
     } catch {
       /* ignore */
     }
+    setHydrated(true);
   }, []);
 
   function toggleGroup(id: string) {
@@ -156,8 +190,11 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
   }
 
   return (
-    <Sidebar collapsible="icon" className="w-[260px]">
-      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 border-b border-border p-0 px-4 md:h-16">
+    <Sidebar
+      collapsible="icon"
+      className="w-[248px] border-sidebar-border bg-sidebar text-sidebar-foreground"
+    >
+      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 border-b border-sidebar-border bg-transparent p-0 px-4 md:h-16">
         <Link
           href="/panel"
           className="flex h-full items-center justify-center transition-opacity hover:opacity-80"
@@ -173,20 +210,30 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
           <BrandMark size={26} className="hidden group-data-[collapsible=icon]:block" />
         </Link>
       </SidebarHeader>
-      <SidebarContent className="gap-1">
+
+      <SidebarContent
+        className={cn(
+          "gap-0 px-0 py-3",
+          !hydrated && "opacity-0",
+          hydrated && "opacity-100 transition-opacity duration-150",
+        )}
+      >
         {PANEL_NAV_GROUPS.map((group) => (
           <NavGroup
             key={group.id}
-            groupId={group.id}
-            label={group.label}
-            items={group.items}
+            group={group}
             openLeadsCount={openLeadsCount}
             collapsed={Boolean(collapsedGroups[group.id])}
             onToggle={() => toggleGroup(group.id)}
           />
         ))}
       </SidebarContent>
-      <SidebarFooter />
+
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <p className="px-1 text-[10px] leading-relaxed text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden">
+          Yetiş operasyon paneli
+        </p>
+      </SidebarFooter>
     </Sidebar>
   );
 }

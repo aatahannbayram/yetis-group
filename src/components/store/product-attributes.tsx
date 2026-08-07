@@ -1,5 +1,6 @@
 import { formatAttributeDisplay } from "@/infra/db/attributes";
 import type { AttributeType } from "@/generated/prisma";
+import { productJsonLd } from "@/lib/seo/json-ld";
 
 type AttrValue = {
   valueText: string | null;
@@ -46,41 +47,20 @@ export function ProductAttributes({ values }: { values: AttrValue[] }) {
   );
 }
 
-export function ProductJsonLd({
-  name,
-  description,
-  image,
-  sku,
-  priceKurus,
-  brand,
-}: {
+export function ProductJsonLd(props: {
   name: string;
   description: string;
   image: string | null;
   sku: string;
   priceKurus: number;
   brand: string;
+  path: string;
+  category?: string;
 }) {
-  const data = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name,
-    description,
-    sku,
-    brand: { "@type": "Brand", name: brand },
-    image: image ? [image] : undefined,
-    offers: {
-      "@type": "Offer",
-      priceCurrency: "TRY",
-      price: (priceKurus / 100).toFixed(2),
-      availability: "https://schema.org/InStock",
-    },
-  };
-
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(props)) }}
     />
   );
 }

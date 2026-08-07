@@ -7,6 +7,7 @@ export function buildPageMetadata(input: {
   path: string;
   image?: string | null;
   noIndex?: boolean;
+  type?: "website" | "article";
 }): Metadata {
   const url = absoluteUrl(input.path);
   let ogImage = absoluteUrl("/brand/logo-light.png");
@@ -14,9 +15,12 @@ export function buildPageMetadata(input: {
     ogImage = input.image.startsWith("http") ? input.image : absoluteUrl(input.image);
   }
 
+  const title = input.title.includes(SITE.name) ? input.title : `${input.title} · ${SITE.name}`;
+  const description = input.description.trim().slice(0, 160);
+
   return {
-    title: input.title.includes(SITE.name) ? input.title : `${input.title} · ${SITE.name}`,
-    description: input.description,
+    title,
+    description,
     alternates: {
       canonical: url,
       languages: {
@@ -25,23 +29,33 @@ export function buildPageMetadata(input: {
       },
     },
     openGraph: {
-      type: "website",
+      type: input.type ?? "website",
       locale: SITE.locale,
       url,
       siteName: SITE.name,
       title: input.title,
-      description: input.description,
-      images: [{ url: ogImage }],
+      description,
+      images: [{ url: ogImage, alt: input.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: input.title,
-      description: input.description,
+      description,
       images: [ogImage],
     },
     robots: input.noIndex
-      ? { index: false, follow: false }
-      : { index: true, follow: true },
+      ? { index: false, follow: false, googleBot: { index: false, follow: false } }
+      : {
+          index: true,
+          follow: true,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+            "max-video-preview": -1,
+          },
+        },
     metadataBase: new URL(getSiteUrl()),
   };
 }

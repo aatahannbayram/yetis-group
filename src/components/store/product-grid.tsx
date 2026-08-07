@@ -6,7 +6,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard, type ProductListItem } from "@/components/store/product-card";
-import { Reveal } from "@/components/store/reveal";
+import { Stagger, StaggerItem } from "@/components/motion/fade-up";
+import { HoverLift } from "@/components/motion/hover-lift";
 import { cn } from "@/lib/utils";
 
 export function ProductGrid({
@@ -90,13 +91,15 @@ export function ProductGrid({
       {filtered.length === 0 ? (
         <p className="mkt-body mt-10">Sonuç bulunamadı.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((product, index) => (
-            <Reveal key={product.id} delay={(index % 6) * 40}>
-              <ProductCard product={product} />
-            </Reveal>
+        <Stagger className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          {filtered.map((product) => (
+            <StaggerItem key={product.id} className="h-full">
+              <HoverLift className="h-full">
+                <ProductCard product={product} />
+              </HoverLift>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       )}
 
       {activeCategory ? (

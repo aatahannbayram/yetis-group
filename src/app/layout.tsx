@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { SITE, getSiteUrl } from "@/lib/site";
+import { SITE, getSiteUrl, absoluteUrl } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,23 +13,59 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: SITE.name,
+    default: `${SITE.name} · ${SITE.slogan}`,
     template: `%s · ${SITE.name}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
+  authors: [{ name: SITE.name, url: getSiteUrl() }],
+  creator: SITE.name,
+  publisher: SITE.name,
+  category: "business",
+  keywords: [
+    "Yetiş Grup",
+    "toptan gıda",
+    "B2B",
+    "yöresel ürün",
+    "bayi sipariş",
+    "HORECA tedarik",
+    "peynir toptan",
+  ],
   alternates: {
+    canonical: "/",
     languages: {
       tr: "/",
       "x-default": "/",
+    },
+    types: {
+      "application/rss+xml": absoluteUrl("/haberler/rss.xml"),
     },
   },
   openGraph: {
     type: "website",
     locale: SITE.locale,
+    url: getSiteUrl(),
     siteName: SITE.name,
     title: SITE.name,
     description: SITE.description,
+    images: [{ url: absoluteUrl("/brand/logo-light.png"), alt: SITE.name }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE.name,
+    description: SITE.description,
+    images: [absoluteUrl("/brand/logo-light.png")],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
   verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
     ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }

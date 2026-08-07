@@ -133,6 +133,78 @@ export async function createProduct(input: CreateProductInput) {
   });
 }
 
+export type CreateVariantInput = {
+  productId: string;
+  sku?: string;
+  packagingType?: PackagingType;
+  packSize?: string | null;
+  unitFactor: number;
+  pricePerUnitKurus: number;
+  vatRateBasisPoints?: number;
+  moq?: number;
+  /** When true (default), seed base price into every price list. */
+  seedPriceLists?: boolean;
+};
+
+/** Adds an active variant (SKU / pack) to an existing product. */
+export async function createVariant(input: CreateVariantInput) {
+  if (!input.productId) throw new Error("Ürün gerekli");
+  if (!Number.isFinite(input.pricePerUnitKurus) || input.pricePerUnitKurus < 0) {
+    throw new Error("Geçerli bir fiyat girin");
+  }
+  if (!Number.isFinite(input.unitFactor) || input.unitFactor <= 0) {
+    throw new Error("Birim katsayısı 0'dan büyük olmalı");
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: input.productId },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      variants: { select: { sortOrder: true }, orderBy: { sortOrder: "desc" }, take: 1 },
+    },
+  });
+  if (!product) throw new Error("Ürün bulunamadı");
+
+  const nextOrder = (product.variants[0]?.sortOrder ?? -1) + 1;
+  const skuBase =
+    input.sku?.trim() ||
+    `YG-${slugifyTr(product.name).slice(0, 10).toUpperCase() || "SKU"}-${nextOrder + 1}`;
+  const sku = await uniqueSku(skuBase);
+  const priceKurus = Math.round(input.pricePerUnitKurus);
+
+  const variant = await prisma.productVariant.create({
+    data: {
+      productId: product.id,
+      sku,
+      packagingType: input.packagingType ?? "KOLI",
+      packSize: input.packSize?.trim() || null,
+      unitFactor: input.unitFactor,
+      pricePerUnitKurus: priceKurus,
+      vatRateBasisPoints: input.vatRateBasisPoints ?? 100,
+      moq: input.moq && input.moq > 0 ? Math.round(input.moq) : 1,
+      sortOrder: nextOrder,
+    },
+  });
+
+  if (input.seedPriceLists !== false) {
+    const lists = await prisma.priceList.findMany({ select: { id: true } });
+    if (lists.length > 0) {
+      await prisma.priceListItem.createMany({
+        data: lists.map((list) => ({
+          priceListId: list.id,
+          variantId: variant.id,
+          priceKurus,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  return variant;
+}
+
 export type ProductWithVariants = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
 export function defaultVariant(product: ProductWithVariants) {

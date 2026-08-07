@@ -8,6 +8,7 @@ import { createOrder, transitionOrder } from "@/infra/db/orders";
 import { createShipment } from "@/infra/db/shipments";
 import { prisma } from "@/infra/db/client";
 import type { OrderStatus } from "@/domain/order/state-machine";
+import { trySendProforma, voidAndReissueProforma } from "@/infra/db/proforma";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -72,4 +73,19 @@ export async function createShipmentFromOrderAction(formData: FormData) {
   });
   revalidatePath("/panel/siparisler");
   revalidatePath("/panel/sevkiyat");
+}
+
+export async function reissueProformaAction(orderId: string) {
+  await requireStaff();
+  if (!orderId) throw new Error("Sipariş gerekli");
+  await voidAndReissueProforma(orderId);
+  revalidatePath("/panel/siparisler");
+}
+
+export async function sendProformaEmailAction(proformaId: string) {
+  await requireStaff();
+  if (!proformaId) throw new Error("Proforma gerekli");
+  const result = await trySendProforma(proformaId);
+  if (!result.ok) throw new Error(result.error);
+  revalidatePath("/panel/siparisler");
 }

@@ -2,14 +2,17 @@ import { PageHeader } from "@/components/ui/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { OrderBoard, type OrderRow } from "@/components/admin/order-board";
 import { listOrders } from "@/infra/db/orders";
-import { listDealers } from "@/infra/db/dealers";
+import { listDealers, listPriceListOptions } from "@/infra/db/dealers";
 import { listShippableVariants } from "@/infra/db/shipments";
+import { formatMoney } from "@/lib/format/money";
+import { money } from "@/domain/money";
 
 export default async function AdminOrdersPage() {
-  const [orders, dealers, variants] = await Promise.all([
+  const [orders, dealers, variants, priceLists] = await Promise.all([
     listOrders(),
     listDealers(),
     listShippableVariants(),
+    listPriceListOptions(),
   ]);
 
   const rows: OrderRow[] = orders.map((o) => ({
@@ -43,6 +46,18 @@ export default async function AdminOrdersPage() {
       quantityKg: s.quantityKg.toString(),
       lotNumbers: s.allocations.map((a) => a.lot.lotNumber),
     })),
+    proforma: o.proformas[0]
+      ? {
+          id: o.proformas[0].id,
+          number: o.proformas[0].number,
+          status: o.proformas[0].status,
+          issuedAt: o.proformas[0].issuedAt.toISOString(),
+          sentAt: o.proformas[0].sentAt?.toISOString() ?? null,
+          version: o.proformas[0].version,
+          buyerEmail: o.proformas[0].buyerEmail,
+          totalKurus: o.proformas[0].totalKurus,
+        }
+      : null,
   }));
 
   const activeCount = rows.filter(
@@ -72,8 +87,7 @@ export default async function AdminOrdersPage() {
         <StatCard label="Teslim edilen" value={deliveredCount} href="#siparis-panosu" />
         <StatCard
           label="Toplam ciro"
-          value={Math.round(totalKurus / 100)}
-          unit="₺"
+          value={formatMoney(money(totalKurus))}
           href="#siparis-panosu"
         />
       </section>
@@ -83,6 +97,7 @@ export default async function AdminOrdersPage() {
           orders={rows}
           dealers={dealers.map((d) => ({ id: d.id, unvan: d.unvan }))}
           variants={variants}
+          priceLists={priceLists}
         />
       </div>
 

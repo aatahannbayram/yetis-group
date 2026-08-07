@@ -12,6 +12,7 @@ import {
   sum,
   zeroMoney,
 } from "@/domain/money";
+import { formatMoney } from "@/lib/format/money";
 
 describe("money", () => {
   it("accepts integer kuruş values", () => {
@@ -62,5 +63,14 @@ describe("money", () => {
   it("detects negative amounts", () => {
     expect(isNegative(money(-1))).toBe(true);
     expect(isNegative(money(0))).toBe(false);
+  });
+});
+
+describe("formatMoney", () => {
+  it("uses thousand dots without decimal comma", () => {
+    expect(formatMoney(money(100_000_000))).toBe("1.000.000 ₺");
+    expect(formatMoney(money(6_800))).toBe("68 ₺");
+    expect(formatMoney(money(150_050))).toBe("1.500.50 ₺");
+    expect(formatMoney(money(-2_694_800))).toBe("-26.948 ₺");
   });
 });

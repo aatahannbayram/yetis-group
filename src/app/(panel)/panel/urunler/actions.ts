@@ -8,10 +8,18 @@ import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
 import { addProductMedia, deleteProductMedia, setPrimaryMedia } from "@/infra/db/media";
 import { saveUploadedImage } from "@/infra/storage/local";
-import { upsertProductAttributeValue } from "@/infra/db/attributes";
-import { createProduct, updateProductDescription } from "@/infra/db/products";
+import { upsertProductAttributeValue, listAttributeDefinitions } from "@/infra/db/attributes";
+import { createProduct, createVariant, updateProductDescription } from "@/infra/db/products";
 import { prisma } from "@/infra/db/client";
 import type { PackagingType } from "@/generated/prisma";
+import { upsertPriceListItem } from "@/infra/db/pricing";
+import {
+  buildProductsExcel,
+  buildProductsExcelTemplate,
+  mapProductsToExcelRows,
+  parseProductsExcel,
+} from "@/infra/export/products-excel";
+import { importProductRows } from "@/infra/db/product-import";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -21,9 +29,11 @@ async function requireStaff() {
 }
 
 export async function updateVariantPriceAction(variantId: string, priceKurus: number) {
+  await requireStaff();
   await updateVariantBasePrice(variantId, priceKurus);
   revalidatePath("/panel/urunler");
   revalidatePath("/urunler");
+  revalidatePath("/panel/fiyat-listeleri");
 }
 
 export async function createProductAction(formData: FormData) {
@@ -58,6 +68,52 @@ export async function createProductAction(formData: FormData) {
   revalidatePath("/panel/urunler");
   revalidatePath("/urunler");
   revalidatePath("/panel/b2b/katalog");
+}
+
+export async function createVariantAction(formData: FormData) {
+  await requireStaff();
+
+  const productId = String(formData.get("productId") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim();
+  const priceTl = Number(String(formData.get("priceTl") ?? "").replace(",", "."));
+  const unitFactor = Number(String(formData.get("unitFactor") ?? "1").replace(",", "."));
+  const vatPercent = Number(String(formData.get("vatPercent") ?? "1").replace(",", "."));
+  const moq = Number(String(formData.get("moq") ?? "1").replace(",", "."));
+  const packagingType = String(formData.get("packagingType") ?? "KOLI") as PackagingType;
+
+  if (!productId) throw new Error("Ürün gerekli");
+  if (!Number.isFinite(priceTl) || priceTl < 0) throw new Error("Geçerli bir fiyat girin");
+
+  await createVariant({
+    productId,
+    sku: String(formData.get("sku") ?? "").trim() || undefined,
+    packSize: String(formData.get("packSize") ?? "").trim() || null,
+    packagingType,
+    unitFactor: Number.isFinite(unitFactor) && unitFactor > 0 ? unitFactor : 1,
+    pricePerUnitKurus: Math.round(priceTl * 100),
+    vatRateBasisPoints: Number.isFinite(vatPercent) ? Math.round(vatPercent * 100) : 100,
+    moq: Number.isFinite(moq) && moq > 0 ? Math.round(moq) : 1,
+  });
+
+  if (slug) {
+    revalidatePath(`/panel/urunler/${slug}`);
+    revalidatePath(`/urunler/${slug}`);
+  }
+  revalidatePath("/panel/urunler");
+  revalidatePath("/panel/fiyat-listeleri");
+  revalidatePath("/urunler");
+}
+
+export async function updateGroupPriceAction(
+  priceListId: string,
+  variantId: string,
+  priceKurus: number,
+) {
+  await requireStaff();
+  await upsertPriceListItem(priceListId, variantId, priceKurus);
+  revalidatePath("/panel/urunler");
+  revalidatePath("/panel/fiyat-listeleri");
+  revalidatePath("/urunler");
 }
 
 /** @deprecated use updateVariantPriceAction */
@@ -195,4 +251,163 @@ export async function saveAttributeValueAction(formData: FormData) {
 
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath(`/urunler/${slug}`);
+}
+
+type ExcelFileResult =
+  | { ok: true; base64: string; filename: string; mime: string }
+  | { ok: false; error: string };
+
+export async function exportProductsExcelAction(): Promise<ExcelFileResult> {
+  await requireStaff();
+  try {
+    const [products, attrs] = await Promise.all([
+      prisma.product.findMany({
+        orderBy: { name: "asc" },
+        include: {
+          primaryCategory: true,
+          producer: true,
+          media: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }] },
+          variants: { orderBy: { sortOrder: "asc" } },
+          attributeValues: {
+            include: {
+              attribute: true,
+              selectedOptions: { include: { option: true } },
+            },
+          },
+        },
+      }),
+      listAttributeDefinitions(),
+    ]);
+
+    const { rows, attributeNames } = mapProductsToExcelRows(
+      products.map((p) => ({
+        name: p.name,
+        description: p.description,
+        active: p.active,
+        storageCondition: p.storageCondition,
+        shelfLifeDays: p.shelfLifeDays,
+        requiresColdChain: p.requiresColdChain,
+        usageTips: p.usageTips,
+        imageUrl: p.imageUrl,
+        primaryCategory: p.primaryCategory,
+        producer: p.producer,
+        media: p.media,
+        variants: p.variants.map((v) => ({
+          sku: v.sku,
+          barcode: v.barcode,
+          packagingType: v.packagingType,
+          packSize: v.packSize,
+          unitFactor: v.unitFactor.toString(),
+          moq: v.moq,
+          pricePerUnitKurus: v.pricePerUnitKurus,
+          vatRateBasisPoints: v.vatRateBasisPoints,
+          isActive: v.isActive,
+        })),
+        attributeValues: p.attributeValues,
+      })),
+    );
+
+    const names =
+      attributeNames.length > 0
+        ? attributeNames
+        : attrs.map((a) => a.name).sort((a, b) => a.localeCompare(b, "tr"));
+
+    const buffer = await buildProductsExcel(rows, names);
+    const stamp = new Date().toISOString().slice(0, 10);
+    return {
+      ok: true,
+      base64: buffer.toString("base64"),
+      filename: `yetis-urunler-${stamp}.xlsx`,
+      mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Dışa aktarım başarısız" };
+  }
+}
+
+export async function downloadProductsExcelTemplateAction(): Promise<ExcelFileResult> {
+  await requireStaff();
+  try {
+    const attrs = await listAttributeDefinitions();
+    const buffer = await buildProductsExcelTemplate(
+      attrs.map((a) => a.name).sort((a, b) => a.localeCompare(b, "tr")),
+    );
+    return {
+      ok: true,
+      base64: buffer.toString("base64"),
+      filename: "yetis-urun-sablon.xlsx",
+      mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Şablon oluşturulamadı" };
+  }
+}
+
+export type ProductImportActionResult =
+  | {
+      ok: true;
+      created: number;
+      updated: number;
+      variantsCreated: number;
+      imagesSaved: number;
+      attributesSet: number;
+      skipped: number;
+      errors: string[];
+      warnings: string[];
+    }
+  | { ok: false; error: string };
+
+export async function importProductsExcelAction(
+  formData: FormData,
+): Promise<ProductImportActionResult> {
+  await requireStaff();
+  try {
+    const file = formData.get("file");
+    if (!(file instanceof File)) {
+      return { ok: false, error: "Excel dosyası gerekli (.xlsx)" };
+    }
+    const name = file.name.toLowerCase();
+    if (!name.endsWith(".xlsx") && !name.endsWith(".xlsm")) {
+      return { ok: false, error: "Yalnızca .xlsx dosyaları desteklenir" };
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      return { ok: false, error: "Dosya 15 MB sınırını aşıyor" };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const attrs = await listAttributeDefinitions();
+    const attrDefs = attrs.map((a) => ({
+      id: a.id,
+      key: a.key,
+      name: a.name,
+      type: a.type,
+      options: a.options.map((o) => ({ id: o.id, value: o.value, label: o.label })),
+    }));
+
+    const { rows, errors: parseErrors } = await parseProductsExcel(buffer, attrDefs);
+    if (rows.length === 0 && parseErrors.length === 0) {
+      return { ok: false, error: "Dosyada içe aktarılacak satır yok" };
+    }
+
+    const result = await importProductRows(rows, { attributes: attrDefs });
+    result.errors = [...parseErrors, ...result.errors];
+
+    revalidatePath("/panel/urunler");
+    revalidatePath("/urunler");
+    revalidatePath("/panel/b2b/katalog");
+
+    return {
+      ok: true,
+      created: result.created,
+      updated: result.updated,
+      variantsCreated: result.variantsCreated,
+      imagesSaved: result.imagesSaved,
+      attributesSet: result.attributesSet,
+      skipped: result.skipped,
+      errors: result.errors.slice(0, 40),
+      warnings: result.warnings.slice(0, 40),
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "İçe aktarım başarısız" };
+  }
 }

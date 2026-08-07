@@ -18,10 +18,11 @@ import {
 import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
 import { listAttributeDefinitions } from "@/infra/db/attributes";
+import { getGroupPricesForVariants } from "@/infra/db/pricing";
 import { LotManager } from "@/components/admin/lot-manager";
 import { ProductGallery } from "@/components/admin/product-gallery";
 import { EditableTextarea } from "@/components/admin/editable-textarea";
-import { EditablePrice } from "@/components/admin/editable-price";
+import { ProductVariantPricing } from "@/components/admin/product-variant-pricing";
 import { StatCard } from "@/components/admin/stat-card";
 import {
   DescriptionField,
@@ -32,7 +33,6 @@ import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -43,7 +43,6 @@ import {
   saveProductDepthAction,
   saveAttributeValueAction,
   updateProductDescriptionAction,
-  updateVariantPriceAction,
 } from "../actions";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -67,11 +66,19 @@ export default async function AdminProductDetailPage({
   const variant = defaultVariant(product);
   if (!variant) notFound();
 
-  const [lots, stock, attributes] = await Promise.all([
+  const [lots, stock, attributes, groupPricing] = await Promise.all([
     getLotsForVariant(variant.id),
     getProductStockSummary(product.id),
     listAttributeDefinitions(),
+    getGroupPricesForVariants(product.variants.map((v) => v.id)),
   ]);
+
+  const groupPriceMap: Record<string, number | null> = {};
+  for (const list of groupPricing.lists) {
+    for (const v of product.variants) {
+      groupPriceMap[`${list.id}:${v.id}`] = groupPricing.getPrice(list.id, v.id);
+    }
+  }
 
   const valueByAttr = new Map(product.attributeValues.map((v) => [v.attributeId, v]));
   const saveDescription = updateProductDescriptionAction.bind(null, product.id, slug);
@@ -394,43 +401,23 @@ export default async function AdminProductDetailPage({
         </TabsContent>
 
         <TabsContent value="fiyat">
-          <section className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-stone-200 dark:border-zinc-800">
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Paket</TableHead>
-                  <TableHead>Birim / Katsayı</TableHead>
-                  <TableHead>MOQ</TableHead>
-                  <TableHead>KDV</TableHead>
-                  <TableHead className="text-right">Fiyat</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {product.variants.map((v) => (
-                  <TableRow key={v.id} className="border-stone-200 dark:border-zinc-800">
-                    <TableCell className="font-mono text-xs text-stone-500">{v.sku}</TableCell>
-                    <TableCell className="text-stone-700 dark:text-zinc-300">
-                      {v.packSize ?? v.packagingType}
-                    </TableCell>
-                    <TableCell className="tabular-nums text-stone-500">
-                      {v.baseUnit} &middot; ×{v.unitFactor.toString()}
-                    </TableCell>
-                    <TableCell className="tabular-nums text-stone-500">{v.moq}</TableCell>
-                    <TableCell className="tabular-nums text-stone-500">
-                      %{(v.vatRateBasisPoints / 100).toString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <EditablePrice
-                        priceKurus={v.pricePerUnitKurus}
-                        onSave={updateVariantPriceAction.bind(null, v.id)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </section>
+          <ProductVariantPricing
+            productId={product.id}
+            slug={slug}
+            variants={product.variants.map((v) => ({
+              id: v.id,
+              sku: v.sku,
+              packSize: v.packSize,
+              packagingType: v.packagingType,
+              baseUnit: v.baseUnit,
+              unitFactor: v.unitFactor.toString(),
+              moq: v.moq,
+              vatRateBasisPoints: v.vatRateBasisPoints,
+              pricePerUnitKurus: v.pricePerUnitKurus,
+            }))}
+            priceLists={groupPricing.lists}
+            groupPrices={groupPriceMap}
+          />
         </TabsContent>
 
         <TabsContent value="gorseller">

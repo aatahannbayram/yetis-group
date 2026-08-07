@@ -3,9 +3,14 @@
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, LogOut, Search, Store, User } from "lucide-react";
+import { LogOut, Search, Store, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { NotificationBell, type NotificationItem } from "@/components/ui/notification-bell";
+import {
+  markStaffNotificationReadAction,
+  markAllStaffNotificationsReadAction,
+} from "@/app/(panel)/panel/bildirimler/actions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -39,9 +44,13 @@ function initials(name: string) {
 export function AdminTopbar({
   userName,
   userEmail,
+  notifications,
+  unreadCount,
 }: {
   userName: string;
   userEmail: string;
+  notifications: NotificationItem[];
+  unreadCount: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -115,13 +124,14 @@ export function AdminTopbar({
         <Store className="size-4" aria-hidden />
       </Link>
 
-      <button
-        type="button"
-        className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-9"
-        aria-label="Bildirimler"
-      >
-        <Bell className="size-4" aria-hidden />
-      </button>
+      <NotificationBell
+        items={notifications}
+        unreadCount={unreadCount}
+        viewAllHref="/panel/bildirimler"
+        onMarkRead={markStaffNotificationReadAction}
+        onMarkAllRead={markAllStaffNotificationsReadAction}
+        triggerClassName="md:size-9"
+      />
 
       <ThemeToggle />
 

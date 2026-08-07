@@ -28,12 +28,16 @@ Yeti≈ü Grup is a B2B solution partner for regional and rural food products in T√
 
 ## Sitemaps
 - ${absoluteUrl("/sitemap.xml")}
+- ${absoluteUrl("/sitemaps/pages.xml")}
 - ${absoluteUrl("/sitemaps/products.xml")}
+- ${absoluteUrl("/sitemaps/categories.xml")}
 - ${absoluteUrl("/sitemaps/haberler.xml")}
 - ${absoluteUrl("/sitemaps/tarifler.xml")}
 
 ## Optional
 - RSS: ${absoluteUrl("/haberler/rss.xml")}
+- Robots: ${absoluteUrl("/robots.txt")}
+- Manifest: ${absoluteUrl("/manifest.webmanifest")}
 `;
 
   return new Response(body, {

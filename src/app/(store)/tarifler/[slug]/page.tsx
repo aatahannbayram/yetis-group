@@ -1,22 +1,40 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getRecipeBySlug, type RecipeIngredient } from "@/infra/db/content";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
+import { buildPageMetadata } from "@/lib/seo/metadata";
+import { JsonLdScript, breadcrumbJsonLd } from "@/lib/seo/json-ld";
+import { absoluteUrl } from "@/lib/site";
 
 const difficultyLabel = { EASY: "Kolay", MEDIUM: "Orta", HARD: "Zor" } as const;
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
   const recipe = await getRecipeBySlug(slug);
-  if (!recipe || recipe.status !== "PUBLISHED") return { title: "Tarif" };
-  return {
-    title: `${recipe.title} · Yetiş Grup`,
-    description: recipe.excerpt,
-  };
+  if (!recipe || recipe.status !== "PUBLISHED") {
+    return buildPageMetadata({
+      title: "Tarif",
+      description: "Yetiş Grup tarifleri",
+      path: `/tarifler/${slug}`,
+      noIndex: true,
+    });
+  }
+  return buildPageMetadata({
+    title: recipe.title,
+    description: recipe.excerpt.slice(0, 160) || `${recipe.title} — Yetiş Grup tarifi`,
+    path: `/tarifler/${recipe.slug}`,
+    image: recipe.coverUrl,
+    type: "article",
+  });
 }
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,12 +45,19 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
   const ingredients = recipe.ingredients as RecipeIngredient[];
   const steps = recipe.steps as string[];
 
+  const coverAbs = recipe.coverUrl
+    ? recipe.coverUrl.startsWith("http")
+      ? recipe.coverUrl
+      : absoluteUrl(recipe.coverUrl)
+    : undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Recipe",
     name: recipe.title,
     description: recipe.excerpt,
-    image: recipe.coverUrl ? [recipe.coverUrl] : undefined,
+    url: absoluteUrl(`/tarifler/${recipe.slug}`),
+    image: coverAbs ? [coverAbs] : undefined,
     author: { "@type": "Organization", name: recipe.authorName },
     prepTime: `PT${recipe.prepMinutes}M`,
     cookTime: `PT${recipe.cookMinutes}M`,
@@ -48,7 +73,16 @@ export default async function RecipeDetailPage({ params }: { params: Promise<{ s
 
   return (
     <Canvas>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLdScript
+        data={[
+          jsonLd,
+          breadcrumbJsonLd([
+            { name: "Ana sayfa", path: "/" },
+            { name: "Tarifler", path: "/tarifler" },
+            { name: recipe.title, path: `/tarifler/${recipe.slug}` },
+          ]),
+        ]}
+      />
       <Slab>
         <SiteHeader />
         <article className="mkt-pad">

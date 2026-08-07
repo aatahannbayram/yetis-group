@@ -1,117 +1,65 @@
-import Image from "next/image";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { PageHeader } from "@/components/ui/page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
-import { EditablePrice } from "@/components/admin/editable-price";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { getPriceListsWithItems } from "@/infra/db/pricing";
-import { updatePriceListItemAction } from "./actions";
+import { PriceListsManager } from "@/components/admin/price-lists-manager";
+import { getPriceListsWithItems, listActiveVariantsForPicker } from "@/infra/db/pricing";
 
 export default async function AdminPriceListsPage() {
-  const priceLists = await getPriceListsWithItems();
+  const [priceLists, variants] = await Promise.all([
+    getPriceListsWithItems(),
+    listActiveVariantsForPicker(),
+  ]);
   const totalItems = priceLists.reduce((sum, list) => sum + list.items.length, 0);
-  const unusedLists = priceLists.filter(
-    (list) => list.users.length === 0 && list.dealers.length === 0,
-  ).length;
+  const unusedLists = priceLists.filter((list) => list.dealers.length === 0).length;
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <AdminPageHeader
-        title="Fiyat Listeleri"
-        description="Fiyatlar varyant (SKU) bazındadır. Bayilere atanan listeler Dealer kaydından da yönetilir."
-        actions={
-          <PillButton href="/panel/kullanicilar" variant="secondary">
-            Kullanıcılar
+    <div className="mx-auto max-w-6xl space-y-6">
+      <PageHeader
+        title="Fiyat listeleri"
+        count={priceLists.length}
+        description="Bayi / müşteri gruplarına özel fiyatlar. Listeler bayi kaydına atanır."
+        primaryAction={
+          <PillButton href="/panel/bayiler" variant="secondary">
+            Bayi/Müşteriler
           </PillButton>
         }
       />
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <StatCard label="Toplam Liste" value={priceLists.length} href="#liste" featured />
-        <StatCard label="Toplam Fiyat Kalemi" value={totalItems} href="#liste" />
+      <section aria-label="Özet" className="grid gap-3 sm:grid-cols-3">
+        <StatCard label="Liste" value={priceLists.length} href="#listeler" />
+        <StatCard label="Fiyat kalemi" value={totalItems} href="#listeler" />
         <StatCard
-          label="Atanmamış Liste"
+          label="Atanmamış liste"
           value={unusedLists}
-          warn={unusedLists > 0}
-          href="#liste"
+          tone={unusedLists > 0 ? "warning" : "neutral"}
+          href="#listeler"
         />
-      </div>
+      </section>
 
-      <div id="liste" className="mt-6 flex flex-col gap-6">
-        {priceLists.map((priceList) => (
-          <Card key={priceList.id} className="shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-h4 leading-h4">{priceList.name}</CardTitle>
-              <p className="text-caption text-neutral-500">
-                Kullanıcı:{" "}
-                {priceList.users.length === 0
-                  ? "-"
-                  : priceList.users.map((u) => u.name).join(", ")}
-                {" · "}
-                Bayi:{" "}
-                {priceList.dealers.length === 0
-                  ? "-"
-                  : priceList.dealers.map((d) => d.unvan).join(", ")}
-              </p>
-            </CardHeader>
-            <CardContent className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12"></TableHead>
-                    <TableHead>Ürün / SKU</TableHead>
-                    <TableHead className="text-right">Fiyat</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {priceList.items.map((item) => {
-                    const product = item.variant.product;
-                    return (
-                      <TableRow key={item.id}>
-                        <TableCell className="w-12 pr-0">
-                          {product.imageUrl ? (
-                            <Image
-                              src={product.imageUrl}
-                              alt=""
-                              width={36}
-                              height={36}
-                              className="size-9 rounded-md object-cover"
-                            />
-                          ) : (
-                            <div className="size-9 rounded-md bg-neutral-100" aria-hidden />
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <p className="font-medium text-neutral-900">{product.name}</p>
-                          <p className="font-mono text-caption text-neutral-400">
-                            {item.variant.sku}
-                          </p>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <EditablePrice
-                            priceKurus={item.priceKurus}
-                            onSave={updatePriceListItemAction.bind(
-                              null,
-                              priceList.id,
-                              item.variantId,
-                            )}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        ))}
+      <div id="listeler">
+        <PriceListsManager
+          lists={priceLists.map((list) => ({
+            id: list.id,
+            name: list.name,
+            slug: list.slug,
+            dealerNames: list.dealers.map((d) => d.unvan),
+            items: list.items.map((item) => ({
+              id: item.id,
+              variantId: item.variantId,
+              priceKurus: item.priceKurus,
+              sku: item.variant.sku,
+              packLabel: item.variant.packSize ?? item.variant.packagingType,
+              productName: item.variant.product.name,
+              productSlug: item.variant.product.slug,
+              imageUrl: item.variant.product.imageUrl,
+            })),
+          }))}
+          variantOptions={variants.map((v) => ({
+            id: v.id,
+            sku: v.sku,
+            label: `${v.product.name} · ${v.sku}${v.packSize ? ` (${v.packSize})` : ""}`,
+            basePriceTl: (v.pricePerUnitKurus / 100).toFixed(2),
+          }))}
+        />
       </div>
     </div>
   );

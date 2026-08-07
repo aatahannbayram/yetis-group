@@ -31,6 +31,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { btnInkClassName } from "@/components/ui/button";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 
@@ -122,10 +123,10 @@ export function PanoAction({
     <Link
       href={href}
       className={cn(
-        "inline-flex h-9 items-center justify-center rounded-full px-4 text-[13px] font-semibold transition-colors",
+        "inline-flex h-9 items-center justify-center rounded-full px-4 text-[13px] font-semibold",
         variant === "primary"
-          ? "bg-[var(--neutral-900)] text-[var(--neutral-50)] shadow-[inset_0_1px_0_0_rgb(255_255_255/0.12),0_1px_2px_0_rgb(0_0_0/0.22)] hover:bg-[var(--neutral-800)]"
-          : "bg-white text-stone-800 ring-1 ring-stone-200 hover:bg-stone-50 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-800",
+          ? btnInkClassName
+          : "bg-white text-stone-800 ring-1 ring-stone-200 transition-colors hover:bg-stone-50 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-800",
       )}
     >
       {children}

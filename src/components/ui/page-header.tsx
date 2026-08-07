@@ -42,7 +42,7 @@ export function PageHeader({
   const right = primaryAction ?? actions;
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("animate-page-header space-y-4", className)}>
       <div className="flex min-h-14 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

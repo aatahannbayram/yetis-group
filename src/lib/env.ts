@@ -14,6 +14,12 @@ const envSchema = z
     WHATSAPP_META_PHONE_NUMBER_ID: z.string().optional(),
     WHATSAPP_META_WEBHOOK_SECRET: z.string().optional(),
 
+    /** Unset in dev: emails are logged instead of sent. */
+    RESEND_API_KEY: z.string().optional(),
+    EMAIL_FROM: z.string().default("Yetiş Grup <bildirim@yetisgrup.test>"),
+    /** Inbox that receives staff-facing order notifications (new order, etc.). */
+    NOTIFICATIONS_STAFF_EMAIL: z.string().optional(),
+
     APP_TIMEZONE: z.string().default("Europe/Istanbul"),
 
     /** Public site origin for sitemap/canonical (defaults to BETTER_AUTH_URL). */

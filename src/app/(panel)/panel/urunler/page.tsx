@@ -43,11 +43,11 @@ export default async function AdminProductsPage() {
     }));
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-[1400px] space-y-5">
       <PageHeader
         title="Ürünler"
         count={products.length}
-        description="Katalog, stok ve baz fiyat yönetimi."
+        description="Katalog, stok ve baz fiyat — hızlı düzenleme."
         primaryAction={
           <PillButton href="/panel/fiyat-listeleri" variant="secondary">
             Fiyat listeleri
@@ -57,7 +57,7 @@ export default async function AdminProductsPage() {
 
       <section aria-label="Özet" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Toplam ürün" value={products.length} href="#urun-listesi" />
-        <StatCard label="Toplam varyant" value={variantCount} href="#urun-listesi" />
+        <StatCard label="Toplam paket" value={variantCount} href="#urun-listesi" />
         <StatCard
           label="Toplam stok"
           value={Math.round(totalKg.toNumber())}
@@ -81,7 +81,7 @@ export default async function AdminProductsPage() {
       </div>
 
       {lotCount === 0 ? (
-        <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">
+        <p className="text-sm text-stone-500">
           Henüz lot kaydı yok. Ürün detayına girip lot ekleyin.
         </p>
       ) : null}

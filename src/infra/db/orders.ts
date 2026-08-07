@@ -1,17 +1,33 @@
 import { prisma } from "@/infra/db/client";
 import { assertOrderTransition, type OrderStatus } from "@/domain/order/state-machine";
 import { addLedgerEntry } from "@/infra/db/ledger";
+import { notifyOrderCreated, notifyOrderStatusChanged } from "@/infra/db/notifications";
 
 export async function listOrders() {
   return prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      dealer: { select: { id: true, unvan: true, dealerType: true } },
+      dealer: { select: { id: true, unvan: true, dealerType: true, email: true } },
       lines: {
         include: { variant: { include: { product: { select: { name: true, imageUrl: true } } } } },
       },
       events: { orderBy: { createdAt: "asc" } },
       shipments: { include: { allocations: { include: { lot: { select: { lotNumber: true } } } } } },
+      proformas: {
+        where: { status: "ISSUED" },
+        orderBy: { version: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          issuedAt: true,
+          sentAt: true,
+          version: true,
+          buyerEmail: true,
+          totalKurus: true,
+        },
+      },
     },
   });
 }
@@ -83,7 +99,7 @@ export async function createOrder(input: {
 
   const totalKurus = lineData.reduce((sum, l) => sum + l.lineTotalKurus, 0);
 
-  return prisma.order.create({
+  const order = await prisma.order.create({
     data: {
       dealerId: input.dealerId,
       totalKurus,
@@ -92,7 +108,25 @@ export async function createOrder(input: {
       lines: { create: lineData },
       events: { create: { status: "SUBMITTED", note: "Sipariş oluşturuldu" } },
     },
+    include: { dealer: { select: { unvan: true, email: true } } },
   });
+
+  try {
+    const { issueProformaForOrder } = await import("@/infra/db/proforma");
+    await issueProformaForOrder(order.id, { sendEmail: true });
+  } catch (err) {
+    console.error("[proforma] auto-issue failed for order", order.id, err);
+  }
+
+  await notifyOrderCreated({
+    orderId: order.id,
+    dealerId: order.dealerId,
+    dealerName: order.dealer.unvan,
+    dealerEmail: order.dealer.email,
+    totalKurus: order.totalKurus,
+  });
+
+  return order;
 }
 
 /**
@@ -104,7 +138,10 @@ export async function transitionOrder(
   to: OrderStatus,
   input?: { note?: string; cancelReason?: string },
 ) {
-  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { dealer: { select: { unvan: true, email: true } } },
+  });
   const result = assertOrderTransition({
     from: order.status,
     to,
@@ -129,6 +166,16 @@ export async function transitionOrder(
       type: "BORC",
       amountKurus: order.totalKurus,
       description: `Sipariş #${order.id.slice(-6)} teslim edildi`,
+    });
+  }
+
+  if (order.status !== to) {
+    await notifyOrderStatusChanged({
+      orderId: order.id,
+      dealerId: order.dealerId,
+      dealerName: order.dealer.unvan,
+      dealerEmail: order.dealer.email,
+      status: to,
     });
   }
 

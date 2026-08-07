@@ -3,11 +3,17 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
+import { countUnreadDealer } from "@/infra/db/notifications";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { ImpersonationBanner } from "@/components/workspace/impersonation-banner";
 import { WorkspaceShell } from "@/components/workspace/workspace-shell";
 import { DealerNav } from "@/components/dealer/dealer-nav";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function BayiLayout({ children }: { children: React.ReactNode }) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -36,6 +42,8 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
   });
   if (!dealer) redirect(staff ? "/panel" : "/");
 
+  const unreadNotifications = await countUnreadDealer(dealer.id);
+
   return (
     <TooltipProvider delayDuration={200}>
       <WorkspaceShell
@@ -45,7 +53,7 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
         {impersonating ? (
           <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
         ) : null}
-        <DealerNav dealerName={dealer.unvan} />
+        <DealerNav dealerName={dealer.unvan} unreadNotifications={unreadNotifications} />
         <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-7">{children}</main>
       </WorkspaceShell>
     </TooltipProvider>

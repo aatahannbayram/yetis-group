@@ -42,7 +42,13 @@ const headerIcons: { href: string; label: string; icon: React.ComponentType<{ cl
   { href: "/bayi/destek", label: "Destek", icon: MessageCircle },
 ];
 
-export function DealerNav({ dealerName }: { dealerName: string }) {
+export function DealerNav({
+  dealerName,
+  unreadNotifications = 0,
+}: {
+  dealerName: string;
+  unreadNotifications?: number;
+}) {
   const pathname = usePathname();
 
   return (
@@ -62,16 +68,23 @@ export function DealerNav({ dealerName }: { dealerName: string }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  aria-label={item.label}
+                  aria-label={
+                    item.href === "/bayi/bildirimler" && unreadNotifications > 0
+                      ? `${item.label} (${unreadNotifications} okunmamış)`
+                      : item.label
+                  }
                   title={item.label}
                   className={cn(
-                    "flex size-8 items-center justify-center rounded-full transition-colors duration-200",
+                    "relative flex size-8 items-center justify-center rounded-full transition-colors duration-200",
                     active
                       ? "bg-[var(--primary-subtle)] text-[var(--primary-text)]"
                       : "text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--panel-ink)]",
                   )}
                 >
                   <item.icon className="size-4.5" aria-hidden />
+                  {item.href === "/bayi/bildirimler" && unreadNotifications > 0 ? (
+                    <span className="absolute top-1 right-1 flex size-2 items-center justify-center rounded-full bg-[var(--danger-solid)] ring-2 ring-[var(--panel-surface)]" />
+                  ) : null}
                 </Link>
               );
             })}

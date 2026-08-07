@@ -41,7 +41,9 @@ export default async function BayiHomePage() {
         take: 5,
         include: {
           lines: {
-            include: { variant: { include: { product: { select: { name: true } } } } },
+            include: {
+              variant: { include: { product: { select: { name: true, imageUrl: true } } } },
+            },
           },
         },
       },
@@ -71,16 +73,23 @@ export default async function BayiHomePage() {
         .map((l) => l.variant.product.name)
         .join(", ") + (lastCart.lines.length > 3 ? "…" : "")
     : null;
+  const lastCartThumbnails = lastCart
+    ? Array.from(new Set(lastCart.lines.map((l) => l.variant.product.imageUrl).filter(Boolean)))
+        .slice(0, 3)
+        .map((url) => url as string)
+    : [];
 
   return (
     <DealerHomeModules
       modules={modules}
+      dealerName={dealer.unvan}
+      dealerTypeLabel={TYPE_LABEL[dealer.dealerType] ?? dealer.dealerType}
       creditLimitKurus={dealer.creditLimitKurus}
       balanceKurus={balanceKurus}
       paymentTermDays={dealer.paymentTermDays}
       openCartLines={currentCart?.lines.length ?? 0}
       lastCartSummary={lastSummary}
-      dealerTypeLabel={TYPE_LABEL[dealer.dealerType] ?? dealer.dealerType}
+      lastCartThumbnails={lastCartThumbnails}
     />
   );
 }

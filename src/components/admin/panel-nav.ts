@@ -62,8 +62,8 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
     id: "satis",
     label: "Satış",
     items: [
-      { href: "/panel/bayi-adaylari", label: "Bayi adayları", icon: Target, badgeKey: "leads", status: "ready" },
-      { href: "/panel/bayiler", label: "Bayiler", icon: Users2, status: "ready" },
+      { href: "/panel/bayi-adaylari", label: "Bayi/Müşteri adayları", icon: Target, badgeKey: "leads", status: "ready" },
+      { href: "/panel/bayiler", label: "Bayi/Müşteriler", icon: Users2, status: "ready" },
       { href: "/panel/teklifler", label: "Teklifler", icon: FileText, status: "soon" },
       { href: "/panel/siparisler", label: "Siparişler", icon: ClipboardList, status: "ready" },
       { href: "/panel/b2b/sepetler", label: "Açık sepetler", icon: ShoppingCart, status: "ready" },

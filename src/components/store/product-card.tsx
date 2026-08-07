@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { Minus, Package, Plus, ShoppingBag } from "lucide-react";
 import { useCart } from "@/components/store/cart-context";
 import type { Money } from "@/domain/money";
 import { formatMoney } from "@/lib/format/money";
@@ -24,71 +24,44 @@ export type ProductListItem = {
   vatRateBasisPoints?: number;
 };
 
-function CompactThumb({
-  imageUrl,
-  category,
-  alt,
-}: {
-  imageUrl: string | null;
-  category: string;
-  alt: string;
-}) {
-  if (!imageUrl) {
-    return (
-      <div
-        className="flex size-14 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-mkt-card-muted text-[length:var(--text-body)] font-semibold text-mkt-ink-muted"
-        aria-hidden
-      >
-        {category.charAt(0).toLocaleUpperCase("tr-TR")}
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative size-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-mkt-card-muted">
-      <Image src={imageUrl} alt={alt} fill className="object-cover" sizes="56px" />
-    </div>
-  );
-}
-
 export function ProductCard({ product }: { product: ProductListItem }) {
   const { addVariant, isPending } = useCart();
   const moq = Math.max(1, product.moq ?? 1);
   const [qty, setQty] = useState(moq);
+  const [added, setAdded] = useState(false);
   const vatPercent =
-    typeof product.vatRateBasisPoints === "number"
-      ? product.vatRateBasisPoints / 100
-      : null;
+    typeof product.vatRateBasisPoints === "number" ? product.vatRateBasisPoints / 100 : null;
 
   return (
-    <div className="flex gap-3 rounded-[var(--radius-md)] border border-[color:var(--mkt-border)] bg-mkt-slab p-3.5 shadow-[0_1px_2px_rgb(33_28_22/0.04)] transition-[border-color,box-shadow] hover:border-[color:var(--mkt-border-strong,var(--mkt-border))] hover:shadow-[0_4px_14px_rgb(33_28_22/0.08)]">
-      <Link href={`/urunler/${product.slug}`} className="shrink-0">
-        <CompactThumb
-          imageUrl={product.imageUrl}
-          category={product.category}
-          alt={product.name}
-        />
+    <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-[color:var(--mkt-border)] bg-mkt-slab shadow-[0_1px_2px_rgb(33_28_22/0.04)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-[color:var(--mkt-border-strong,var(--mkt-border))] hover:shadow-[0_18px_36px_-14px_rgb(33_28_22/0.18)]">
+      <Link href={`/urunler/${product.slug}`} className="relative block aspect-[4/5] overflow-hidden bg-mkt-card-muted">
+        {product.imageUrl ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+            sizes="(min-width: 1280px) 360px, (min-width: 640px) 45vw, 90vw"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center text-mkt-ink-muted">
+            <Package className="size-10" aria-hidden />
+          </div>
+        )}
+        {moq > 1 ? (
+          <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-mkt-ink shadow-sm backdrop-blur-sm">
+            Min. {moq}
+          </span>
+        ) : null}
       </Link>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <div className="min-w-0">
-            <Link href={`/urunler/${product.slug}`}>
-              <h3 className="truncate text-[14px] font-medium tracking-[-0.01em] text-mkt-ink hover:opacity-80">
-                {product.name}
-              </h3>
-            </Link>
-            <p className="mt-0.5 truncate text-[12px] text-mkt-ink-muted">
-              <span className="font-medium tabular-nums text-mkt-ink">{product.sku}</span>
-              <span className="mx-1.5 text-mkt-ink-muted/60">·</span>
-              {product.category}
-            </p>
-          </div>
-          <p className="shrink-0 text-[15px] font-semibold tracking-[-0.02em] text-mkt-ink tabular-nums">
-            {formatMoney(product.unitPrice)}
-          </p>
-        </div>
-
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <p className="mkt-label text-mkt-ink-muted">{product.category}</p>
+        <Link href={`/urunler/${product.slug}`}>
+          <h3 className="text-[15px] leading-snug font-semibold tracking-[-0.01em] text-mkt-ink hover:opacity-80">
+            {product.name}
+          </h3>
+        </Link>
         <p className="text-[12px] text-mkt-ink-muted">
           {product.unitLabel}
           {vatPercent != null ? (
@@ -97,16 +70,13 @@ export function ProductCard({ product }: { product: ProductListItem }) {
               %{vatPercent.toString()} KDV
             </>
           ) : null}
-          {moq > 1 ? (
-            <>
-              <span className="mx-1.5 text-mkt-ink-muted/60">·</span>
-              Min. {moq}
-            </>
-          ) : null}
         </p>
 
-        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <div className="inline-flex items-center gap-1 rounded-full border border-[color:var(--mkt-border)] bg-mkt-card-muted p-0.5">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <p className="text-[1.25rem] font-semibold tracking-[-0.02em] text-mkt-ink tabular-nums">
+            {formatMoney(product.unitPrice)}
+          </p>
+          <div className="inline-flex items-center gap-0.5 rounded-full border border-[color:var(--mkt-border)] bg-mkt-card-muted p-0.5">
             <button
               type="button"
               aria-label="Azalt"
@@ -131,18 +101,27 @@ export function ProductCard({ product }: { product: ProductListItem }) {
               <Plus className="size-3.5" aria-hidden />
             </button>
           </div>
-
-          <button
-            type="button"
-            aria-label={`${qty} adet sepete ekle`}
-            disabled={isPending}
-            onClick={() => addVariant(product.variantId, qty)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full bg-mkt-accent px-3 text-[12px] font-medium text-mkt-accent-ink hover:brightness-105 disabled:opacity-60"
-          >
-            <ShoppingBag className="size-3.5" aria-hidden />
-            Sepete ekle
-          </button>
         </div>
+
+        <button
+          type="button"
+          aria-label={`${qty} adet sepete ekle`}
+          disabled={isPending}
+          onClick={() => {
+            addVariant(product.variantId, qty);
+            setAdded(true);
+            setTimeout(() => setAdded(false), 1400);
+          }}
+          className={cn(
+            "mt-2.5 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-full text-[13px] font-semibold transition-colors disabled:opacity-60",
+            added
+              ? "bg-mkt-green-text text-white"
+              : "bg-mkt-accent text-mkt-accent-ink hover:brightness-105",
+          )}
+        >
+          <ShoppingBag className="size-3.5" aria-hidden />
+          {added ? "Sepete eklendi" : "Sepete ekle"}
+        </button>
       </div>
     </div>
   );

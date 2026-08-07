@@ -157,10 +157,10 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
 
   return (
     <Sidebar collapsible="icon" className="w-[260px]">
-      <SidebarHeader className="h-14 justify-center border-b border-sidebar-border px-4">
+      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 border-b border-border p-0 px-4 md:h-16">
         <Link
           href="/panel"
-          className="flex items-center justify-center px-1 transition-opacity hover:opacity-80"
+          className="flex h-full items-center justify-center transition-opacity hover:opacity-80"
           onClick={() => {
             if (isMobile) setOpenMobile(false);
           }}

@@ -6,6 +6,11 @@ const nextConfig = {
   images: {
     qualities: [55, 60, 65, 70, 75, 80],
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
   async redirects() {
     return [
       {

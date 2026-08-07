@@ -40,7 +40,7 @@ const homeFaqs = [
   {
     question: "Kimlere satıyorsunuz?",
     answer:
-      "Market, şarküteri, otel–restoran–kafe ve ara toptancıya. Son tüketiciye açık pazar değiliz; onaylı bayi hesabı gerekir.",
+      "Market, şarküteri, otel–restoran–kafe ve ara toptancıya. Son tüketiciye açık pazar değiliz; onaylı hesap gerekir.",
   },
   {
     question: "Minimum sipariş var mı?",
@@ -353,36 +353,31 @@ export default function StoreHomePage() {
         </div>
       </Slab>
 
-      <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(48,163,105,0.18),transparent_55%)]"
-        />
+      <Slab className="!bg-[#0c1612] text-white">
         <SupportStrip />
       </Slab>
 
-      <Slab className="mkt-pad !py-8 md:!py-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:items-start lg:gap-10">
-          <Reveal>
-            <p className="mkt-section-label">Sık sorulanlar</p>
-            <h2 className="mkt-h2 mt-2 text-balance text-mkt-ink sm:mt-3">
-              Bayilikten önce bilmen gerekenler.
+      <Slab className="mkt-pad !py-10 md:!py-14 lg:!py-16">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)] lg:gap-14 xl:gap-20">
+          <Reveal className="lg:sticky lg:top-28 lg:self-start">
+            <p className="text-[12px] font-medium tracking-[0.14em] text-mkt-green-text uppercase">
+              Sık sorulanlar
+            </p>
+            <h2 className="mkt-h2 mt-3 max-w-[16ch] text-balance text-mkt-ink">
+              Hesap açmadan önce bilmen gerekenler.
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-mkt-ink-muted">
+            <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-mkt-ink-muted">
               Min sipariş, bölge/gün, vade, SKT ve başvuru: kısa ve net.
             </p>
-            <div className="relative mt-6 hidden aspect-[4/5] overflow-hidden rounded-[1.25rem] lg:block">
-              <SceneImage id="partner-kitchen" fill sizes="(min-width: 1024px) 28vw, 90vw" />
-            </div>
             <Link
               href="/iletisim"
-              className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-semibold text-mkt-green-text hover:underline"
+              className="mt-8 inline-flex items-center gap-1.5 text-[14px] font-semibold text-mkt-green-text underline-offset-4 hover:underline"
             >
               Başka soru?
               <ArrowUpRight className="size-3.5" aria-hidden />
             </Link>
           </Reveal>
-          <Reveal delay={60}>
+          <Reveal delay={60} className="min-w-0">
             <HomeFaq items={homeFaqs} />
           </Reveal>
         </div>

@@ -1,12 +1,17 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import {
+  AlertTriangle,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  CalendarClock,
+  Plus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Select,
   SelectContent,
@@ -34,6 +39,17 @@ type LotItem = {
   movements: Movement[];
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function sktStatus(expirationDate: string, expired: boolean) {
+  if (expired) return { tone: "danger" as const, icon: AlertTriangle, label: "Süresi geçti" };
+  const days = Math.ceil((new Date(expirationDate).getTime() - Date.now()) / DAY_MS);
+  if (days <= 14) {
+    return { tone: "warning" as const, icon: CalendarClock, label: `SKT ${days} gün kaldı` };
+  }
+  return { tone: "success" as const, icon: CalendarClock, label: "SKT uygun" };
+}
+
 function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
   const [lotNumber, setLotNumber] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
@@ -56,11 +72,12 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-      <div>
-        <Label htmlFor="lotNumber" className="mb-1.5">
-          Lot No
-        </Label>
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
+    >
+      <div className="space-y-1.5">
+        <Label htmlFor="lotNumber">Lot No</Label>
         <Input
           id="lotNumber"
           value={lotNumber}
@@ -69,10 +86,8 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
           required
         />
       </div>
-      <div>
-        <Label htmlFor="expirationDate" className="mb-1.5">
-          SKT
-        </Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="expirationDate">SKT</Label>
         <Input
           id="expirationDate"
           type="date"
@@ -81,10 +96,8 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
           required
         />
       </div>
-      <div>
-        <Label htmlFor="initialKg" className="mb-1.5">
-          Giriş Miktarı (kg)
-        </Label>
+      <div className="space-y-1.5">
+        <Label htmlFor="initialKg">Giriş Miktarı (kg)</Label>
         <Input
           id="initialKg"
           type="number"
@@ -96,8 +109,8 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
           required
         />
       </div>
-      <Button type="submit" disabled={isPending} className="self-end">
-        <Plus />
+      <Button type="submit" disabled={isPending} className="gap-1.5">
+        <Plus className="size-4" aria-hidden />
         Lot Ekle
       </Button>
     </form>
@@ -129,9 +142,9 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 flex flex-wrap items-end gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
       <Select value={type} onValueChange={(v) => setType(v as "GIRIS" | "CIKIS")}>
-        <SelectTrigger className="h-8 w-28">
+        <SelectTrigger className="h-8 w-28 bg-[var(--surface)]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -148,13 +161,13 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
         value={quantity}
         onChange={(e) => setQuantity(e.target.value)}
         placeholder="kg"
-        className="h-8 w-28"
+        className="h-8 w-24 bg-[var(--surface)]"
         required
       />
-      <Button type="submit" size="sm" variant="outline" disabled={isPending}>
+      <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         Kaydet
       </Button>
-      {error ? <p className="w-full text-caption text-danger-fg">{error}</p> : null}
+      {error ? <p className="w-full text-caption text-[var(--danger-text)]">{error}</p> : null}
     </form>
   );
 }
@@ -169,62 +182,81 @@ export function LotManager({
   lots: LotItem[];
 }) {
   return (
-    <div>
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-h4 leading-h4">Yeni Lot</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <NewLotForm variantId={variantId} slug={slug} />
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      <div className="rounded-[var(--radius-card)] border border-[var(--panel-border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]">
+        <h3 className="mb-3 flex items-center gap-1.5 text-body-sm font-semibold text-[var(--text-primary)]">
+          <Plus className="size-4 text-[var(--primary-text)]" aria-hidden />
+          Yeni Lot
+        </h3>
+        <NewLotForm variantId={variantId} slug={slug} />
+      </div>
 
-      <div className="mt-6 flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {lots.length === 0 ? (
-          <p className="text-body-sm text-neutral-400">Henüz lot eklenmedi.</p>
+          <p className="rounded-[var(--radius-card)] border border-dashed border-[var(--border-strong)] bg-[var(--surface-2)] p-4 text-center text-body-sm text-[var(--text-muted)]">
+            Henüz lot eklenmedi.
+          </p>
         ) : (
-          lots.map((lot) => (
-            <Card key={lot.id} className="shadow-sm">
-              <CardContent>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <p className="font-mono text-body-sm font-semibold text-neutral-900">
+          lots.map((lot) => {
+            const skt = sktStatus(lot.expirationDate, lot.expired);
+            return (
+              <div
+                key={lot.id}
+                className="rounded-[var(--radius-card)] border border-[var(--panel-border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-sm)]"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-[var(--radius-sm)] bg-[var(--surface-3)] px-2 py-1 font-mono text-caption font-semibold text-[var(--text-primary)]">
                       {lot.lotNumber}
-                    </p>
-                    <Badge
-                      variant={lot.expired ? "destructive" : "outline"}
-                      className={lot.expired ? undefined : "border-neutral-300 text-neutral-700"}
-                    >
-                      SKT: {formatDate(new Date(lot.expirationDate))}
-                    </Badge>
-                    {lot.expired ? <Badge variant="destructive">Süresi geçti</Badge> : null}
+                    </span>
+                    <StatusBadge
+                      tone={skt.tone}
+                      icon={skt.icon}
+                      label={`${formatDate(new Date(lot.expirationDate))} · ${skt.label}`}
+                    />
                   </div>
-                  <p className="tabular-nums text-body-sm font-semibold text-brand-700">
-                    {lot.availableKg} kg mevcut
+                  <p className="tabular-nums text-body font-semibold text-[var(--primary-text)]">
+                    {lot.availableKg}{" "}
+                    <span className="text-caption font-normal text-[var(--text-muted)]">kg mevcut</span>
                   </p>
                 </div>
 
-                <LotMovementForm lot={lot} slug={slug} />
+                <div className="mt-3 border-t border-[var(--panel-border)] pt-3">
+                  <LotMovementForm lot={lot} slug={slug} />
+                </div>
 
                 {lot.movements.length > 0 ? (
-                  <ul className="mt-3 flex flex-col gap-1 border-t border-neutral-100 pt-3">
+                  <ul className="mt-3 flex flex-col gap-2 border-t border-[var(--panel-border)] pt-3">
                     {lot.movements.slice(0, 5).map((movement) => (
-                      <li
-                        key={movement.id}
-                        className="flex items-center justify-between text-caption text-neutral-500"
-                      >
-                        <span>
+                      <li key={movement.id} className="flex items-center gap-2 text-caption">
+                        {movement.type === "GIRIS" ? (
+                          <ArrowDownCircle
+                            className="size-3.5 shrink-0 text-[var(--success-solid)]"
+                            aria-hidden
+                          />
+                        ) : (
+                          <ArrowUpCircle
+                            className="size-3.5 shrink-0 text-[var(--warning-solid)]"
+                            aria-hidden
+                          />
+                        )}
+                        <span className="flex-1 tabular-nums text-[var(--text-secondary)]">
                           {movement.type === "GIRIS" ? "+" : "-"}
-                          {movement.quantityKg} kg {movement.note ? `· ${movement.note}` : ""}
+                          {movement.quantityKg} kg
+                          {movement.note ? (
+                            <span className="text-[var(--text-muted)]"> &middot; {movement.note}</span>
+                          ) : null}
                         </span>
-                        <span>{formatDate(new Date(movement.createdAt))}</span>
+                        <span className="shrink-0 text-[var(--text-muted)]">
+                          {formatDate(new Date(movement.createdAt))}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 ) : null}
-              </CardContent>
-            </Card>
-          ))
+              </div>
+            );
+          })
         )}
       </div>
     </div>

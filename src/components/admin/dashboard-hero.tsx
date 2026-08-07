@@ -11,7 +11,7 @@ import { SoftTile } from "@/components/b2b";
 
 const QUICK_LINKS = [
   { label: "Genel bakış", href: "/panel", icon: LayoutDashboard },
-  { label: "Bayi adayları", href: "/panel/bayi-adaylari", icon: UserPlus },
+  { label: "Bayi/Müşteri adayları", href: "/panel/bayi-adaylari", icon: UserPlus },
   { label: "Ürünler", href: "/panel/urunler", icon: Package },
   { label: "Kullanıcılar", href: "/panel/kullanicilar", icon: Users },
 ];

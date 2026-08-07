@@ -49,7 +49,7 @@ export function CommandPalette({ dealers = [] }: { dealers?: CommandDealerOption
   const recentHint = useMemo(
     () => [
       { label: "Pano", href: "/panel" },
-      { label: "Bayi adayları", href: "/panel/bayi-adaylari" },
+      { label: "Bayi/Müşteri adayları", href: "/panel/bayi-adaylari" },
       { label: "Sevkiyat planı", href: "/panel/sevkiyat" },
     ],
     [],

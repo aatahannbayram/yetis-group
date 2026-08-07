@@ -90,7 +90,7 @@ export function ProductGrid({
       {filtered.length === 0 ? (
         <p className="mkt-body mt-10">Sonuç bulunamadı.</p>
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product, index) => (
             <Reveal key={product.id} delay={(index % 6) * 40}>
               <ProductCard product={product} />

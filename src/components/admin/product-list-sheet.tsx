@@ -138,7 +138,7 @@ export function ProductListSheet({
                 {row.original.name}
               </p>
               <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
-                {variant?.packSize ?? variant?.packagingType ?? "—"}
+                {variant?.packSize ?? variant?.packagingType ?? "-"}
               </p>
             </div>
           );
@@ -149,7 +149,7 @@ export function ProductListSheet({
         header: "SKU",
         cell: ({ row }) => (
           <span className="font-mono text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
-            {row.original.variants[0]?.sku ?? "—"}
+            {row.original.variants[0]?.sku ?? "-"}
           </span>
         ),
       },
@@ -167,7 +167,7 @@ export function ProductListSheet({
           const bp = row.original.variants[0]?.vatRateBasisPoints;
           return (
             <span className="tabular-nums text-[var(--text-secondary)]">
-              {bp != null ? `%${(bp / 100).toString()}` : "—"}
+              {bp != null ? `%${(bp / 100).toString()}` : "-"}
             </span>
           );
         },
@@ -187,7 +187,7 @@ export function ProductListSheet({
         enableSorting: false,
         cell: ({ row }) => {
           const variant = row.original.variants[0];
-          if (!variant) return "—";
+          if (!variant) return "-";
           return (
             <div
               onClick={(e) => e.stopPropagation()}

@@ -46,3 +46,6 @@ next-env.d.ts
 
 # local Claude Code tool state
 /.claude/
+
+# user-uploaded product media (persisted on the deploy volume, not source)
+/public/uploads/

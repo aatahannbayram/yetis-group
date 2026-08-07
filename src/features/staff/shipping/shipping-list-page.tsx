@@ -1,13 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ColumnDef, RowSelectionState, SortingState } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricStrip } from "@/components/ui/metric-strip";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { DataTable } from "@/components/ui/data-table";
-import { BulkActionBar } from "@/components/ui/bulk-action-bar";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { StatusPill, type StatusTone } from "@/components/ui/status-pill";
 import { FilterChip } from "@/components/ui/filter-chip";
@@ -17,7 +16,14 @@ import type { ShippingRow } from "@/components/admin/shipping-board";
 import { ShippingBoard } from "@/components/admin/shipping-board";
 import { ShipmentBoard, type ShipmentRow } from "@/components/admin/shipment-board";
 import { kg, sum, type Kg } from "@/domain/weight";
-import { suggestFefoShipment, InventoryError } from "@/domain/inventory/fefo";
+import {
+  suggestFefoShipment,
+  InventoryError,
+  type FefoAllocation,
+} from "@/domain/inventory/fefo";
+import { formatDateShort } from "@/lib/format/date";
+import { lotPartyLabel, lotSktLine } from "@/lib/format/lot";
+import { cn } from "@/lib/utils";
 import type { Density } from "@/components/ui/density-toggle";
 import type { ViewMode } from "@/components/ui/view-switcher";
 
@@ -43,6 +49,80 @@ function sktTone(days: number | null, expired: number): StatusTone {
   return "skt-ok";
 }
 
+function priorityOf(row: VariantRow): { label: string; tone: StatusTone } {
+  if (row.expiredCount > 0) return { label: "Sevk etme", tone: "skt-danger" };
+  if (row.nearestDays != null && row.nearestDays <= 3)
+    return { label: "Acil", tone: "skt-danger" };
+  if (row.soonCount > 0 || (row.nearestDays != null && row.nearestDays <= 14))
+    return { label: "Önce sevk", tone: "skt-warn" };
+  return { label: "Normal", tone: "skt-ok" };
+}
+
+function urgencyCopy(days: number, expired: boolean): { label: string; tone: StatusTone } {
+  if (expired || days < 0) return { label: "Sevk etme", tone: "skt-danger" };
+  if (days <= 3) return { label: "Acil", tone: "skt-danger" };
+  if (days <= 14) return { label: "Yaklaşıyor", tone: "skt-warn" };
+  if (days <= 30) return { label: "Takipte", tone: "skt-info" };
+  return { label: "Rahat", tone: "skt-ok" };
+}
+
+function LotCard({
+  lot,
+  rank,
+  highlight,
+}: {
+  lot: ShippingRow["lots"][number];
+  rank: number | null;
+  highlight?: boolean;
+}) {
+  const urgency = urgencyCopy(lot.daysUntilExpiry, lot.expired);
+  return (
+    <li
+      className={cn(
+        "rounded-xl border px-4 py-3.5 transition-colors",
+        lot.expired
+          ? "border-red-200 bg-red-50/60 opacity-80 dark:border-red-900/50 dark:bg-red-950/20"
+          : highlight
+            ? "border-[#1B5E3A]/30 bg-green-50/80 dark:border-green-800 dark:bg-green-950/30"
+            : "border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {rank != null && !lot.expired ? (
+              <span className="inline-flex size-6 items-center justify-center rounded-full bg-[#1B5E3A] text-xs font-semibold text-white tabular-nums">
+                {rank}
+              </span>
+            ) : null}
+            <p className="font-semibold text-stone-900 dark:text-zinc-50">
+              {lotPartyLabel(lot.lotNumber)}
+            </p>
+            <StatusPill label={urgency.label} tone={urgency.tone} />
+          </div>
+          <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
+            {lotSktLine({
+              expirationDate: lot.expirationDate,
+              daysUntilExpiry: lot.daysUntilExpiry,
+              expired: lot.expired,
+              formatDate: formatDateShort,
+            })}
+          </p>
+          {highlight && !lot.expired ? (
+            <p className="mt-1 text-xs font-medium text-[#1B5E3A]">Önce bu partiden çek</p>
+          ) : null}
+        </div>
+        <p className="shrink-0 text-right">
+          <span className="block text-lg font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+            {kgFmt.format(Number(lot.availableKg))}
+          </span>
+          <span className="text-xs text-stone-500">kg</span>
+        </p>
+      </div>
+    </li>
+  );
+}
+
 export function ShippingListPage({
   lotRows,
   shipments,
@@ -60,10 +140,10 @@ export function ShippingListPage({
   const [activeView, setActiveView] = useState("stock");
   const [metricFilter, setMetricFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<VariantRow | null>(null);
-  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([{ id: "nearestDays", desc: false }]);
   const [fefoQty, setFefoQty] = useState("");
-  const [fefoResult, setFefoResult] = useState<string | null>(null);
+  const [fefoAllocations, setFefoAllocations] = useState<FefoAllocation[] | null>(null);
+  const [fefoError, setFefoError] = useState<string | null>(null);
 
   const tableRows: VariantRow[] = useMemo(
     () =>
@@ -92,11 +172,20 @@ export function ShippingListPage({
     const soon = tableRows.filter((r) => r.soonCount > 0 && r.expiredCount === 0).length;
     const totalKg = tableRows.reduce((s, r) => s + r.shippableKg, 0);
     return [
-      { id: "variants", label: "Varyant", value: tableRows.length },
-      { id: "shippable", label: "Sevk edilebilir kg", value: Math.round(totalKg).toLocaleString("tr-TR") },
+      { id: "variants", label: "Ürün", value: tableRows.length },
+      {
+        id: "shippable",
+        label: "Sevk edilebilir",
+        value: `${Math.round(totalKg).toLocaleString("tr-TR")} kg`,
+      },
       { id: "soon", label: "SKT yaklaşan", value: soon, tone: "warn" as const },
       { id: "expired", label: "SKT geçmiş", value: expired, tone: "danger" as const },
-      { id: "shipments", label: "Açık sevkiyat", value: shipments.filter((s) => s.status !== "TESLIM_EDILDI").length, tone: "info" as const },
+      {
+        id: "shipments",
+        label: "Açık sevkiyat",
+        value: shipments.filter((s) => s.status !== "TESLIM_EDILDI").length,
+        tone: "info" as const,
+      },
     ];
   }, [tableRows, shipments]);
 
@@ -107,6 +196,11 @@ export function ShippingListPage({
     return rows;
   }, [tableRows, metricFilter]);
 
+  const sortedLots = useMemo(() => {
+    if (!selected) return [];
+    return [...selected.lots].sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
+  }, [selected]);
+
   const columns = useMemo<ColumnDef<VariantRow, unknown>[]>(
     () => [
       {
@@ -114,95 +208,101 @@ export function ShippingListPage({
         header: "Ürün",
         minSize: 260,
         cell: ({ row }) => (
-          <div className="min-w-0 max-w-[320px]">
-            <p className="truncate font-medium" title={row.original.productName}>
+          <div className="min-w-0 max-w-[300px]">
+            <p className="truncate font-medium text-stone-900 dark:text-zinc-50" title={row.original.productName}>
               {row.original.productName}
             </p>
-            <p className="text-caption text-[var(--panel-ink-muted)]">{row.original.packLabel}</p>
+            <p className="truncate text-xs text-stone-500 dark:text-zinc-400">
+              {row.original.packLabel}
+              {row.original.categoryName ? (
+                <>
+                  <span className="mx-1 opacity-40">·</span>
+                  {row.original.categoryName}
+                </>
+              ) : null}
+            </p>
           </div>
         ),
       },
       {
-        accessorKey: "sku",
-        header: "SKU",
+        accessorKey: "shippableKg",
+        header: "Stok",
         cell: ({ getValue }) => (
-          <span className="font-mono text-caption whitespace-nowrap" title={String(getValue())}>
-            {String(getValue())}
+          <span className="block text-right font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+            {fmtKg(kg(getValue() as number))}
           </span>
         ),
       },
       {
-        accessorKey: "shippableKg",
-        header: "Sevk edilebilir",
-        cell: ({ getValue }) => (
-          <span className="block text-right tabular-nums">{fmtKg(kg(getValue() as number))}</span>
-        ),
-      },
-      {
         accessorKey: "lotCount",
-        header: "Lot",
-        cell: ({ getValue }) => (
-          <span className="tabular-nums">{String(getValue())}</span>
+        header: "Parti",
+        cell: ({ row }) => (
+          <span className="tabular-nums text-stone-600 dark:text-zinc-400">
+            {row.original.lots.filter((l) => !l.expired).length}
+          </span>
         ),
       },
       {
         id: "nearestDays",
         accessorKey: "nearestDays",
-        header: "En yakın SKT",
+        header: "SKT",
         sortingFn: (a, b) =>
           (a.original.nearestDays ?? 9999) - (b.original.nearestDays ?? 9999),
         cell: ({ row }) => {
           const d = row.original.nearestDays;
-          const label =
-            row.original.expiredCount > 0
-              ? "SKT geçmiş"
-              : d == null
-                ? "—"
-                : d < 0
-                  ? "Geçmiş"
-                  : `${d} gün`;
+          const nearestLot = [...row.original.lots]
+            .filter((l) => !l.expired)
+            .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)[0];
+          if (row.original.expiredCount > 0 && !nearestLot) {
+            return <StatusPill label="Geçmiş" tone="skt-danger" />;
+          }
+          if (d == null) return <span className="text-stone-400">-</span>;
           return (
-            <StatusPill
-              label={label}
-              tone={sktTone(d, row.original.expiredCount)}
-            />
+            <div className="flex flex-col items-start gap-0.5">
+              <StatusPill
+                label={d < 0 ? "Geçmiş" : d === 0 ? "Bugün" : d === 1 ? "Yarın" : `${d} gün`}
+                tone={sktTone(d, row.original.expiredCount)}
+              />
+              {nearestLot && d >= 0 ? (
+                <span className="text-[11px] text-stone-500 tabular-nums">
+                  {formatDateShort(new Date(nearestLot.expirationDate))}
+                </span>
+              ) : null}
+            </div>
           );
         },
       },
       {
-        id: "action",
-        header: "Önerilen",
+        id: "priority",
+        header: "Öncelik",
         cell: ({ row }) => {
-          const label =
-            row.original.expiredCount > 0
-              ? "Kampanya / imha"
-              : row.original.soonCount > 0
-                ? "FEFO sevk"
-                : "Stok normal";
-          return (
-            <span className="whitespace-nowrap text-caption" title={label}>
-              {label}
-            </span>
-          );
+          const p = priorityOf(row.original);
+          return <StatusPill label={p.label} tone={p.tone} />;
         },
       },
       {
-        id: "menu",
+        id: "open",
         header: "",
-        size: 48,
+        size: 40,
         enableSorting: false,
         cell: () => (
-          <Button type="button" variant="ghost" size="icon-sm" aria-label="İşlemler">
-            <MoreHorizontal className="size-4" />
-          </Button>
+          <ChevronRight className="size-4 text-stone-300 dark:text-zinc-600" aria-hidden />
         ),
       },
     ],
     [],
   );
 
+  function resetFefo() {
+    setFefoQty("");
+    setFefoAllocations(null);
+    setFefoError(null);
+  }
+
   function runFefo() {
     if (!selected) return;
+    setFefoAllocations(null);
+    setFefoError(null);
     try {
       const allocations = suggestFefoShipment(
         selected.lots.map((l) => ({
@@ -213,188 +313,238 @@ export function ShippingListPage({
         })),
         kg(fefoQty || "0"),
       );
-      setFefoResult(
-        allocations.map((a) => `${a.lotNumber}: ${fmtKg(a.quantityKg)}`).join(" · ") ||
-          "Öneri yok",
-      );
+      setFefoAllocations(allocations);
     } catch (e) {
-      setFefoResult(e instanceof InventoryError ? e.message : "Hesaplanamadı");
+      setFefoError(e instanceof InventoryError ? e.message : "Hesaplanamadı");
     }
   }
 
+  function openShipments() {
+    setSelected(null);
+    resetFefo();
+    setActiveView("shipments");
+  }
+
   return (
-    <div className="mx-auto max-w-7xl space-y-4" data-density={density}>
-      <PageHeader
-        title="Sevkiyat"
-        count={tableRows.length}
-        actions={
-          <Button
-            className="bg-[var(--panel-accent-action)] hover:bg-brand-800"
-            onClick={() => setActiveView("shipments")}
-          >
-            Yeni sevkiyat
-          </Button>
-        }
-      />
-
-      <MetricStrip
-        items={metrics}
-        activeId={metricFilter}
-        onSelect={(id) => {
-          if (id === "shipments") {
-            setActiveView("shipments");
-            setMetricFilter(null);
-            return;
+    <div
+      className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950"
+      data-density={density}
+    >
+      <div className="mx-auto max-w-5xl space-y-5">
+        <PageHeader
+          title="Sevkiyat"
+          count={activeView === "stock" ? tableRows.length : shipments.length}
+          description={
+            activeView === "stock"
+              ? "Satıra tıklayın: partileri görün, kg yazın, çekim sırasını alın."
+              : "Hazırlanıyor → yolda → teslim."
           }
-          setActiveView("stock");
-          setMetricFilter((cur) => (cur === id ? null : id));
-        }}
-      />
-
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Ürün veya SKU ara…"
-        views={[
-          { id: "stock", label: "Stok & FEFO" },
-          { id: "shipments", label: "Sevkiyatlar" },
-        ]}
-        activeViewId={activeView}
-        onViewSelect={setActiveView}
-        filters={
-          metricFilter ? (
-            <FilterChip
-              label={metrics.find((m) => m.id === metricFilter)?.label ?? ""}
-              active
-              onClear={() => setMetricFilter(null)}
-            />
-          ) : null
-        }
-        density={density}
-        onDensityChange={setDensity}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        viewModes={["table", "cards"]}
-      />
-
-      {activeView === "shipments" ? (
-        <ShipmentBoard shipments={shipments} dealers={dealers} variants={variants} />
-      ) : viewMode === "cards" ? (
-        <ShippingBoard rows={filtered} />
-      ) : (
-        <DataTable
-          data={filtered}
-          columns={columns}
-          getRowId={(r) => r.variantId}
-          storageKey="shipping-fefo"
-          search={search}
-          globalFilterFn={(row, q) =>
-            row.productName.toLocaleLowerCase("tr-TR").includes(q) ||
-            row.sku.toLocaleLowerCase("tr-TR").includes(q)
+          primaryAction={
+            <Button onClick={openShipments}>Yeni sevkiyat</Button>
           }
-          sorting={sorting}
-          onSortingChange={setSorting}
-          onRowOpen={setSelected}
-          enableSelection
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          emptyTitle="Sevk edilebilir stok yok"
-          emptyDescription="Aktif lot bulunamadı."
-          exportColumns={[
-            { id: "name", header: "Ürün", accessor: (r) => r.productName },
-            { id: "sku", header: "SKU", accessor: (r) => r.sku },
-            { id: "kg", header: "kg", accessor: (r) => String(r.shippableKg) },
-            {
-              id: "skt",
-              header: "En yakın SKT (gün)",
-              accessor: (r) => String(r.nearestDays ?? ""),
-            },
-          ]}
         />
-      )}
 
-      <BulkActionBar
-        count={Object.keys(rowSelection).filter((k) => rowSelection[k]).length}
-        onClear={() => setRowSelection({})}
-      >
-        <Button size="sm" variant="secondary">
-          FEFO öner
-        </Button>
-        <Button size="sm" variant="secondary">
-          Sevkiyat oluştur
-        </Button>
-        <Button size="sm" variant="secondary">
-          Kampanya başlat
-        </Button>
-      </BulkActionBar>
+        <MetricStrip
+          className="xl:grid-cols-5"
+          items={metrics}
+          activeId={metricFilter}
+          onSelect={(id) => {
+            if (id === "shipments") {
+              setActiveView("shipments");
+              setMetricFilter(null);
+              return;
+            }
+            setActiveView("stock");
+            setMetricFilter((cur) => (cur === id ? null : id));
+          }}
+        />
+
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="border-b border-stone-200 px-3 py-2 dark:border-zinc-800">
+            <ListToolbar
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Ürün ara…"
+              views={[
+                { id: "stock", label: "Stok planı" },
+                { id: "shipments", label: "Sevkiyat panosu" },
+              ]}
+              activeViewId={activeView}
+              onViewSelect={setActiveView}
+              filters={
+                metricFilter ? (
+                  <FilterChip
+                    label={metrics.find((m) => m.id === metricFilter)?.label ?? ""}
+                    active
+                    onClear={() => setMetricFilter(null)}
+                  />
+                ) : null
+              }
+              density={density}
+              onDensityChange={setDensity}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              viewModes={["table", "cards"]}
+            />
+          </div>
+
+          <div className="p-0">
+            {activeView === "shipments" ? (
+              <div className="p-4">
+                <ShipmentBoard shipments={shipments} dealers={dealers} variants={variants} />
+              </div>
+            ) : viewMode === "cards" ? (
+              <div className="p-4">
+                <ShippingBoard rows={filtered} />
+              </div>
+            ) : (
+              <DataTable
+                data={filtered}
+                columns={columns}
+                getRowId={(r) => r.variantId}
+                storageKey="shipping-fefo-v2"
+                search={search}
+                globalFilterFn={(row, q) =>
+                  row.productName.toLocaleLowerCase("tr-TR").includes(q) ||
+                  row.sku.toLocaleLowerCase("tr-TR").includes(q) ||
+                  row.packLabel.toLocaleLowerCase("tr-TR").includes(q) ||
+                  row.categoryName.toLocaleLowerCase("tr-TR").includes(q)
+                }
+                sorting={sorting}
+                onSortingChange={setSorting}
+                onRowOpen={(row) => {
+                  resetFefo();
+                  setSelected(row);
+                }}
+                emptyTitle="Sevk edilebilir stok yok"
+                emptyDescription="Aktif parti bulunamadı."
+                exportColumns={[
+                  { id: "name", header: "Ürün", accessor: (r) => r.productName },
+                  { id: "pack", header: "Paket", accessor: (r) => r.packLabel },
+                  { id: "kg", header: "kg", accessor: (r) => String(r.shippableKg) },
+                  {
+                    id: "skt",
+                    header: "En yakın SKT (gün)",
+                    accessor: (r) => String(r.nearestDays ?? ""),
+                  },
+                ]}
+              />
+            )}
+          </div>
+        </div>
+      </div>
 
       <DetailDrawer
         open={Boolean(selected)}
         onOpenChange={(open) => {
           if (!open) {
             setSelected(null);
-            setFefoResult(null);
+            resetFefo();
           }
         }}
-        title={selected?.productName ?? "Lot detayı"}
-        description={selected ? `${selected.sku} · ${selected.packLabel}` : undefined}
+        title={selected?.productName ?? "Parti detayı"}
+        description={selected ? selected.packLabel : undefined}
         wide
         footer={
           selected ? (
-            <div className="flex flex-wrap items-end gap-2">
-              <div className="min-w-[8rem] flex-1">
-                <label className="text-caption text-[var(--panel-ink-muted)]" htmlFor="fefo-kg">
-                  Gereken kg
-                </label>
-                <Input
-                  id="fefo-kg"
-                  value={fefoQty}
-                  onChange={(e) => setFefoQty(e.target.value)}
-                  className="mt-1 h-8 tabular-nums"
-                  inputMode="decimal"
-                />
+            <div className="flex w-full flex-col gap-3">
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="min-w-[8rem] flex-1">
+                  <label className="text-xs font-medium text-stone-500" htmlFor="fefo-kg">
+                    Kaç kg sevk edilecek?
+                  </label>
+                  <Input
+                    id="fefo-kg"
+                    value={fefoQty}
+                    onChange={(e) => {
+                      setFefoQty(e.target.value);
+                      setFefoAllocations(null);
+                      setFefoError(null);
+                    }}
+                    placeholder={`Örn. ${selected.shippableKg > 0 ? Math.min(10, Math.floor(selected.shippableKg)) : 5}`}
+                    className="mt-1 h-10 rounded-lg border-stone-200 tabular-nums focus-visible:border-[#1B5E3A] focus-visible:ring-[#1B5E3A]/20"
+                    inputMode="decimal"
+                  />
+                </div>
+                <Button type="button" className="h-10" onClick={runFefo}>
+                  Partileri hesapla
+                </Button>
               </div>
-              <Button
-                type="button"
-                className="bg-[var(--panel-accent-action)] hover:bg-brand-800"
-                onClick={runFefo}
-              >
-                FEFO öner
-              </Button>
+              {fefoAllocations && fefoAllocations.length > 0 ? (
+                <Button type="button" variant="secondary" onClick={openShipments}>
+                  Sevkiyat panosuna geç
+                  <ArrowRight className="ml-1 size-4" />
+                </Button>
+              ) : null}
             </div>
           ) : null
         }
       >
         {selected ? (
-          <div className="space-y-3">
-            <p className="text-[length:var(--panel-font-size)] text-[var(--panel-ink-muted)]">
-              Lotlar en erken SKT sırasıyla listelenir.
-            </p>
-            <ul className="space-y-2">
-              {[...selected.lots]
-                .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry)
-                .map((lot) => (
-                  <li
-                    key={lot.id}
-                    className="flex items-center justify-between gap-2 rounded-[var(--radius-sm)] border border-[var(--panel-border)] px-3 py-2"
-                  >
-                    <span className="font-mono text-caption" title={lot.lotNumber}>
-                      {lot.lotNumber}
-                    </span>
-                    <span className="tabular-nums text-caption">
-                      {fmtKg(kg(lot.availableKg))}
-                    </span>
-                    <StatusPill
-                      label={lot.expired ? "Geçmiş" : `${lot.daysUntilExpiry} gün`}
-                      tone={sktTone(lot.daysUntilExpiry, lot.expired ? 1 : 0)}
-                    />
-                  </li>
-                ))}
-            </ul>
-            {fefoResult ? (
-              <p className="rounded-[var(--radius-sm)] bg-neutral-50 p-3 text-[length:var(--panel-font-size)]">
-                {fefoResult}
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
+                <p className="text-xs text-stone-500">Sevk edilebilir</p>
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-[#1B5E3A]">
+                  {fmtKg(kg(selected.shippableKg))}
+                </p>
+              </div>
+              <div className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
+                <p className="text-xs text-stone-500">Aktif parti</p>
+                <p className="mt-0.5 text-lg font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+                  {selected.lots.filter((l) => !l.expired).length}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2.5 text-xs font-semibold tracking-wide text-stone-500 uppercase">
+                Partiler · erken SKT üstte
               </p>
+              <ul className="space-y-2.5">
+                {sortedLots.map((lot) => {
+                  const activeIndex = sortedLots
+                    .filter((l) => !l.expired)
+                    .findIndex((l) => l.id === lot.id);
+                  const rank = lot.expired ? null : activeIndex + 1;
+                  return (
+                    <LotCard key={lot.id} lot={lot} rank={rank} highlight={rank === 1} />
+                  );
+                })}
+              </ul>
+            </div>
+
+            {fefoError ? (
+              <p className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
+                {fefoError}
+              </p>
+            ) : null}
+
+            {fefoAllocations ? (
+              <div className="rounded-xl border border-[#1B5E3A]/25 bg-green-50 px-3.5 py-3.5 dark:border-green-800 dark:bg-green-950/30">
+                <p className="font-semibold text-stone-900 dark:text-zinc-50">Depo çekim listesi</p>
+                <p className="mt-1 text-xs text-stone-500">
+                  Bu sırayla alın. Sevkiyat kaydı panoda oluşturulur.
+                </p>
+                <ol className="mt-3 space-y-2">
+                  {fefoAllocations.map((a, i) => (
+                    <li
+                      key={a.lotId}
+                      className="flex items-center gap-3 rounded-lg bg-white px-3 py-2.5 dark:bg-zinc-900"
+                    >
+                      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-[#1B5E3A] text-xs font-semibold text-white tabular-nums">
+                        {i + 1}
+                      </span>
+                      <p className="min-w-0 flex-1 font-medium text-stone-900 dark:text-zinc-50">
+                        {lotPartyLabel(a.lotNumber)}
+                      </p>
+                      <span className="shrink-0 font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+                        {fmtKg(a.quantityKg)}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             ) : null}
           </div>
         ) : null}

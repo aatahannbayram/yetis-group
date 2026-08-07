@@ -3,6 +3,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Theme is toggled via .dark on <html> (WorkspaceShell), not OS preference.
+   Without this, Tailwind's dark: variant defaults to prefers-color-scheme
+   and fires independently of the in-app toggle, causing dark: utilities to
+   activate on systems with OS-level dark mode regardless of app theme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* shadcn semantic tokens - mapped onto our warm brand palette, not the library's
    default gray/oklch theme (CLAUDE.md forbids a generic gray admin look). */
 :root {
@@ -45,6 +51,8 @@
 .admin-shell,
 .panel-shell {
   --background: var(--panel-canvas);
+  --border: var(--panel-border);
+  --sidebar-border: var(--panel-border);
   color: var(--text-primary);
 }
 
@@ -81,6 +89,8 @@ html.dark {
 html.dark .admin-shell,
 html.dark .panel-shell {
   --background: var(--panel-canvas);
+  --border: var(--panel-border);
+  --sidebar-border: var(--panel-border);
   color: var(--text-primary);
 }
 

@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { createShipmentAction, updateShipmentStatusAction } from "@/app/(panel)/panel/sevkiyat/actions";
 import { canTransitionShipment, type ShipmentStatus } from "@/domain/shipment";
+import { lotPartyLabel } from "@/lib/format/lot";
 import { cn } from "@/lib/utils";
 
 export type ShipmentRow = {
@@ -121,8 +122,8 @@ function ShipmentCardContent({
       </div>
 
       {shipment.lotNumbers.length > 0 ? (
-        <p className="mt-2 truncate font-mono text-caption text-muted-foreground/80">
-          {shipment.lotNumbers.join(", ")}
+        <p className="mt-2 truncate text-caption text-muted-foreground">
+          {shipment.lotNumbers.map(lotPartyLabel).join(" · ")}
         </p>
       ) : null}
       {shipment.note ? <p className="mt-1 text-caption text-neutral-500">{shipment.note}</p> : null}

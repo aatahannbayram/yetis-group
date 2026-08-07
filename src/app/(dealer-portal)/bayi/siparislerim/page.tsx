@@ -1,24 +1,21 @@
-import { EmptyState } from "@/components/ui/empty-state";
-import { ClipboardList } from "lucide-react";
 import Link from "next/link";
+import { ArrowRight, ClipboardList } from "lucide-react";
+import { DealerStubPage } from "@/components/dealer/dealer-stub-page";
 
 export default function Page() {
   return (
-    <div className="pb-20 sm:pb-6">
-      <h1 className="mb-4 text-xl font-bold">Siparişlerim</h1>
-      <EmptyState
-        icon={ClipboardList}
-        title="Henüz sipariş yok"
-        description="Sipariş akışı bağlandığında geçmişiniz burada listelenir."
-        action={
-          <Link
-            href="/bayi/siparis"
-            className="inline-flex min-h-11 items-center rounded-[var(--radius-sm)] bg-[var(--panel-accent-action)] px-4 font-semibold text-white"
-          >
-            Sipariş ver
-          </Link>
-        }
-      />
-    </div>
+    <DealerStubPage
+      icon={ClipboardList}
+      title="Siparişlerim"
+      description="Sipariş akışı bağlandığında geçmişiniz ve teslimat durumu burada listelenir."
+      action={
+        <Link
+          href="/bayi/siparis"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--primary-solid)] px-4 font-semibold text-white shadow-[var(--shadow-sm)] transition-[transform,background-color] duration-200 hover:scale-[1.01] hover:bg-[var(--primary-hover)]"
+        >
+          Sipariş ver <ArrowRight className="size-4" aria-hidden />
+        </Link>
+      }
+    />
   );
 }

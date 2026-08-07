@@ -31,7 +31,7 @@ export function AiAssistantDock({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-6 bottom-6 z-20 inline-flex size-11 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-surface)] text-[var(--panel-accent-action)] shadow-[var(--shadow-md)] transition-colors duration-[var(--motion-hover)] hover:bg-[var(--primary-subtle)]"
+        className="fixed right-6 bottom-6 z-10 inline-flex size-11 items-center justify-center rounded-full border border-[var(--panel-border)] bg-[var(--panel-surface)] text-[var(--panel-accent-action)] shadow-[var(--shadow-md)] transition-colors duration-[var(--motion-hover)] hover:bg-[var(--primary-subtle)]"
         aria-label="AI asistan (⌘J)"
         title="AI asistan (⌘J)"
       >

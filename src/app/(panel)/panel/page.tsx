@@ -1,27 +1,19 @@
-import Link from "next/link";
 import {
-  AlertTriangle,
-  ArrowRight,
-  ClipboardList,
-  Package,
-  ShoppingCart,
-  Target,
-  Truck,
-  UserPlus,
-  Users,
-  Wallet,
-} from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
-import { StatCard, PillButton } from "@/components/admin/stat-card";
-import {
-  ChartPanel,
-  DashboardChannelBars,
-  DashboardLeadTrend,
-  DashboardOutcomeDonut,
-  DashboardPipelineBars,
-  DashboardReceivables,
-  DashboardStockDonut,
-} from "@/components/admin/dashboard-charts";
+  PanoAction,
+  PanoActionList,
+  PanoChannel,
+  PanoDonut,
+  PanoHeader,
+  PanoKpi,
+  PanoKpiRow,
+  PanoLeadTrend,
+  PanoPanel,
+  PanoPipeline,
+  PanoQuickNav,
+  PanoReceivables,
+  PanoShell,
+  type PanoIconName,
+} from "@/components/admin/pano-ui";
 import { getLeads } from "@/infra/db/leads";
 import { getInventoryDashboardSummary } from "@/infra/db/inventory";
 import {
@@ -36,25 +28,18 @@ import { formatMoney } from "@/lib/format/money";
 import { formatKg } from "@/lib/format/weight";
 import { money } from "@/domain/money";
 import { isReadyHref } from "@/components/admin/panel-nav";
+import { formatDate } from "@/lib/format/date";
 
-type ActionItem = {
-  id: string;
-  title: string;
-  detail: string;
-  href: string;
-  cta: string;
-  tone: "default" | "warn" | "danger" | "info";
-  icon: React.ComponentType<{ className?: string }>;
-};
-
-const QUICK_LINKS = [
-  { href: "/panel/bayi-adaylari", label: "Bayi adayları", icon: UserPlus },
-  { href: "/panel/urunler", label: "Ürünler", icon: Package },
-  { href: "/panel/sevkiyat", label: "Sevkiyat", icon: Truck },
-  { href: "/panel/bayiler", label: "Bayiler", icon: Users },
-  { href: "/panel/b2b/sepetler", label: "Sepetler", icon: ShoppingCart },
-  { href: "/panel/cari", label: "Cari", icon: Wallet },
-].filter((l) => isReadyHref(l.href));
+const QUICK_LINKS = (
+  [
+    { href: "/panel/bayi-adaylari", label: "Bayi/Müşteri adayları", icon: "userPlus" },
+    { href: "/panel/urunler", label: "Ürünler", icon: "package" },
+    { href: "/panel/sevkiyat", label: "Sevkiyat", icon: "truck" },
+    { href: "/panel/bayiler", label: "Bayi/Müşteriler", icon: "users" },
+    { href: "/panel/b2b/sepetler", label: "Sepetler", icon: "cart" },
+    { href: "/panel/cari", label: "Cari", icon: "wallet" },
+  ] as const satisfies readonly { href: string; label: string; icon: PanoIconName }[]
+).filter((l) => isReadyHref(l.href));
 
 export default async function PanelDashboardPage() {
   const [leads, inventory, carts, balances, shipping, dealers, analytics] =
@@ -98,27 +83,25 @@ export default async function PanelDashboardPage() {
     }));
 
   const stockSlices = [
-    {
-      key: "healthy",
-      label: "Sağlıklı",
-      value: inventory.healthyCount,
-      color: "#30a369",
-    },
-    {
-      key: "soon",
-      label: "SKT eşiği",
-      value: inventory.expiringSoonCount,
-      color: "#b4650a",
-    },
-    {
-      key: "expired",
-      label: "SKT geçmiş",
-      value: inventory.expiredCount,
-      color: "#b42318",
-    },
+    { key: "healthy", label: "Sağlıklı", value: inventory.healthyCount, color: "#00693e" },
+    { key: "soon", label: "SKT eşiği", value: inventory.expiringSoonCount, color: "#c47a1a" },
+    { key: "expired", label: "SKT geçmiş", value: inventory.expiredCount, color: "#c02626" },
   ];
 
-  const actions: ActionItem[] = [];
+  const outcomeSlices = [
+    { key: "won", label: "Kazanıldı", value: analytics.crm.wonLeads, color: "#30a369" },
+    { key: "lost", label: "Kaybedildi", value: analytics.crm.lostLeads, color: "#c9c2b4" },
+  ].filter((s) => s.value > 0);
+
+  const actions: {
+    id: string;
+    title: string;
+    detail: string;
+    href: string;
+    cta: string;
+    tone: "default" | "warn" | "danger" | "info";
+    icon: PanoIconName;
+  }[] = [];
 
   if (carts.length > 0) {
     actions.push({
@@ -128,10 +111,9 @@ export default async function PanelDashboardPage() {
       href: "/panel/b2b/sepetler",
       cta: "Sepetleri gör",
       tone: "info",
-      icon: ShoppingCart,
+      icon: "cart",
     });
   }
-
   if (staleLeadRows.length > 0) {
     actions.push({
       id: "stale-leads",
@@ -140,10 +122,9 @@ export default async function PanelDashboardPage() {
       href: "/panel/bayi-adaylari",
       cta: "Adaylara git",
       tone: "warn",
-      icon: Target,
+      icon: "target",
     });
   }
-
   if (inventory.expiringSoonCount > 0 || soonVariants > 0) {
     actions.push({
       id: "skt",
@@ -152,10 +133,9 @@ export default async function PanelDashboardPage() {
       href: "/panel/sevkiyat",
       cta: "FEFO planı",
       tone: "warn",
-      icon: Truck,
+      icon: "truck",
     });
   }
-
   if (expiredVariants > 0 || inventory.expiredCount > 0) {
     actions.push({
       id: "expired",
@@ -164,19 +144,18 @@ export default async function PanelDashboardPage() {
       href: "/panel/sevkiyat",
       cta: "Stoku incele",
       tone: "danger",
-      icon: AlertTriangle,
+      icon: "alert",
     });
   }
-
   if (overLimit.length > 0) {
     actions.push({
       id: "credit",
-      title: `${overLimit.length} bayi kredi limitini aştı`,
+      title: `${overLimit.length} bayi/müşteri kredi limitini aştı`,
       detail: "Yeni sipariş öncesi limit veya tahsilat kontrolü gerekir.",
       href: "/panel/cari",
       cta: "Cariyi aç",
       tone: "danger",
-      icon: Wallet,
+      icon: "wallet",
     });
   } else if (overdueish.length > 0) {
     actions.push({
@@ -186,10 +165,9 @@ export default async function PanelDashboardPage() {
       href: "/panel/cari",
       cta: "Cariyi aç",
       tone: "default",
-      icon: Wallet,
+      icon: "wallet",
     });
   }
-
   if (openLeadsCount > 0) {
     actions.push({
       id: "new-leads",
@@ -198,259 +176,146 @@ export default async function PanelDashboardPage() {
       href: "/panel/bayi-adaylari",
       cta: "İncele",
       tone: "default",
-      icon: ClipboardList,
+      icon: "clipboard",
     });
   }
-
   if (actions.length === 0) {
     actions.push({
       id: "clear",
-      title: "Şu an bekleyen kritik iş yok",
+      title: "Kritik iş yok",
       detail: "Sepet, aday ve stok kuyrukları sakin.",
       href: "/panel/analytics",
       cta: "Analytics",
       tone: "info",
-      icon: ClipboardList,
+      icon: "clipboard",
     });
   }
-
-  const toneClass = {
-    default: "border-[var(--border)]",
-    warn: "border-[var(--warning-border)]",
-    danger: "border-[var(--danger-border)]",
-    info: "border-[var(--info-border)]",
-  } as const;
 
   const totalReceivable = balances
     .filter((b) => b.balanceKurus > 0)
     .reduce((s, b) => s + b.balanceKurus, 0);
 
+  const closed = analytics.crm.wonLeads + analytics.crm.lostLeads;
+  const winRate =
+    closed > 0 ? Math.round((analytics.crm.wonLeads / closed) * 100) : 0;
+
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
-      <PageHeader
+    <PanoShell>
+      <PanoHeader
         title="Pano"
-        description="Operasyon nabzı: CRM, stok, cari ve açık sepetler."
-        primaryAction={
-          <div className="flex flex-wrap gap-2">
-            <PillButton href="/panel/analytics" variant="secondary">
-              Analytics
-            </PillButton>
-            <PillButton href="/panel/bayi-adaylari">Adaylar</PillButton>
-          </div>
+        dateLabel={formatDate(new Date())}
+        description="CRM, stok, cari ve sepetler: sadece kritik sinyaller ve net grafikler."
+        actions={
+          <>
+            <PanoAction href="/panel/analytics">Analytics</PanoAction>
+            <PanoAction href="/panel/bayi-adaylari" variant="primary">
+              Adaylar
+            </PanoAction>
+          </>
         }
       />
 
-      {/* Pulse KPIs */}
-      <section aria-label="Özet metrikler" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard
+      <PanoKpiRow>
+        <PanoKpi
           label="Açık aday"
           value={openLeadsCount}
+          hint={`14g · ${analytics.crm.leadsLast14d}`}
           href="/panel/bayi-adaylari"
           tone={openLeadsCount > 0 ? "info" : "neutral"}
-          hint={`Son 14g: ${analytics.crm.leadsLast14d}`}
         />
-        <StatCard
+        <PanoKpi
           label="Bayatlayan"
           value={staleLeadRows.length}
           href="/panel/bayi-adaylari"
-          tone={staleLeadRows.length > 0 ? "warning" : "neutral"}
+          tone={staleLeadRows.length > 0 ? "warn" : "neutral"}
         />
-        <StatCard
+        <PanoKpi
           label="Açık sepet"
           value={carts.length}
+          hint={formatMoney(money(analytics.b2b.openCartValueKurus))}
           href="/panel/b2b/sepetler"
           tone={carts.length > 0 ? "info" : "neutral"}
-          hint={formatMoney(money(analytics.b2b.openCartValueKurus))}
         />
-        <StatCard
+        <PanoKpi
           label="SKT eşiği"
           value={inventory.expiringSoonCount}
+          hint={formatKg(inventory.totalKg)}
           href="/panel/sevkiyat"
-          tone={inventory.expiringSoonCount > 0 ? "warning" : "neutral"}
-          hint={`${formatKg(inventory.totalKg)} stok`}
+          tone={inventory.expiringSoonCount > 0 ? "warn" : "neutral"}
         />
-        <StatCard
+        <PanoKpi
           label="Bayi"
           value={dealers.length}
-          href="/panel/bayiler"
           hint={`${analytics.dealers.active} aktif`}
+          href="/panel/bayiler"
         />
-        <StatCard
+        <PanoKpi
           label="Limit aşımı"
           value={overLimit.length}
+          hint={totalReceivable > 0 ? formatMoney(money(totalReceivable)) : undefined}
           href="/panel/cari"
           tone={overLimit.length > 0 ? "danger" : "neutral"}
-          hint={totalReceivable > 0 ? formatMoney(money(totalReceivable)) : undefined}
         />
-      </section>
+      </PanoKpiRow>
 
-      {/* Charts row 1 */}
-      <section aria-label="CRM grafikleri" className="grid gap-4 lg:grid-cols-12">
-        <ChartPanel
-          className="lg:col-span-7"
+      <div className="grid gap-4 lg:grid-cols-12">
+        <PanoPanel
+          className="lg:col-span-8"
           title="Aday girişi"
-          subtitle="Son 14 gün · günlük yeni başvurular"
-          aside={
-            <span
-              className={
-                analytics.crm.weekOverWeek >= 0
-                  ? "rounded-full bg-[var(--success-subtle)] px-2.5 py-1 text-[length:var(--text-caption)] font-semibold tabular-nums text-[var(--success-text)]"
-                  : "rounded-full bg-[var(--danger-subtle)] px-2.5 py-1 text-[length:var(--text-caption)] font-semibold tabular-nums text-[var(--danger-text)]"
-              }
-            >
-              {analytics.crm.weekOverWeek >= 0 ? "+" : ""}
-              {analytics.crm.weekOverWeek}% Hf/Hf
-            </span>
-          }
+          subtitle="Son 14 gün"
         >
-          <DashboardLeadTrend
+          <PanoLeadTrend
             data={analytics.crm.leadsByDay}
             weekOverWeek={analytics.crm.weekOverWeek}
           />
-        </ChartPanel>
+        </PanoPanel>
+        <PanoPanel className="lg:col-span-4" title="Pipeline" subtitle="Açık aşamalar">
+          <PanoPipeline data={analytics.crm.stageCounts} />
+        </PanoPanel>
+      </div>
 
-        <ChartPanel
-          className="lg:col-span-5"
-          title="Pipeline"
-          subtitle="Açık aşama dağılımı"
-        >
-          <DashboardPipelineBars data={analytics.crm.stageCounts} />
-        </ChartPanel>
-      </section>
-
-      {/* Charts row 2 */}
-      <section aria-label="Cari ve stok" className="grid gap-4 md:grid-cols-2 xl:grid-cols-12">
-        <ChartPanel
-          className="xl:col-span-5"
-          title="Açık alacaklar"
-          subtitle="En yüksek bakiyeli bayiler"
-          aside={
-            totalReceivable > 0 ? (
-              <p className="text-right text-[length:var(--text-caption)] text-[var(--text-muted)]">
-                Toplam
-                <span className="mt-0.5 block font-semibold tabular-nums text-[var(--text-primary)]">
-                  {formatMoney(money(totalReceivable))}
-                </span>
-              </p>
-            ) : null
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <PanoPanel
+          title="Alacaklar"
+          subtitle={
+            totalReceivable > 0
+              ? `Toplam ${formatMoney(money(totalReceivable))}`
+              : "Açık bakiye yok"
           }
         >
-          <DashboardReceivables
-            data={receivableChart}
-            formatValue={(k) => formatMoney(money(k))}
-          />
-        </ChartPanel>
+          <PanoReceivables data={receivableChart} />
+        </PanoPanel>
+        <PanoPanel title="Lot sağlığı" subtitle="SKT durumu">
+          <PanoDonut data={stockSlices} centerLabel="lot" />
+        </PanoPanel>
+        <PanoPanel title="Kazanma" subtitle={closed > 0 ? `%${winRate} kapanan` : "Henüz kapanış yok"}>
+          {outcomeSlices.length > 0 ? (
+            <PanoDonut data={outcomeSlices} centerLabel={`%${winRate}`} />
+          ) : (
+            <p className="flex h-44 items-center justify-center text-[13px] text-[var(--text-muted)]">
+              Kapanmış fırsat yok
+            </p>
+          )}
+        </PanoPanel>
+      </div>
 
-        <ChartPanel
-          className="xl:col-span-3"
-          title="Lot sağlığı"
-          subtitle="SKT durumuna göre"
+      <div className="grid gap-4 lg:grid-cols-12">
+        <PanoPanel className="lg:col-span-5" title="Kanallar" subtitle="Aday kaynakları">
+          <PanoChannel data={analytics.crm.channelCounts} />
+        </PanoPanel>
+        <PanoPanel
+          className="lg:col-span-7"
+          title="Şimdi yap"
+          subtitle={`${Math.min(actions.length, 4)} öncelik`}
         >
-          <DashboardStockDonut data={stockSlices} />
-        </ChartPanel>
+          <PanoActionList items={actions.slice(0, 4)} />
+        </PanoPanel>
+      </div>
 
-        <ChartPanel
-          className="xl:col-span-4"
-          title="Kazanma oranı"
-          subtitle="Kapanmış fırsatlar"
-        >
-          <DashboardOutcomeDonut
-            won={analytics.crm.wonLeads}
-            lost={analytics.crm.lostLeads}
-          />
-        </ChartPanel>
+      <section aria-label="Hızlı erişim" className="space-y-3">
+        <h2 className="text-[13px] font-medium text-[var(--text-muted)]">Hızlı erişim</h2>
+        <PanoQuickNav links={QUICK_LINKS} />
       </section>
-
-      {/* Channel + actions */}
-      <section aria-label="Kanal ve aksiyonlar" className="grid gap-4 lg:grid-cols-12">
-        <ChartPanel
-          className="lg:col-span-5"
-          title="Kanal dağılımı"
-          subtitle="Aday kaynak kanalları"
-        >
-          <DashboardChannelBars data={analytics.crm.channelCounts} />
-        </ChartPanel>
-
-        <div className="flex flex-col gap-4 lg:col-span-7">
-          <section aria-label="Aksiyon kuyruğu">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-[length:var(--text-body)] font-semibold text-[var(--text-primary)]">
-                Şu an ne yapmalıyım?
-              </h2>
-              <span className="text-[length:var(--text-caption)] tabular-nums text-[var(--text-muted)]">
-                {actions.length} madde
-              </span>
-            </div>
-            <ol className="space-y-2">
-              {actions.slice(0, 4).map((item) => {
-                const Icon = item.icon;
-                return (
-                  <li
-                    key={item.id}
-                    className={`relative overflow-hidden rounded-[var(--radius-md)] border bg-[var(--surface)] p-3.5 shadow-[var(--shadow-sm)] ${toneClass[item.tone]}`}
-                  >
-                    {item.tone !== "default" ? (
-                      <span
-                        aria-hidden
-                        className={
-                          item.tone === "warn"
-                            ? "absolute inset-y-0 left-0 w-[3px] bg-[var(--warning-solid)]"
-                            : item.tone === "danger"
-                              ? "absolute inset-y-0 left-0 w-[3px] bg-[var(--danger-solid)]"
-                              : "absolute inset-y-0 left-0 w-[3px] bg-[var(--info-solid)]"
-                        }
-                      />
-                    ) : null}
-                    <div className="flex items-start gap-3 pl-0.5">
-                      <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--surface-3)] text-[var(--text-primary)]">
-                        <Icon className="size-4" aria-hidden />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-[var(--text-primary)]">{item.title}</p>
-                        <p className="mt-0.5 text-[length:var(--text-caption)] text-[var(--text-secondary)]">
-                          {item.detail}
-                        </p>
-                        <Link
-                          href={item.href}
-                          className="mt-2 inline-flex items-center gap-1 text-[length:var(--text-body)] font-semibold text-[var(--primary-text)] hover:underline"
-                        >
-                          {item.cta}
-                          <ArrowRight className="size-3.5" aria-hidden />
-                        </Link>
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-
-          <section aria-label="Hızlı erişim">
-            <h2 className="mb-3 text-[length:var(--text-body)] font-semibold text-[var(--text-primary)]">
-              Hızlı erişim
-            </h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {QUICK_LINKS.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="group flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-3 transition-[border-color,box-shadow,background-color] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] hover:shadow-[var(--shadow-sm)]"
-                  >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--primary-subtle)] text-[var(--primary-text)]">
-                      <Icon className="size-4" aria-hidden />
-                    </span>
-                    <span className="text-[length:var(--text-body)] font-medium text-[var(--text-primary)]">
-                      {link.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        </div>
-      </section>
-    </div>
+    </PanoShell>
   );
 }

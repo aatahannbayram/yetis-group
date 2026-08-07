@@ -7,6 +7,7 @@ import { addStockMovement, createLot } from "@/infra/db/inventory";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
 import { addProductMedia, deleteProductMedia, setPrimaryMedia } from "@/infra/db/media";
+import { saveUploadedImage } from "@/infra/storage/local";
 import { upsertProductAttributeValue } from "@/infra/db/attributes";
 import { createProduct, updateProductDescription } from "@/infra/db/products";
 import { prisma } from "@/infra/db/client";
@@ -103,6 +104,20 @@ export async function addMediaAction(formData: FormData) {
   const url = String(formData.get("url") ?? "").trim();
   const slug = String(formData.get("slug") ?? "");
   if (!productId || !url) throw new Error("url gerekli");
+  await addProductMedia({ productId, url });
+  revalidatePath(`/panel/urunler/${slug}`);
+  revalidatePath(`/urunler/${slug}`);
+}
+
+export async function uploadProductImageAction(formData: FormData) {
+  await requireStaff();
+  const productId = String(formData.get("productId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const file = formData.get("file");
+  if (!productId || !slug) throw new Error("Ürün bulunamadı");
+  if (!(file instanceof File)) throw new Error("Dosya gerekli");
+
+  const url = await saveUploadedImage(file, productId);
   await addProductMedia({ productId, url });
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath(`/urunler/${slug}`);

@@ -12,9 +12,7 @@ export function CreditLimitBar({
 }) {
   if (limitKurus == null || limitKurus <= 0) {
     return (
-      <p className={cn("text-[length:var(--text-caption)] text-[var(--text-muted)]", className)}>
-        Limit tanımsız
-      </p>
+      <p className={cn("text-xs text-stone-400 dark:text-zinc-500", className)}>Limit tanımsız</p>
     );
   }
 
@@ -24,21 +22,21 @@ export function CreditLimitBar({
   const over = balanceKurus > limitKurus;
 
   return (
-    <div className={cn("space-y-1", className)}>
-      <div className="flex justify-between text-[length:var(--text-caption)] tabular-nums text-[var(--text-muted)]">
-        <span>Limit kullanımı</span>
+    <div className={cn("space-y-1.5", className)}>
+      <div className="flex justify-between gap-2 text-xs tabular-nums text-stone-500 dark:text-zinc-400">
+        <span>Kullanım</span>
         <span
           className={cn(
-            over && "font-semibold text-[var(--danger-text)]",
-            tone === "warning" && !over && "text-[var(--warning-text)]",
+            over && "font-semibold text-red-600 dark:text-red-400",
+            tone === "warning" && !over && "text-amber-700 dark:text-amber-400",
           )}
         >
           %{pct}
-          {over ? " · aşım" : ""}
+          {over ? " aşım" : ""}
         </span>
       </div>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]"
+        className="h-1 overflow-hidden rounded-full bg-stone-100 dark:bg-zinc-800"
         role="progressbar"
         aria-valuenow={pct}
         aria-valuemin={0}
@@ -48,9 +46,9 @@ export function CreditLimitBar({
         <div
           className={cn(
             "h-full rounded-full transition-[width]",
-            tone === "neutral" && "bg-[var(--neutral-solid)]",
-            tone === "warning" && "bg-[var(--warning-solid)]",
-            tone === "danger" && "bg-[var(--danger-solid)]",
+            tone === "neutral" && "bg-stone-400 dark:bg-zinc-500",
+            tone === "warning" && "bg-amber-500",
+            tone === "danger" && "bg-red-500",
           )}
           style={{ width: `${Math.min(100, pct)}%` }}
         />

@@ -12,8 +12,9 @@ import { StatusPill } from "@/components/ui/status-pill";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { Button } from "@/components/ui/button";
 import { LeadDetailSheet } from "@/components/admin/lead-detail-sheet";
+import { LeadsKanban } from "@/components/admin/leads-kanban";
 import type { LeadItem } from "@/components/admin/leads-board";
-import { LEAD_STAGES, LEAD_STAGE_LABELS } from "@/domain/leads";
+import { LEAD_STAGE_LABELS } from "@/domain/leads";
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
 import {
@@ -36,12 +37,12 @@ function nextAction(lead: LeadListItem): string {
   if (lead.stage === "NITELIKLI") return "Numune planla";
   if (lead.stage === "NUMUNE" || lead.stage === "NUMUNE_TEKLIF") return "Numune takibi";
   if (lead.stage === "TEKLIF" || lead.stage === "MUZAKERE") return "Teklifi kapat";
-  return "—";
+  return "-";
 }
 
 export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
   const [density, setDensity] = useState<Density>("compact");
   const [activeView, setActiveView] = useState("all");
   const [metricFilter, setMetricFilter] = useState<string | null>(null);
@@ -95,6 +96,16 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
     return rows;
   }, [leads, openLeads, activeView, metricFilter]);
 
+  const displayed = useMemo(() => {
+    const q = search.trim().toLocaleLowerCase("tr-TR");
+    if (!q) return filtered;
+    return filtered.filter(
+      (row) =>
+        row.companyName.toLocaleLowerCase("tr-TR").includes(q) ||
+        row.contactName.toLocaleLowerCase("tr-TR").includes(q),
+    );
+  }, [filtered, search]);
+
   const columns = useMemo<ColumnDef<LeadListItem, unknown>[]>(
     () => [
       {
@@ -103,10 +114,16 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
         minSize: 220,
         cell: ({ row }) => (
           <div className="min-w-0 max-w-[280px]">
-            <p className="truncate font-medium text-[var(--panel-ink)]" title={row.original.companyName}>
+            <p
+              className="truncate font-medium text-stone-900 dark:text-zinc-50"
+              title={row.original.companyName}
+            >
               {row.original.companyName}
             </p>
-            <p className="truncate text-caption text-[var(--panel-ink-muted)]" title={row.original.contactName}>
+            <p
+              className="truncate text-xs text-stone-500 dark:text-zinc-400"
+              title={row.original.contactName}
+            >
               {row.original.contactName}
             </p>
           </div>
@@ -124,7 +141,10 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
         id: "assignee",
         header: "Sahip",
         cell: ({ row }) => (
-          <span className="truncate" title={row.original.assigneeName ?? "Atanmadı"}>
+          <span
+            className="truncate text-stone-600 dark:text-zinc-400"
+            title={row.original.assigneeName ?? "Atanmadı"}
+          >
             {row.original.assigneeName ?? "Atanmadı"}
           </span>
         ),
@@ -133,10 +153,10 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
         id: "potential",
         header: "Potansiyel",
         cell: ({ row }) => (
-          <span className="tabular-nums">
+          <span className="tabular-nums text-stone-700 dark:text-zinc-300">
             {row.original.estimatedMonthlyKg
               ? formatKg(kg(row.original.estimatedMonthlyKg))
-              : "—"}
+              : "-"}
           </span>
         ),
       },
@@ -171,7 +191,10 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
         cell: ({ row }) => {
           const label = nextAction(row.original);
           return (
-            <span className="block max-w-[200px] truncate" title={label}>
+            <span
+              className="block max-w-[200px] truncate text-stone-600 dark:text-zinc-400"
+              title={label}
+            >
               {label}
             </span>
           );
@@ -183,7 +206,13 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
         size: 48,
         enableSorting: false,
         cell: () => (
-          <Button type="button" variant="ghost" size="icon-sm" aria-label="İşlemler">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label="İşlemler"
+            className="text-stone-400 hover:text-stone-700"
+          >
             <MoreHorizontal className="size-4" />
           </Button>
         ),
@@ -207,70 +236,88 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4" data-density={density}>
-      <PageHeader
-        title="Bayi adayları"
-        count={leads.length}
-        actions={
-          <Button className="bg-[var(--panel-accent-action)] hover:bg-brand-800">Yeni aday</Button>
-        }
-      />
+    <div
+      className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950"
+      data-density={density}
+    >
+      <div
+        className={cn(
+          "mx-auto space-y-5",
+          viewMode === "kanban" ? "max-w-none" : "max-w-5xl",
+        )}
+      >
+        <PageHeader
+          title="Bayi/Müşteri adayları"
+          count={leads.length}
+          description="Başvurular, aşama ve sonraki aksiyon."
+          primaryAction={<Button className="h-9">Yeni aday</Button>}
+        />
 
-      <MetricStrip
-        items={metrics}
-        activeId={metricFilter}
-        onSelect={(id) => setMetricFilter((cur) => (cur === id ? null : id))}
-      />
+        <MetricStrip
+          items={metrics}
+          activeId={metricFilter}
+          onSelect={(id) => setMetricFilter((cur) => (cur === id ? null : id))}
+        />
 
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Firma veya kişi ara…"
-        views={[
-          { id: "all", label: "Tümü" },
-          { id: "open", label: "Açık" },
-          { id: "stale", label: "Bayat" },
-        ]}
-        activeViewId={activeView}
-        onViewSelect={setActiveView}
-        filters={
-          metricFilter ? (
-            <FilterChip
-              label={metrics.find((m) => m.id === metricFilter)?.label ?? metricFilter}
-              active
-              onClear={() => setMetricFilter(null)}
+        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="border-b border-stone-200 px-3 py-2 dark:border-zinc-800">
+            <ListToolbar
+              search={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Firma veya kişi ara…"
+              views={[
+                { id: "all", label: "Tümü" },
+                { id: "open", label: "Açık" },
+                { id: "stale", label: "Bayat" },
+              ]}
+              activeViewId={activeView}
+              onViewSelect={setActiveView}
+              filters={
+                metricFilter ? (
+                  <FilterChip
+                    label={metrics.find((m) => m.id === metricFilter)?.label ?? metricFilter}
+                    active
+                    onClear={() => setMetricFilter(null)}
+                  />
+                ) : null
+              }
+              density={density}
+              onDensityChange={setDensity}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              viewModes={["table", "kanban"]}
             />
-          ) : null
-        }
-        density={density}
-        onDensityChange={setDensity}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        viewModes={["table", "kanban"]}
-      />
+          </div>
 
-      {viewMode === "table" ? (
-        <DataTable
-          data={filtered}
-          columns={columns}
-          getRowId={getRowId}
-          storageKey="leads"
-          search={search}
-          globalFilterFn={globalFilterFn}
-          onRowOpen={(row) => setSelectedId(row.id)}
-          enableSelection
-          rowSelection={rowSelection}
-          onRowSelectionChange={setRowSelection}
-          staleLeftBorder={staleLeftBorder}
-          emptyTitle="Aday yok"
-          emptyDescription="Filtreleri temizleyin veya yeni başvuru bekleyin."
-        />
-      ) : (
-        <KanbanView
-          leads={filtered}
-          onOpen={(id) => setSelectedId(id)}
-        />
-      )}
+          {viewMode === "table" ? (
+            <DataTable
+              data={displayed}
+              columns={columns}
+              getRowId={getRowId}
+              storageKey="leads"
+              search=""
+              globalFilterFn={globalFilterFn}
+              onRowOpen={(row) => setSelectedId(row.id)}
+              enableSelection
+              rowSelection={rowSelection}
+              onRowSelectionChange={setRowSelection}
+              staleLeftBorder={staleLeftBorder}
+              emptyTitle="Aday yok"
+              emptyDescription="Filtreleri temizleyin veya yeni başvuru bekleyin."
+            />
+          ) : (
+            <div className="bg-gradient-to-b from-stone-50/80 to-white p-4 dark:from-zinc-950/80 dark:to-zinc-900">
+              {displayed.length === 0 ? (
+                <p className="py-12 text-center text-sm text-stone-500">
+                  Bu görünümde aday yok.
+                </p>
+              ) : (
+                <LeadsKanban leads={displayed} onOpen={(id) => setSelectedId(id)} />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       <BulkActionBar
         count={Object.keys(rowSelection).filter((k) => rowSelection[k]).length}
@@ -291,88 +338,6 @@ export function LeadsListPage({ leads }: { leads: LeadListItem[] }) {
           if (!open) setSelectedId(null);
         }}
       />
-    </div>
-  );
-}
-
-function KanbanView({
-  leads,
-  onOpen,
-}: {
-  leads: LeadListItem[];
-  onOpen: (id: string) => void;
-}) {
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
-      {LEAD_STAGES.map((stage) => {
-        const stageLeads = leads.filter((l) => l.stage === stage);
-        const potential = stageLeads.reduce(
-          (s, l) => s + (l.estimatedMonthlyKg ? Number(l.estimatedMonthlyKg) : 0),
-          0,
-        );
-        const empty = stageLeads.length === 0;
-        return (
-          <div
-            key={stage}
-            className={cn(
-              "shrink-0 rounded-[var(--radius-md)] border border-[var(--panel-border)] bg-neutral-50/80",
-              empty ? "w-12" : "w-64",
-            )}
-          >
-            <div
-              className={cn(
-                "border-b border-[var(--panel-border)] px-2 py-2",
-                empty && "px-1 writing-mode-vertical",
-              )}
-              title={`${LEAD_STAGE_LABELS[stage]} · ${stageLeads.length}`}
-            >
-              {!empty ? (
-                <>
-                  <p className="text-caption font-semibold text-[var(--panel-ink)]">
-                    {LEAD_STAGE_LABELS[stage]}
-                  </p>
-                  <p className="text-caption tabular-nums text-[var(--panel-ink-muted)]">
-                    {stageLeads.length} · {Math.round(potential).toLocaleString("tr-TR")} kg/ay
-                  </p>
-                </>
-              ) : (
-                <p
-                  className="text-center text-caption text-[var(--panel-ink-muted)]"
-                  style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}
-                >
-                  {LEAD_STAGE_LABELS[stage]}
-                </p>
-              )}
-            </div>
-            {!empty ? (
-              <div className="space-y-2 p-2">
-                {stageLeads.map((lead) => {
-                  const days = leadStaleDays(lead.updatedAt);
-                  return (
-                    <button
-                      key={lead.id}
-                      type="button"
-                      onClick={() => onOpen(lead.id)}
-                      className="w-full rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-white p-2.5 text-left"
-                      style={{ borderLeft: `3px solid ${leadStaleBorder(days) ?? "transparent"}` }}
-                    >
-                      <p className="truncate font-medium" title={lead.companyName}>
-                        {lead.companyName}
-                      </p>
-                      <p className="mt-1 truncate text-caption text-[var(--panel-ink-muted)]">
-                        {lead.assigneeName ?? "Atanmadı"} · {leadStaleLabel(days)}
-                      </p>
-                      <p className="mt-1 truncate text-caption" title={nextAction(lead)}>
-                        {nextAction(lead)}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
     </div>
   );
 }

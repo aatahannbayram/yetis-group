@@ -183,18 +183,18 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                     className="rounded-2xl border border-[color:var(--mkt-border)] bg-[var(--mkt-card-muted)]/40 p-3"
                   >
                     <div className="flex gap-3">
-                      <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-white">
+                      <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm">
                         {line.imageUrl ? (
                           <Image
                             src={line.imageUrl}
                             alt=""
                             fill
                             className="object-cover"
-                            sizes="64px"
+                            sizes="80px"
                           />
                         ) : (
                           <div className="flex size-full items-center justify-center text-mkt-ink-muted">
-                            <Package className="size-5" aria-hidden />
+                            <Package className="size-6" aria-hidden />
                           </div>
                         )}
                       </div>

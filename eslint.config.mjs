@@ -28,6 +28,26 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    files: ["src/app/**/*.{ts,tsx}", "src/components/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXText[value=/—/]",
+          message: "Em dash is banned in site/panel copy. Use a period, comma, colon, or restructure the sentence.",
+        },
+        {
+          selector: "Literal[value=/—/]",
+          message: "Em dash is banned in site/panel copy. Use a period, comma, colon, or restructure the sentence.",
+        },
+        {
+          selector: "TemplateElement[value.raw=/—/]",
+          message: "Em dash is banned in site/panel copy. Use a period, comma, colon, or restructure the sentence.",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

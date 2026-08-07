@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Headphones, Mail, MessageCircle, Phone } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { SITE } from "@/lib/site";
+import { cn } from "@/lib/utils";
 
 function isWithinBusinessHours(now = new Date()): boolean {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -19,6 +20,13 @@ function isWithinBusinessHours(now = new Date()): boolean {
   return hour >= 9 && hour < 18;
 }
 
+const TOPICS = [
+  { href: "/iletisim?konu=bayilik", label: "Bayilik" },
+  { href: "/iletisim?konu=numune", label: "Numune" },
+  { href: "/iletisim?konu=horeca", label: "HORECA" },
+  { href: "/iletisim", label: "İletişim formu" },
+] as const;
+
 export function SupportStrip() {
   const [openNow, setOpenNow] = useState(true);
   const wa = `https://wa.me/${SITE.phone.replace("+", "")}`;
@@ -28,97 +36,102 @@ export function SupportStrip() {
   }, []);
 
   return (
-    <div className="mkt-pad relative py-10 md:py-14 lg:py-16">
-      <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12">
-        <div className="max-w-xl">
-          <p className="mkt-section-label !text-mkt-accent">Destek</p>
-          <h2 className="mkt-h2 mt-3 text-balance text-white">Takıldığın yerde yaz.</h2>
-          <p className="mt-3 text-[15px] leading-relaxed text-white/70 md:text-base">
-            Sipariş, numune veya bayilik: satış ekibi cevaplar.
+    <div className="mkt-pad relative py-12 md:py-16 lg:py-20">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16 xl:gap-24">
+        <div className="max-w-md">
+          <p className="text-[12px] font-medium tracking-[0.14em] text-white/45 uppercase">
+            İletişim
           </p>
-          <div className="mt-5 flex items-center gap-3">
+          <h2 className="mt-4 text-balance text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.03em] text-white sm:text-[2rem] md:text-[2.25rem]">
+            Sipariş ve bayilik için yazın.
+          </h2>
+          <p className="mt-4 max-w-sm text-[15px] leading-relaxed text-white/55">
+            Numune, fiyat listesi veya bölge teslimatı için yazın; ekip mesai içinde dönüş yapar.
+          </p>
+          <p className="mt-6 flex items-center gap-2 text-[13px] text-white/40">
             <span
-              className="flex size-11 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-mkt-accent"
+              className={cn(
+                "size-1.5 shrink-0 rounded-full",
+                openNow ? "bg-[#45c980]" : "bg-white/30",
+              )}
               aria-hidden
-            >
-              <Headphones className="size-5" />
-            </span>
-            <div className="text-[13px] text-white/70">
-              <p className="font-semibold text-white/90">Satış ekibi</p>
-              <p className="flex items-center gap-2">
-                <span
-                  className={
-                    openNow
-                      ? "inline-block size-1.5 shrink-0 rounded-full bg-mkt-accent"
-                      : "inline-block size-1.5 shrink-0 rounded-full bg-white/40"
-                  }
-                  aria-hidden
-                />
-                {openNow
-                  ? "Şu an mesaide · 09:00–18:00 (TR)"
-                  : "Mesai dışı · 09:00–18:00 (TR) yazın, ilk iş günü dönüş yaparız"}
-              </p>
-            </div>
-          </div>
+            />
+            {openNow
+              ? "Mesai içinde · 09:00–18:00 (TR)"
+              : "Mesai dışı · ilk iş günü dönüş"}
+          </p>
         </div>
 
-        <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-2xl">
-          <a
-            href={wa}
-            target="_blank"
-            rel="noreferrer"
-            className="flex flex-col rounded-[1.15rem] border border-white/15 bg-white/5 p-4 transition-colors hover:bg-white/10"
-          >
-            <MessageCircle className="size-5 text-mkt-accent" aria-hidden />
-            <p className="mt-3 text-[15px] font-semibold text-white">WhatsApp</p>
-            <p className="mt-1 text-[13px] text-white/60">Hızlı yanıt</p>
-            <span className="mkt-pill mt-auto inline-flex h-10 items-center justify-center gap-2 bg-mkt-accent px-4 text-[13px] font-semibold text-mkt-accent-ink">
-              Yazın
-              <ArrowUpRight className="size-3.5" aria-hidden />
-            </span>
-          </a>
-          <a
-            href={`tel:${SITE.phone}`}
-            className="flex flex-col rounded-[1.15rem] border border-white/15 bg-white/5 p-4 transition-colors hover:bg-white/10"
-          >
-            <Phone className="size-5 text-mkt-accent" aria-hidden />
-            <p className="mt-3 text-[15px] font-semibold text-white">Telefon</p>
-            <p className="mt-1 tabular-nums text-[13px] text-white/60">{SITE.phoneDisplay}</p>
-            <span className="mkt-pill mt-auto inline-flex h-10 items-center justify-center gap-2 border border-white/25 bg-white/5 px-4 text-[13px] font-semibold text-white">
-              Ara
-              <ArrowUpRight className="size-3.5" aria-hidden />
-            </span>
-          </a>
-          <a
-            href={`mailto:${SITE.email}`}
-            className="flex flex-col rounded-[1.15rem] border border-white/15 bg-white/5 p-4 transition-colors hover:bg-white/10"
-          >
-            <Mail className="size-5 text-mkt-accent" aria-hidden />
-            <p className="mt-3 text-[15px] font-semibold text-white">E-posta</p>
-            <p className="mt-1 break-all text-[13px] text-white/60">{SITE.email}</p>
-            <span className="mkt-pill mt-auto inline-flex h-10 items-center justify-center gap-2 border border-white/25 bg-white/5 px-4 text-[13px] font-semibold text-white">
-              Mail at
-              <ArrowUpRight className="size-3.5" aria-hidden />
-            </span>
-          </a>
-        </div>
-      </div>
+        <div className="flex flex-col justify-center">
+          <ul className="divide-y divide-white/[0.08] border-y border-white/[0.08]">
+            <li>
+              <a
+                href={wa}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-center justify-between gap-4 py-4 transition-colors hover:bg-white/[0.03] sm:py-5"
+              >
+                <div className="min-w-0">
+                  <p className="text-[15px] font-medium text-white">WhatsApp</p>
+                  <p className="mt-0.5 text-[13px] text-white/40">Anlık mesaj</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-[#45c980] transition-transform group-hover:translate-x-0.5">
+                  Yazın
+                  <ArrowUpRight className="size-3.5 opacity-70" aria-hidden />
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={`tel:${SITE.phone}`}
+                className="group flex items-center justify-between gap-4 py-4 transition-colors hover:bg-white/[0.03] sm:py-5"
+              >
+                <div className="min-w-0">
+                  <p className="text-[15px] font-medium text-white">Telefon</p>
+                  <p className="mt-0.5 tabular-nums text-[13px] text-white/40">
+                    {SITE.phoneDisplay}
+                  </p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-white/70 transition-colors group-hover:text-white">
+                  Ara
+                  <ArrowUpRight className="size-3.5 opacity-70" aria-hidden />
+                </span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={`mailto:${SITE.email}`}
+                className="group flex items-center justify-between gap-4 py-4 transition-colors hover:bg-white/[0.03] sm:py-5"
+              >
+                <div className="min-w-0">
+                  <p className="text-[15px] font-medium text-white">E-posta</p>
+                  <p className="mt-0.5 truncate text-[13px] text-white/40">{SITE.email}</p>
+                </div>
+                <span className="inline-flex shrink-0 items-center gap-1.5 text-[13px] font-medium text-white/70 transition-colors group-hover:text-white">
+                  Mail
+                  <ArrowUpRight className="size-3.5 opacity-70" aria-hidden />
+                </span>
+              </a>
+            </li>
+          </ul>
 
-      <div className="mt-8 flex flex-wrap gap-2 border-t border-white/10 pt-8">
-        {[
-          { href: "/iletisim?konu=bayilik", label: "Bayilik" },
-          { href: "/iletisim?konu=numune", label: "Numune" },
-          { href: "/iletisim?konu=horeca", label: "HORECA" },
-          { href: "/iletisim", label: "Form" },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="mkt-pill inline-flex items-center border border-white/20 bg-white/5 px-4 py-2.5 text-[13px] font-semibold text-white hover:bg-white/10"
+          <nav
+            aria-label="İletişim konuları"
+            className="mt-8 flex flex-wrap items-center gap-x-1 gap-y-2 text-[13px] text-white/35"
           >
-            {item.label}
-          </Link>
-        ))}
+            {TOPICS.map((item, i) => (
+              <span key={item.href} className="inline-flex items-center gap-1">
+                {i > 0 ? <span className="mx-1.5 text-white/20" aria-hidden>·</span> : null}
+                <Link
+                  href={item.href}
+                  className="font-medium text-white/50 underline-offset-4 transition-colors hover:text-white hover:underline"
+                >
+                  {item.label}
+                </Link>
+              </span>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );

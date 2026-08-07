@@ -68,7 +68,7 @@ export function InlineEdit({
         aria-label={ariaLabel ?? "Düzenle"}
         onClick={() => setEditing(true)}
       >
-        {value || "—"}
+        {value || "-"}
       </button>
     );
   }

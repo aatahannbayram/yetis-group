@@ -61,7 +61,7 @@ export function ListToolbar({
               value={search ?? ""}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 border-[var(--panel-border)] bg-[var(--panel-surface)] pl-8 text-[length:var(--panel-font-size)] shadow-none"
+              className="h-8 bg-[var(--panel-surface)] pl-8 text-[length:var(--panel-font-size)] shadow-none"
               aria-label={searchPlaceholder}
             />
           </div>

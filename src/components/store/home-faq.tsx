@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOTION } from "@/lib/motion";
 
@@ -14,10 +14,7 @@ export function HomeFaq({ items }: { items: HomeFaqItem[] }) {
   const [openId, setOpenId] = useState(0);
 
   return (
-    <div
-      className="overflow-hidden rounded-2xl border border-[color:var(--mkt-border)] bg-white sm:rounded-[1.25rem]"
-      role="list"
-    >
+    <div role="list" className="border-t border-[color:var(--mkt-border)]">
       {items.map((item, i) => {
         const open = openId === i;
         const panelId = `home-faq-panel-${i}`;
@@ -27,10 +24,7 @@ export function HomeFaq({ items }: { items: HomeFaqItem[] }) {
           <div
             key={item.question}
             role="listitem"
-            className={cn(
-              i > 0 && "border-t border-[color:var(--mkt-border)]",
-              open && "border-l-[3px] border-l-mkt-accent",
-            )}
+            className="border-b border-[color:var(--mkt-border)]"
           >
             <h3 className="m-0">
               <button
@@ -39,18 +33,22 @@ export function HomeFaq({ items }: { items: HomeFaqItem[] }) {
                 onClick={() => setOpenId(open ? -1 : i)}
                 aria-expanded={open}
                 aria-controls={panelId}
-                className={cn(
-                  "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors sm:gap-4 sm:px-5 sm:py-4",
-                  open ? "bg-mkt-card-muted/50" : "hover:bg-mkt-card-muted/40",
-                )}
+                className="flex w-full items-center gap-4 py-4 text-left sm:gap-6 sm:py-5"
               >
-                <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug tracking-[-0.015em] text-mkt-ink sm:text-[1.05rem]">
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 text-[15px] leading-snug tracking-[-0.02em] transition-colors sm:text-[1.0625rem]",
+                    open
+                      ? "font-semibold text-mkt-ink"
+                      : "font-medium text-mkt-ink/85 hover:text-mkt-ink",
+                  )}
+                >
                   {item.question}
                 </span>
-                <Plus
+                <ChevronDown
                   className={cn(
-                    "mt-0.5 size-4 shrink-0 text-mkt-ink-muted transition-transform ease-out",
-                    open && "rotate-45 text-mkt-green-text",
+                    "size-4 shrink-0 text-mkt-ink/35 transition-transform ease-out",
+                    open && "rotate-180 text-mkt-green-text",
                   )}
                   style={{ transitionDuration: `${MOTION.faqMs}ms` }}
                   aria-hidden
@@ -69,7 +67,7 @@ export function HomeFaq({ items }: { items: HomeFaqItem[] }) {
               style={{ transitionDuration: `var(--mkt-motion-faq, ${MOTION.faqMs}ms)` }}
             >
               <div className="min-h-0 overflow-hidden">
-                <p className="px-4 pb-3.5 text-[14px] leading-relaxed text-mkt-ink-muted sm:px-5 sm:pb-4 sm:text-[15px]">
+                <p className="max-w-xl pb-4 text-[14px] leading-relaxed text-mkt-ink-muted sm:pb-5 sm:text-[15px]">
                   {item.answer}
                 </p>
               </div>

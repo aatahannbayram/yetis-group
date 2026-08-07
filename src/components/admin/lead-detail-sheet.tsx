@@ -107,26 +107,39 @@ export function LeadDetailSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle>{lead.companyName}</SheetTitle>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 border-stone-200 bg-white p-0 sm:max-w-md dark:border-zinc-800 dark:bg-zinc-950"
+      >
+        <SheetHeader className="space-y-2 border-b border-stone-200 px-5 py-4 text-left dark:border-zinc-800">
+          <SheetTitle className="pr-8 text-lg font-semibold tracking-tight text-stone-900 dark:text-zinc-50">
+            {lead.companyName}
+          </SheetTitle>
           <SheetDescription className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{LEAD_STAGE_LABELS[lead.stage]}</Badge>
-            <Badge variant="outline" className="border-neutral-300 text-neutral-700">
+            <Badge className="border-transparent bg-stone-100 text-stone-700 dark:bg-zinc-800 dark:text-zinc-300">
+              {LEAD_STAGE_LABELS[lead.stage]}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="border-stone-200 text-stone-600 dark:border-zinc-700 dark:text-zinc-400"
+            >
               {LEAD_CHANNEL_LABELS[lead.channel]}
             </Badge>
-            <Badge variant="outline" className="border-neutral-300 text-neutral-700">
+            <Badge
+              variant="outline"
+              className="border-stone-200 text-stone-600 dark:border-zinc-700 dark:text-zinc-400"
+            >
               {LEAD_SOURCE_LABELS[lead.source] ?? lead.source}
             </Badge>
           </SheetDescription>
         </SheetHeader>
 
-        <div className="border-b border-neutral-100 px-4 pb-4">
+        <div className="border-b border-stone-100 px-5 py-4 dark:border-zinc-800">
           <div className="mb-3 flex flex-wrap items-end gap-2">
             <div className="min-w-40 flex-1">
-              <p className="mb-1 text-caption text-neutral-500">Aşama</p>
+              <p className="mb-1.5 text-xs font-medium text-stone-500">Aşama</p>
               <Select value={toStage} onValueChange={(v) => setToStage(v as LeadStage)}>
-                <SelectTrigger>
+                <SelectTrigger className="h-10 border-stone-200 dark:border-zinc-800">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,43 +153,48 @@ export function LeadDetailSheet({
             </div>
             {toStage === "KAYBEDILDI" ? (
               <div className="min-w-40 flex-1">
-                <p className="mb-1 text-caption text-neutral-500">Kayıp nedeni</p>
+                <p className="mb-1.5 text-xs font-medium text-stone-500">Kayıp nedeni</p>
                 <Input
                   value={lostReason}
                   onChange={(e) => setLostReason(e.target.value)}
                   placeholder="Zorunlu"
+                  className="h-10 border-stone-200 dark:border-zinc-800"
                 />
               </div>
             ) : null}
-            <Button type="button" variant="outline" disabled={isPending} onClick={handleStageChange}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              onClick={handleStageChange}
+              className="h-10 border-stone-200"
+            >
               Güncelle
             </Button>
           </div>
-          {stageError ? <p className="mb-2 text-caption text-danger-fg">{stageError}</p> : null}
+          {stageError ? <p className="mb-2 text-xs text-red-700">{stageError}</p> : null}
           {lead.estimatedMonthlyKg ? (
-            <p className="mb-3 tabular-nums text-body-sm font-medium text-brand-700">
+            <p className="mb-3 tabular-nums text-sm font-medium text-[#1B5E3A]">
               ~{formatKg(kg(lead.estimatedMonthlyKg))}/ay tahmini hacim
             </p>
           ) : null}
-          <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-700 text-body-sm font-semibold text-white">
+          <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 dark:border-zinc-800 dark:bg-zinc-900">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-[#1B5E3A] text-sm font-semibold text-white">
               {lead.contactName.slice(0, 1).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-body-sm leading-body-sm font-semibold text-neutral-900">
+              <p className="truncate text-sm font-semibold text-stone-900 dark:text-zinc-50">
                 {lead.contactName}
               </p>
-              <p className="flex items-center gap-1 truncate text-caption text-neutral-500">
+              <p className="flex items-center gap-1 truncate text-xs text-stone-500">
                 <MapPin className="size-3" aria-hidden />
                 {lead.city}
               </p>
               {lead.email ? (
-                <p className="truncate text-caption text-neutral-500">{lead.email}</p>
+                <p className="truncate text-xs text-stone-500">{lead.email}</p>
               ) : null}
               {lead.interestedCategory ? (
-                <p className="truncate text-caption text-neutral-500">
-                  İlgi: {lead.interestedCategory}
-                </p>
+                <p className="truncate text-xs text-stone-500">İlgi: {lead.interestedCategory}</p>
               ) : null}
             </div>
             <div className="flex shrink-0 gap-1.5">
@@ -184,14 +202,14 @@ export function LeadDetailSheet({
                 href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
                 target="_blank"
                 rel="noreferrer"
-                className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm transition-colors hover:text-brand-700"
+                className="flex size-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition-colors hover:text-[#1B5E3A] dark:border-zinc-700 dark:bg-zinc-950"
                 aria-label="WhatsApp'tan yaz"
               >
                 <MessageCircle className="size-4" aria-hidden />
               </a>
               <a
                 href={`tel:${lead.phone}`}
-                className="flex size-8 items-center justify-center rounded-full bg-white text-neutral-500 shadow-sm transition-colors hover:text-brand-700"
+                className="flex size-8 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-500 transition-colors hover:text-[#1B5E3A] dark:border-zinc-700 dark:bg-zinc-950"
                 aria-label="Ara"
               >
                 <PhoneCall className="size-4" aria-hidden />
@@ -199,30 +217,31 @@ export function LeadDetailSheet({
             </div>
           </div>
           {lead.fieldValues.length > 0 ? (
-            <ul className="mt-3 space-y-1 rounded-2xl border border-neutral-200 p-3 text-caption text-neutral-600">
+            <ul className="mt-3 space-y-1 rounded-xl border border-stone-200 p-3 text-xs text-stone-600 dark:border-zinc-800 dark:text-zinc-400">
               {lead.fieldValues.map((fv) => (
                 <li key={fv.label}>
-                  <span className="font-medium text-neutral-800">{fv.label}:</span> {fv.value}
+                  <span className="font-medium text-stone-800 dark:text-zinc-200">{fv.label}:</span>{" "}
+                  {fv.value}
                 </li>
               ))}
             </ul>
           ) : null}
         </div>
 
-        <div className="border-b border-neutral-100 px-4 py-3">
-          <h3 className="text-caption font-semibold tracking-[0.1em] text-neutral-500 uppercase">
-            Görevler
-          </h3>
+        <div className="border-b border-stone-100 px-5 py-4 dark:border-zinc-800">
+          <h3 className="text-xs font-medium tracking-wide text-stone-500 uppercase">Görevler</h3>
           <ul className="mt-2 space-y-2">
             {lead.tasks.map((task) => (
               <li
                 key={task.id}
-                className="flex items-center justify-between gap-2 rounded-xl border border-neutral-200 px-3 py-2 text-body-sm"
+                className="flex items-center justify-between gap-2 rounded-lg border border-stone-200 px-3 py-2 text-sm dark:border-zinc-800"
               >
                 <div>
-                  <p className={task.doneAt ? "text-neutral-400 line-through" : ""}>{task.title}</p>
+                  <p className={task.doneAt ? "text-stone-400 line-through" : "text-stone-800"}>
+                    {task.title}
+                  </p>
                   {task.dueAt ? (
-                    <p className="text-caption text-neutral-400">
+                    <p className="text-xs text-stone-400">
                       Vade: {formatDateTime(new Date(task.dueAt))}
                     </p>
                   ) : null}
@@ -230,7 +249,7 @@ export function LeadDetailSheet({
                 {!task.doneAt ? (
                   <form action={completeLeadTaskAction}>
                     <input type="hidden" name="id" value={task.id} />
-                    <Button type="submit" size="sm" variant="outline">
+                    <Button type="submit" size="sm" variant="outline" className="border-stone-200">
                       Tamamla
                     </Button>
                   </form>
@@ -240,20 +259,29 @@ export function LeadDetailSheet({
           </ul>
           <form action={createLeadTaskAction} className="mt-3 flex gap-2">
             <input type="hidden" name="leadId" value={lead.id} />
-            <Input name="title" placeholder="Yeni görev" className="h-9" required />
-            <Input name="dueAt" type="date" className="h-9 w-36" />
-            <Button type="submit" size="sm">
+            <Input
+              name="title"
+              placeholder="Yeni görev"
+              className="h-10 border-stone-200 dark:border-zinc-800"
+              required
+            />
+            <Input
+              name="dueAt"
+              type="date"
+              className="h-10 w-36 border-stone-200 dark:border-zinc-800"
+            />
+            <Button type="submit" size="sm" className="h-10">
               Ekle
             </Button>
           </form>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4">
-          <h3 className="text-caption leading-caption font-semibold tracking-[0.1em] text-neutral-500 uppercase">
+        <div className="flex-1 overflow-y-auto px-5 py-4">
+          <h3 className="text-xs font-medium tracking-wide text-stone-500 uppercase">
             Geçmiş / Akıbet
           </h3>
           {lead.activities.length === 0 ? (
-            <p className="mt-3 text-body-sm text-neutral-400">Henüz kayıt yok.</p>
+            <p className="mt-3 text-sm text-stone-400">Henüz kayıt yok.</p>
           ) : (
             <ol className="mt-3 flex flex-col">
               {lead.activities.map((activity, index) => {
@@ -262,23 +290,21 @@ export function LeadDetailSheet({
                 return (
                   <li key={activity.id} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-white">
+                      <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-stone-900 text-white dark:bg-zinc-100 dark:text-zinc-900">
                         <Icon className="size-3" aria-hidden />
                       </div>
                       {!isLast ? (
-                        <div className="w-px flex-1 bg-neutral-200" aria-hidden />
+                        <div className="w-px flex-1 bg-stone-200 dark:bg-zinc-800" aria-hidden />
                       ) : null}
                     </div>
                     <div className={isLast ? "pb-1" : "pb-5"}>
-                      <p className="text-caption text-neutral-400">
+                      <p className="text-xs text-stone-400">
                         {formatDateTime(new Date(activity.createdAt))}
                       </p>
-                      <p className="text-body-sm leading-body-sm font-semibold text-neutral-900">
+                      <p className="text-sm font-semibold text-stone-900 dark:text-zinc-50">
                         {LEAD_ACTIVITY_TYPE_LABELS[activity.type]}
                       </p>
-                      <p className="text-body-sm leading-body-sm text-neutral-600">
-                        {activity.note}
-                      </p>
+                      <p className="text-sm text-stone-600 dark:text-zinc-400">{activity.note}</p>
                     </div>
                   </li>
                 );
@@ -287,9 +313,12 @@ export function LeadDetailSheet({
           )}
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-neutral-200 p-4">
-          <Select value={type} onValueChange={(v) => setType(v as (typeof LEAD_ACTIVITY_TYPES)[number])}>
-            <SelectTrigger className="h-9 w-full">
+        <div className="flex flex-col gap-2 border-t border-stone-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+          <Select
+            value={type}
+            onValueChange={(v) => setType(v as (typeof LEAD_ACTIVITY_TYPES)[number])}
+          >
+            <SelectTrigger className="h-10 w-full border-stone-200 dark:border-zinc-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -304,9 +333,13 @@ export function LeadDetailSheet({
             value={note}
             onChange={(event) => setNote(event.target.value)}
             placeholder="Ne oldu? (ör. 'Numune gönderildi, teslimat için depo ile görüşüldü')"
-            className="min-h-20"
+            className="min-h-20 border-stone-200 dark:border-zinc-800"
           />
-          <Button onClick={handleSubmit} disabled={isPending || !note.trim()}>
+          <Button
+            onClick={handleSubmit}
+            disabled={isPending || !note.trim()}
+            className="h-10"
+          >
             Kaydet
           </Button>
         </div>

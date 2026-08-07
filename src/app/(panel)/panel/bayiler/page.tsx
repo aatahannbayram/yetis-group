@@ -55,44 +55,46 @@ export default async function AdminDealersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4">
-      <PageHeader
-        title="Bayiler"
-        count={dealers.length}
-        description="Bayi ve müşteri kayıtları, ticari koşullar ve atamalar."
-        primaryAction={
-          <Link
-            href="/panel/bayi-adaylari"
-            className="inline-flex h-9 items-center rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 text-[length:var(--text-body)] font-medium text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
-          >
-            Bayi adaylarına git
-          </Link>
-        }
-      />
+    <div className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950">
+      <div className="mx-auto max-w-5xl space-y-5">
+        <PageHeader
+          title="Bayi/Müşteriler"
+          count={dealers.length}
+          description="Kayıtlar, ticari koşullar ve atamalar."
+          primaryAction={
+            <Link
+              href="/panel/bayi-adaylari"
+              className="inline-flex h-9 items-center rounded-lg border border-stone-200 bg-white px-3 text-sm font-medium text-stone-700 hover:bg-stone-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+            >
+              Bayi/Müşteri adaylarına git
+            </Link>
+          }
+        />
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Toplam bayi" value={dealers.length} href="#bayi-listesi" />
-        <StatCard label="Aktif" value={activeCount} href="#bayi-listesi" />
-        <StatCard
-          label="Riskli / bloke"
-          value={riskCount}
-          tone={riskCount > 0 ? "warning" : undefined}
-          href="#bayi-listesi"
-        />
-        <StatCard
-          label="Fiyat listesi atanmamış"
-          value={unassignedPriceListCount}
-          tone={unassignedPriceListCount > 0 ? "warning" : undefined}
-          href="#bayi-listesi"
-        />
-      </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Toplam" value={dealers.length} href="#bayi-listesi" />
+          <StatCard label="Aktif" value={activeCount} href="#bayi-listesi" />
+          <StatCard
+            label="Riskli / bloke"
+            value={riskCount}
+            tone={riskCount > 0 ? "warning" : undefined}
+            href="#bayi-listesi"
+          />
+          <StatCard
+            label="Fiyat listesi atanmamış"
+            value={unassignedPriceListCount}
+            tone={unassignedPriceListCount > 0 ? "warning" : undefined}
+            href="#bayi-listesi"
+          />
+        </div>
 
-      <div id="bayi-listesi">
-        <DealerListSheet
-          dealers={rows}
-          priceListOptions={priceListOptions}
-          salesRepOptions={salesRepOptions}
-        />
+        <div id="bayi-listesi">
+          <DealerListSheet
+            dealers={rows}
+            priceListOptions={priceListOptions}
+            salesRepOptions={salesRepOptions}
+          />
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,13 @@ const dateFormatter = new Intl.DateTimeFormat("tr-TR", {
   year: "numeric",
 });
 
+const dateShortFormatter = new Intl.DateTimeFormat("tr-TR", {
+  timeZone: PRESENTATION_TIMEZONE,
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+});
+
 const dateTimeFormatter = new Intl.DateTimeFormat("tr-TR", {
   timeZone: PRESENTATION_TIMEZONE,
   day: "2-digit",
@@ -20,6 +27,11 @@ const dateTimeFormatter = new Intl.DateTimeFormat("tr-TR", {
 
 export function formatDate(value: Date): string {
   return dateFormatter.format(value);
+}
+
+/** Örn. "9 Ağu 2026" — lot / SKT satırları için. */
+export function formatDateShort(value: Date): string {
+  return dateShortFormatter.format(value);
 }
 
 export function formatDateTime(value: Date): string {

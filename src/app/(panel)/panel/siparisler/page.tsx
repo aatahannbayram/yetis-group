@@ -52,14 +52,14 @@ export default async function AdminOrdersPage() {
   const totalKurus = rows.reduce((sum, r) => sum + r.totalKurus, 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
       <PageHeader
         title="Siparişler"
         description="Bayi siparişleri, onay ve teslimat durumu."
         count={rows.length}
       />
 
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Özet" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Toplam sipariş" value={rows.length} href="#siparis-panosu" />
         <StatCard
           label="Aktif"
@@ -74,7 +74,7 @@ export default async function AdminOrdersPage() {
           unit="₺"
           href="#siparis-panosu"
         />
-      </div>
+      </section>
 
       <div id="siparis-panosu">
         <OrderBoard

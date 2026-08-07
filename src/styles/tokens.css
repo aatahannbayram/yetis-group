@@ -23,7 +23,7 @@
   --surface-2: #faf9f6;
   --surface-3: #f2efe8;
   --border: #e6e1d6;
-  --border-strong: #d5cec0;
+  --border-strong: #8a8172;
 
   --surface-canvas: var(--canvas);
   --surface-card: var(--surface);
@@ -171,14 +171,14 @@
   --control-padding-x: 1rem;
   --panel-font-size: 0.875rem;
 
-  /* Panel aliases → semantic */
+  /* Panel aliases → semantic (cool stone shell; store keeps warm --canvas) */
   --panel-accent: var(--brand-500);
   --panel-accent-action: var(--primary-solid);
   --panel-ink: var(--text-primary);
   --panel-ink-muted: var(--text-muted);
-  --panel-border: var(--border);
+  --panel-border: #e7e5e4; /* stone-200 */
   --panel-surface: var(--surface);
-  --panel-canvas: var(--canvas);
+  --panel-canvas: #fafaf9; /* stone-50 */
 
   /* Stage / SKT (map to semantic) */
   --stage-new: var(--neutral-solid);
@@ -227,7 +227,7 @@ html.dark {
   --surface-2: #23201b;
   --surface-3: #2b2721;
   --border: #34302a;
-  --border-strong: #454038;
+  --border-strong: #8a8172;
 
   --surface-canvas: var(--canvas);
   --surface-card: var(--surface);

@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { kg, sum, type Kg } from "@/domain/weight";
 import { suggestFefoShipment, InventoryError, type FefoAllocation } from "@/domain/inventory/fefo";
+import { formatDateShort } from "@/lib/format/date";
+import { lotPartyLabel, lotSktLine } from "@/lib/format/lot";
 
 export type ShippingLot = {
   id: string;
@@ -41,7 +43,7 @@ function LotChip({ lot }: { lot: ShippingLot }) {
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-body-sm",
+        "flex items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-body-sm",
         lot.expired
           ? "border-danger-fg/30 bg-danger-bg"
           : lot.expiringSoon
@@ -49,23 +51,27 @@ function LotChip({ lot }: { lot: ShippingLot }) {
             : "border-border/60",
       )}
     >
-      <div className="flex items-center gap-2 min-w-0">
-        {lot.fefoRank === 0 && !lot.expired ? (
-          <Badge className="bg-brand-600 text-white shrink-0">Önce bu</Badge>
-        ) : null}
-        <span className="truncate font-mono text-caption text-neutral-600">{lot.lotNumber}</span>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          {lot.fefoRank === 0 && !lot.expired ? (
+            <Badge className="bg-brand-600 text-white shrink-0">Önce bu</Badge>
+          ) : null}
+          <span className="truncate font-medium text-neutral-900">
+            {lotPartyLabel(lot.lotNumber)}
+          </span>
+        </div>
+        <p className="mt-0.5 truncate text-caption text-muted-foreground">
+          {lotSktLine({
+            expirationDate: lot.expirationDate,
+            daysUntilExpiry: lot.daysUntilExpiry,
+            expired: lot.expired,
+            formatDate: formatDateShort,
+          })}
+        </p>
       </div>
-      <div className="flex shrink-0 items-center gap-2 tabular-nums text-caption">
-        <span className="text-neutral-500">{formatKgValue(kg(lot.availableKg))}</span>
-        <span
-          className={cn(
-            "font-medium",
-            lot.expired ? "text-danger-fg" : lot.expiringSoon ? "text-warning-fg" : "text-neutral-400",
-          )}
-        >
-          {lot.expired ? "SKT geçti" : `${lot.daysUntilExpiry} gün`}
-        </span>
-      </div>
+      <span className="shrink-0 tabular-nums font-medium text-neutral-800">
+        {formatKgValue(kg(lot.availableKg))}
+      </span>
     </div>
   );
 }
@@ -102,14 +108,18 @@ function VariantCard({ row }: { row: ShippingRow }) {
   }
 
   return (
-    <div
-      className="rounded-[var(--radius-md)] border border-[var(--panel-border)] bg-card p-5"
-    >
+    <div className="rounded-xl border border-stone-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-neutral-900">{row.productName}</p>
-          <p className="text-caption text-muted-foreground">
-            {row.packLabel} · {row.sku}
+          <p className="truncate font-semibold text-stone-900 dark:text-zinc-50">{row.productName}</p>
+          <p className="text-xs text-stone-500 dark:text-zinc-400">
+            {row.packLabel}
+            {row.categoryName ? (
+              <>
+                <span className="mx-1 opacity-40">·</span>
+                {row.categoryName}
+              </>
+            ) : null}
           </p>
         </div>
         <div className="flex shrink-0 gap-1.5">
@@ -141,12 +151,12 @@ function VariantCard({ row }: { row: ShippingRow }) {
           type="number"
           step="0.001"
           min="0"
-          placeholder="Gereken kg"
+          placeholder="Kaç kg?"
           className="h-9"
         />
         <Button type="button" size="sm" onClick={suggest} className="shrink-0 gap-1.5">
           <Sparkles className="size-3.5" />
-          FEFO Öner
+          Partileri hesapla
         </Button>
       </div>
 
@@ -169,9 +179,9 @@ function VariantCard({ row }: { row: ShippingRow }) {
                 <div className="space-y-1.5">
                   {result.allocations.map((a) => (
                     <div key={a.lotId} className="flex items-center justify-between text-caption">
-                      <span className="flex items-center gap-1.5 font-mono text-neutral-700">
-                        <PackageCheck className="size-3.5 text-brand-600" />
-                        {a.lotNumber}
+                      <span className="flex min-w-0 items-center gap-1.5 text-neutral-800">
+                        <PackageCheck className="size-3.5 shrink-0 text-brand-600" />
+                        <span className="truncate font-medium">{lotPartyLabel(a.lotNumber)}</span>
                       </span>
                       <span className="tabular-nums font-medium text-neutral-900">
                         {formatKgValue(a.quantityKg)}

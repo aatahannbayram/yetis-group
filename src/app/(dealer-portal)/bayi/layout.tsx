@@ -38,12 +38,15 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
 
   return (
     <TooltipProvider delayDuration={200}>
-      <WorkspaceShell defaultDensity="comfortable" className="panel-shell dealer-shell min-h-screen bg-[var(--panel-canvas)] text-foreground">
+      <WorkspaceShell
+        defaultDensity="comfortable"
+        className="panel-shell dealer-shell min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--primary-subtle)_45%,var(--panel-canvas))_0%,var(--panel-canvas)_420px)] text-foreground"
+      >
         {impersonating ? (
           <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
         ) : null}
         <DealerNav dealerName={dealer.unvan} />
-        <main className="mx-auto max-w-5xl px-3 py-4 sm:px-4 sm:py-6">{children}</main>
+        <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-7">{children}</main>
       </WorkspaceShell>
     </TooltipProvider>
   );

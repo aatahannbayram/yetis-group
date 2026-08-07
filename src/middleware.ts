@@ -19,7 +19,7 @@ export async function middleware(request: NextRequest) {
     const mapUrl = new URL("/api/seo/redirects", request.url);
     const res = await fetch(mapUrl, {
       headers: { Accept: "application/json" },
-      next: { revalidate: 30 },
+      next: { revalidate: 300 },
     });
     if (!res.ok) return NextResponse.next();
     const map = (await res.json()) as Record<string, { to: string; code: number }>;

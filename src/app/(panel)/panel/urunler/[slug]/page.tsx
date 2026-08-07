@@ -1,26 +1,60 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Boxes,
+  Check,
+  ExternalLink,
+  Images,
+  Info,
+  Layers3,
+  Package,
+  PackageSearch,
+  Tags,
+  TrendingUp,
+} from "lucide-react";
 import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
 import { listAttributeDefinitions } from "@/infra/db/attributes";
 import { LotManager } from "@/components/admin/lot-manager";
 import { ProductGallery } from "@/components/admin/product-gallery";
 import { EditableTextarea } from "@/components/admin/editable-textarea";
-import { formatKg } from "@/lib/format/weight";
+import { EditablePrice } from "@/components/admin/editable-price";
+import { StatCard } from "@/components/admin/stat-card";
+import {
+  DescriptionField,
+  ProductDetailEditor,
+  TrackedForm,
+} from "@/components/admin/product-detail-editor";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
   addMediaAction,
   deleteMediaAction,
   setPrimaryMediaAction,
+  uploadProductImageAction,
   saveProductDepthAction,
   saveAttributeValueAction,
   updateProductDescriptionAction,
+  updateVariantPriceAction,
 } from "../actions";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+const fieldClass =
+  "h-10 rounded-lg border-stone-200 bg-white text-stone-900 placeholder:text-stone-400 focus-visible:border-[#1B5E3A] focus-visible:ring-[#1B5E3A]/20 disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-50 disabled:text-stone-400 disabled:opacity-100 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:disabled:bg-zinc-950 dark:disabled:text-zinc-500";
+
+const cardClass =
+  "rounded-xl border border-stone-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900";
+
+const labelClass = "text-sm font-medium text-stone-700 dark:text-zinc-300";
 
 export default async function AdminProductDetailPage({
   params,
@@ -41,238 +75,383 @@ export default async function AdminProductDetailPage({
 
   const valueByAttr = new Map(product.attributeValues.map((v) => [v.attributeId, v]));
   const saveDescription = updateProductDescriptionAction.bind(null, product.id, slug);
+  const expiringSoonCount = lots.filter(
+    (l) => !l.expired && (l.expirationDate.getTime() - Date.now()) / DAY_MS <= 14,
+  ).length;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10">
+    <div className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950">
+      <div className="mx-auto max-w-5xl space-y-6 text-stone-900 dark:text-zinc-100">
       <Link
         href="/panel/urunler"
-        className="inline-flex items-center gap-1.5 text-caption text-muted-foreground transition-colors hover:text-brand-700"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-500 transition-colors hover:text-stone-900 dark:text-zinc-400 dark:hover:text-zinc-100"
       >
-        <ArrowLeft className="size-3.5" />
+        <ArrowLeft className="size-3.5" aria-hidden />
         Ürünlere dön
       </Link>
 
-      <div className="flex items-start gap-4">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            width={64}
-            height={64}
-            className="rounded-xl object-cover"
-          />
-        ) : (
-          <div className="size-16 rounded-xl bg-muted" />
-        )}
-        <div>
-          <p className="font-mono text-caption text-neutral-400">{variant.sku}</p>
-          <h1 className="text-h2 leading-h2 font-semibold text-neutral-900">{product.name}</h1>
-          <p className="text-body-sm text-neutral-500">
-            {product.primaryCategory.name} &middot; {variant.packSize ?? variant.packagingType}{" "}
-            &middot; {formatMoney(money(variant.pricePerUnitKurus))}
-          </p>
-          <p className="mt-1 text-caption text-neutral-400">Üretici: {product.producer.name}</p>
+      {/* Hero */}
+      <div className={cardClass}>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-4">
+            <div className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:size-24 dark:border-zinc-800 dark:bg-zinc-950">
+              {product.imageUrl ? (
+                <Image src={product.imageUrl} alt={product.name} fill className="object-cover" sizes="96px" />
+              ) : (
+                <div className="flex size-full items-center justify-center text-stone-400">
+                  <PackageSearch className="size-6" aria-hidden />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-md bg-stone-100 px-1.5 py-0.5 font-mono text-xs text-stone-500 dark:bg-zinc-800 dark:text-zinc-400">
+                  {variant.sku}
+                </span>
+                {!product.active ? (
+                  <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-zinc-800 dark:text-zinc-400">
+                    Pasif
+                  </span>
+                ) : null}
+              </div>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-900 dark:text-zinc-50">
+                {product.name}
+              </h1>
+              <p className="mt-1 truncate text-sm text-stone-500 dark:text-zinc-400">
+                {product.primaryCategory.name} &middot; {variant.packSize ?? variant.packagingType}
+                {" · "}Üretici: {product.producer.name}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 flex-row items-center justify-between gap-4 sm:flex-col sm:items-end sm:gap-1.5">
+            <div className="text-left sm:text-right">
+              <p className="text-xs font-medium tracking-wide text-stone-500 uppercase">Baz Fiyat</p>
+              <p className="text-2xl font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+                {formatMoney(money(variant.pricePerUnitKurus))}
+              </p>
+            </div>
+            <a
+              href={`/urunler/${slug}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-[#1B5E3A] dark:text-zinc-400"
+            >
+              Mağazada gör
+              <ExternalLink className="size-3" aria-hidden />
+            </a>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-3xl border border-border bg-card p-4">
-          <p className="text-caption text-neutral-500">Toplam Stok</p>
-          <p className="mt-1 text-h3 leading-h3 font-semibold text-neutral-900">
-            {formatKg(stock.totalKg)}
-          </p>
-        </div>
-        <div className="rounded-3xl border border-border bg-card p-4">
-          <p className="text-caption text-neutral-500">Sevk Edilebilir</p>
-          <p className="mt-1 text-h3 leading-h3 font-semibold text-brand-700">
-            {formatKg(stock.shippableKg)}
-          </p>
-        </div>
-        <div className="rounded-3xl border border-border bg-card p-4">
-          <p className="text-caption text-neutral-500">Lot Sayısı</p>
-          <p className="mt-1 text-h3 leading-h3 font-semibold text-neutral-900">{stock.lotCount}</p>
-        </div>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatCard label="Toplam Stok" value={Math.round(stock.totalKg.toNumber())} suffix=" kg" icon={Package} />
+        <StatCard
+          label="Sevk Edilebilir"
+          value={Math.round(stock.shippableKg.toNumber())}
+          suffix=" kg"
+          icon={TrendingUp}
+          tone="success"
+        />
+        <StatCard label="Lot Sayısı" value={stock.lotCount} icon={Layers3} />
+        <StatCard
+          label="SKT Yaklaşan (14 gün)"
+          value={expiringSoonCount}
+          icon={AlertTriangle}
+          tone={expiringSoonCount > 0 ? "warning" : "neutral"}
+        />
       </div>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-h4 font-semibold">Açıklama</h2>
-        <div className="mt-3">
-          <EditableTextarea
-            value={product.description}
-            placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
-            onSave={saveDescription}
-          />
-        </div>
-      </section>
+      {/* Tabs */}
+      <Tabs defaultValue="genel">
+        <TabsList className="border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <TabsTrigger value="genel" className="data-[state=active]:text-[#1B5E3A]">
+            <Info className="size-3.5" aria-hidden />
+            Genel Bilgi
+          </TabsTrigger>
+          <TabsTrigger value="fiyat" className="data-[state=active]:text-[#1B5E3A]">
+            <Tags className="size-3.5" aria-hidden />
+            Fiyat &amp; Varyantlar
+          </TabsTrigger>
+          <TabsTrigger value="gorseller" className="data-[state=active]:text-[#1B5E3A]">
+            <Images className="size-3.5" aria-hidden />
+            Görseller
+            {product.media.length > 0 ? (
+              <span className="tabular-nums text-stone-500">({product.media.length})</span>
+            ) : null}
+          </TabsTrigger>
+          <TabsTrigger value="stok" className="data-[state=active]:text-[#1B5E3A]">
+            <Boxes className="size-3.5" aria-hidden />
+            Stok &amp; Lot
+          </TabsTrigger>
+        </TabsList>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-h4 font-semibold">Varyantlar</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[560px] text-body-sm">
-            <thead>
-              <tr className="border-b border-border text-caption text-muted-foreground">
-                <th className="px-2 py-2 text-left font-medium">SKU</th>
-                <th className="px-2 py-2 text-left font-medium">Paket</th>
-                <th className="px-2 py-2 text-left font-medium">Birim / Katsayı</th>
-                <th className="px-2 py-2 text-left font-medium">KDV</th>
-                <th className="px-2 py-2 text-right font-medium">Fiyat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {product.variants.map((v) => (
-                <tr key={v.id} className="border-b border-border/60 last:border-0">
-                  <td className="px-2 py-2 font-mono text-caption text-neutral-500">{v.sku}</td>
-                  <td className="px-2 py-2 text-neutral-700">
-                    {v.packSize ?? v.packagingType}
-                  </td>
-                  <td className="px-2 py-2 tabular-nums text-neutral-500">
-                    {v.baseUnit} &middot; ×{v.unitFactor.toString()}
-                  </td>
-                  <td className="px-2 py-2 tabular-nums text-neutral-500">
-                    %{(v.vatRateBasisPoints / 100).toString()}
-                  </td>
-                  <td className="px-2 py-2 text-right tabular-nums font-medium text-neutral-900">
-                    {formatMoney(money(v.pricePerUnitKurus))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <TabsContent value="genel" forceMount className="space-y-6 data-[state=inactive]:hidden">
+          <ProductDetailEditor>
+            <section className={cardClass}>
+              <h2 className="text-base font-semibold text-stone-900 dark:text-zinc-50">Açıklama</h2>
+              <div className="mt-3">
+                <DescriptionField
+                  id="description"
+                  initialValue={product.description}
+                  onSave={saveDescription}
+                >
+                  {({ value, onChange }) => (
+                    <EditableTextarea
+                      deferSave
+                      value={product.description}
+                      controlledValue={value}
+                      onControlledChange={onChange}
+                      onSave={saveDescription}
+                      placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
+                    />
+                  )}
+                </DescriptionField>
+              </div>
+            </section>
 
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-h4 font-semibold">Galeri</h2>
-        <div className="mt-4">
-          <ProductGallery
-            productId={product.id}
-            slug={slug}
-            media={product.media}
-            addMediaAction={addMediaAction}
-            deleteMediaAction={deleteMediaAction}
-            setPrimaryMediaAction={setPrimaryMediaAction}
-          />
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-h4 font-semibold">Saklama &amp; kullanım</h2>
-        <form action={saveProductDepthAction} className="mt-4 grid gap-3 sm:grid-cols-2">
-          <input type="hidden" name="productId" value={product.id} />
-          <input type="hidden" name="slug" value={slug} />
-          <div className="space-y-1 sm:col-span-2">
-            <label className="text-caption text-muted-foreground">Saklama koşulu</label>
-            <Input name="storageCondition" defaultValue={product.storageCondition ?? ""} />
-          </div>
-          <div className="space-y-1">
-            <label className="text-caption text-muted-foreground">Raf ömrü (gün)</label>
-            <Input
-              name="shelfLifeDays"
-              type="number"
-              defaultValue={product.shelfLifeDays ?? ""}
-            />
-          </div>
-          <label className="flex items-center gap-2 text-body-sm">
-            <input
-              type="checkbox"
-              name="requiresColdChain"
-              defaultChecked={product.requiresColdChain}
-            />
-            Soğuk zincir zorunlu
-          </label>
-          <div className="space-y-1 sm:col-span-2">
-            <label className="text-caption text-muted-foreground">Kullanım önerileri</label>
-            <textarea
-              name="usageTips"
-              rows={3}
-              defaultValue={product.usageTips}
-              className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="space-y-1 sm:col-span-2">
-            <label className="text-caption text-muted-foreground">Teknik föy URL</label>
-            <Input name="techSheetUrl" defaultValue={product.techSheetUrl ?? ""} />
-          </div>
-          <Button type="submit">Kaydet</Button>
-        </form>
-      </section>
-
-      <section className="rounded-3xl border border-border bg-card p-5">
-        <h2 className="text-h4 font-semibold">Nitelikler</h2>
-        <div className="mt-4 space-y-4">
-          {attributes.map((attr) => {
-            const current = valueByAttr.get(attr.id);
-            const selected = new Set(current?.selectedOptions.map((s) => s.optionId) ?? []);
-            return (
-              <form
-                key={attr.id}
-                action={saveAttributeValueAction}
-                className="rounded-xl border border-border/70 p-3"
+            <section className={cn(cardClass, "mt-6")}>
+              <h2 className="text-base font-semibold text-stone-900 dark:text-zinc-50">
+                Saklama &amp; kullanım
+              </h2>
+              <TrackedForm
+                id="depth"
+                action={saveProductDepthAction}
+                className="mt-4 grid gap-4 sm:grid-cols-2"
               >
                 <input type="hidden" name="productId" value={product.id} />
-                <input type="hidden" name="attributeId" value={attr.id} />
-                <input type="hidden" name="type" value={attr.type} />
                 <input type="hidden" name="slug" value={slug} />
-                <p className="text-body-sm font-medium">{attr.name}</p>
-                {attr.type === "TEXT" ? (
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="storageCondition" className={labelClass}>
+                    Saklama koşulu
+                  </Label>
                   <Input
-                    name="valueText"
-                    className="mt-2"
-                    defaultValue={current?.valueText ?? ""}
+                    id="storageCondition"
+                    name="storageCondition"
+                    defaultValue={product.storageCondition ?? ""}
+                    className={fieldClass}
                   />
-                ) : null}
-                {attr.type === "NUMBER" ? (
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="shelfLifeDays" className={labelClass}>
+                    Raf ömrü (gün)
+                  </Label>
                   <Input
-                    name="valueNumber"
+                    id="shelfLifeDays"
+                    name="shelfLifeDays"
                     type="number"
-                    step="any"
-                    className="mt-2"
-                    defaultValue={current?.valueNumber?.toString() ?? ""}
+                    defaultValue={product.shelfLifeDays ?? ""}
+                    className={fieldClass}
                   />
-                ) : null}
-                {attr.type === "BOOLEAN" ? (
-                  <label className="mt-2 flex items-center gap-2 text-body-sm">
-                    <input
-                      type="checkbox"
-                      name="valueBoolean"
-                      defaultChecked={current?.valueBoolean ?? false}
-                    />
-                    Evet
-                  </label>
-                ) : null}
-                {(attr.type === "SELECT" || attr.type === "MULTI_SELECT") && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {attr.options.map((opt) => (
-                      <label
-                        key={opt.id}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-caption"
-                      >
-                        <input
-                          type={attr.type === "SELECT" ? "radio" : "checkbox"}
-                          name="optionIds"
-                          value={opt.id}
-                          defaultChecked={selected.has(opt.id)}
-                        />
-                        {opt.label}
-                      </label>
-                    ))}
-                  </div>
-                )}
-                <Button type="submit" size="sm" className="mt-3">
-                  Kaydet
-                </Button>
-              </form>
-            );
-          })}
-        </div>
-      </section>
+                </div>
+                <label className="group flex min-h-10 cursor-pointer items-center gap-2.5 self-end rounded-lg border border-stone-200 bg-white px-3 has-[:checked]:border-[#1B5E3A] dark:border-zinc-800 dark:bg-zinc-900">
+                  <input
+                    type="checkbox"
+                    name="requiresColdChain"
+                    defaultChecked={product.requiresColdChain}
+                    className="sr-only"
+                  />
+                  <span className="flex size-4 shrink-0 items-center justify-center rounded border border-stone-300 bg-white group-has-[:checked]:border-[#1B5E3A] group-has-[:checked]:bg-[#1B5E3A] dark:border-zinc-600">
+                    <Check className="size-3 text-white opacity-0 group-has-[:checked]:opacity-100" aria-hidden />
+                  </span>
+                  <span className="text-sm text-stone-700 dark:text-zinc-300">Soğuk zincir zorunlu</span>
+                </label>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="usageTips" className={labelClass}>
+                    Kullanım önerileri
+                  </Label>
+                  <textarea
+                    id="usageTips"
+                    name="usageTips"
+                    rows={3}
+                    defaultValue={product.usageTips}
+                    className={cn(
+                      "w-full rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100",
+                    )}
+                  />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="techSheetUrl" className={labelClass}>
+                    Teknik föy URL
+                  </Label>
+                  <Input
+                    id="techSheetUrl"
+                    name="techSheetUrl"
+                    defaultValue={product.techSheetUrl ?? ""}
+                    className={fieldClass}
+                    placeholder="https://"
+                  />
+                  <p className="text-xs text-stone-500 dark:text-zinc-500">
+                    Opsiyonel. Harici PDF veya belge bağlantısı, dosya yükleme bu ekrandan değil.
+                  </p>
+                </div>
+              </TrackedForm>
+            </section>
 
-      <div>
-        <h2 className="text-h4 leading-h4 font-semibold text-neutral-900">Lot &amp; Stok Hareketleri</h2>
-        <p className="mt-1 text-body-sm text-neutral-500">
-          Lotlar varyant (`{variant.sku}`) seviyesindedir. Süresi geçmiş lottan çıkış yapılamaz.
-        </p>
-        <div className="mt-4">
+            <section className="mt-6 space-y-4">
+              <div className="border-t border-stone-200 pt-6 dark:border-zinc-800">
+                <h2 className="text-base font-semibold text-stone-900 dark:text-zinc-50">Nitelikler</h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                {attributes.map((attr) => {
+                  const current = valueByAttr.get(attr.id);
+                  const selected = new Set(current?.selectedOptions.map((s) => s.optionId) ?? []);
+                  return (
+                    <TrackedForm
+                      key={attr.id}
+                      id={`attr-${attr.id}`}
+                      action={saveAttributeValueAction}
+                      className={cardClass}
+                    >
+                      <input type="hidden" name="productId" value={product.id} />
+                      <input type="hidden" name="attributeId" value={attr.id} />
+                      <input type="hidden" name="type" value={attr.type} />
+                      <input type="hidden" name="slug" value={slug} />
+                      <p className="text-sm font-medium tracking-wide text-stone-500 uppercase dark:text-zinc-500">
+                        {attr.name}
+                      </p>
+                      {attr.type === "TEXT" ? (
+                        <Input
+                          name="valueText"
+                          className={cn("mt-3", fieldClass)}
+                          defaultValue={current?.valueText ?? ""}
+                        />
+                      ) : null}
+                      {attr.type === "NUMBER" ? (
+                        <Input
+                          name="valueNumber"
+                          type="number"
+                          step="any"
+                          className={cn("mt-3", fieldClass)}
+                          defaultValue={current?.valueNumber?.toString() ?? ""}
+                        />
+                      ) : null}
+                      {attr.type === "BOOLEAN" ? (
+                        <label className="group mt-3 inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-700 transition-colors has-[:checked]:border-green-600 has-[:checked]:bg-green-50 has-[:checked]:text-green-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:has-[:checked]:border-green-600 dark:has-[:checked]:bg-green-950/40 dark:has-[:checked]:text-green-400">
+                          <input
+                            type="checkbox"
+                            name="valueBoolean"
+                            defaultChecked={current?.valueBoolean ?? false}
+                            className="sr-only"
+                          />
+                          <Check
+                            className="size-3.5 opacity-0 group-has-[:checked]:opacity-100"
+                            aria-hidden
+                          />
+                          Evet
+                        </label>
+                      ) : null}
+                      {(attr.type === "SELECT" || attr.type === "MULTI_SELECT") && (
+                        <div
+                          className="mt-3 flex flex-wrap gap-2"
+                          role={attr.type === "SELECT" ? "radiogroup" : "group"}
+                          aria-label={attr.name}
+                        >
+                          {attr.options.map((opt) =>
+                            attr.type === "SELECT" ? (
+                              <label
+                                key={opt.id}
+                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-stone-200 bg-white px-3.5 text-sm text-stone-700 transition-colors has-[:checked]:border-[#1B5E3A] has-[:checked]:bg-[#1B5E3A] has-[:checked]:text-white has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
+                              >
+                                <input
+                                  type="radio"
+                                  name="optionIds"
+                                  value={opt.id}
+                                  defaultChecked={selected.has(opt.id)}
+                                  className="sr-only"
+                                />
+                                {opt.label}
+                              </label>
+                            ) : (
+                              <label
+                                key={opt.id}
+                                className="group inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3.5 text-sm text-stone-700 transition-colors has-[:checked]:border-green-600 has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:has-[:checked]:border-green-600 dark:has-[:checked]:bg-green-950/40 dark:has-[:checked]:text-green-400"
+                              >
+                                <input
+                                  type="checkbox"
+                                  name="optionIds"
+                                  value={opt.id}
+                                  defaultChecked={selected.has(opt.id)}
+                                  className="sr-only"
+                                />
+                                <Check
+                                  className="size-3.5 opacity-0 group-has-[:checked]:opacity-100"
+                                  aria-hidden
+                                />
+                                {opt.label}
+                              </label>
+                            ),
+                          )}
+                        </div>
+                      )}
+                    </TrackedForm>
+                  );
+                })}
+              </div>
+            </section>
+          </ProductDetailEditor>
+        </TabsContent>
+
+        <TabsContent value="fiyat">
+          <section className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-stone-200 dark:border-zinc-800">
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Paket</TableHead>
+                  <TableHead>Birim / Katsayı</TableHead>
+                  <TableHead>MOQ</TableHead>
+                  <TableHead>KDV</TableHead>
+                  <TableHead className="text-right">Fiyat</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {product.variants.map((v) => (
+                  <TableRow key={v.id} className="border-stone-200 dark:border-zinc-800">
+                    <TableCell className="font-mono text-xs text-stone-500">{v.sku}</TableCell>
+                    <TableCell className="text-stone-700 dark:text-zinc-300">
+                      {v.packSize ?? v.packagingType}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-stone-500">
+                      {v.baseUnit} &middot; ×{v.unitFactor.toString()}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-stone-500">{v.moq}</TableCell>
+                    <TableCell className="tabular-nums text-stone-500">
+                      %{(v.vatRateBasisPoints / 100).toString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <EditablePrice
+                        priceKurus={v.pricePerUnitKurus}
+                        onSave={updateVariantPriceAction.bind(null, v.id)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="gorseller">
+          <section className={cardClass}>
+            <ProductGallery
+              productId={product.id}
+              slug={slug}
+              media={product.media}
+              addMediaAction={addMediaAction}
+              uploadImageAction={uploadProductImageAction}
+              deleteMediaAction={deleteMediaAction}
+              setPrimaryMediaAction={setPrimaryMediaAction}
+            />
+          </section>
+        </TabsContent>
+
+        <TabsContent value="stok">
+          <p className="mb-4 text-sm text-stone-500 dark:text-zinc-400">
+            Lotlar varyant (<code className="font-mono text-stone-700 dark:text-zinc-300">{variant.sku}</code>)
+            seviyesindedir. Süresi geçmiş lottan çıkış yapılamaz.
+          </p>
           <LotManager
             variantId={variant.id}
             slug={product.slug}
@@ -291,7 +470,8 @@ export default async function AdminProductDetailPage({
               })),
             }))}
           />
-        </div>
+        </TabsContent>
+      </Tabs>
       </div>
     </div>
   );

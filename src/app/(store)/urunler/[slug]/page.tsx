@@ -222,7 +222,7 @@ export default async function ProductDetailPage({
               <h2 className="text-[1.25rem] font-medium tracking-[-0.015em] text-mkt-ink">
                 {product.category} kategorisinden diğerleri
               </h2>
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
                 {related.map((p, index) => (
                   <Reveal key={p.id} delay={(index % 3) * 60}>
                     <ProductCard

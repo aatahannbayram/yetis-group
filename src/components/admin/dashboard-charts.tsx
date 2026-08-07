@@ -16,14 +16,17 @@ import {
   YAxis,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/format/money";
+import { money } from "@/domain/money";
 
 const MUTED = "#6b6255";
-const GRID = "#e6e1d6";
+const GRID = "#ebe6dc";
 const GREEN = "#00693e";
 const GREEN_MID = "#30a369";
+const GREEN_SOFT = "#45c980";
 const INFO = "#1f5fb8";
 const WARN = "#b4650a";
-const DANGER = "#b42318";
+const DANGER = "#c02626";
 const NEUTRAL = "#8a8172";
 
 export function ChartPanel({
@@ -32,23 +35,40 @@ export function ChartPanel({
   aside,
   children,
   className,
+  accent,
 }: {
   title: string;
   subtitle?: string;
   aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  /** Soft top wash */
+  accent?: "green" | "warm" | "cool" | "none";
 }) {
   return (
     <section
       className={cn(
-        "flex flex-col rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]",
+        "group/panel relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] transition-[box-shadow,border-color] duration-[var(--motion-hover)] hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)]",
         className,
       )}
     >
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      {accent && accent !== "none" ? (
+        <div
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-x-0 top-0 h-24 opacity-90",
+            accent === "green" &&
+              "bg-[radial-gradient(120%_80%_at_0%_0%,color-mix(in_srgb,var(--brand-500)_18%,transparent),transparent_70%)]",
+            accent === "warm" &&
+              "bg-[radial-gradient(120%_80%_at_100%_0%,color-mix(in_srgb,var(--warning-solid)_14%,transparent),transparent_70%)]",
+            accent === "cool" &&
+              "bg-[radial-gradient(120%_80%_at_0%_0%,color-mix(in_srgb,var(--info-solid)_14%,transparent),transparent_70%)]",
+          )}
+        />
+      ) : null}
+      <header className="relative mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[length:var(--text-body)] font-semibold text-[var(--text-primary)]">
+          <h2 className="text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">
             {title}
           </h2>
           {subtitle ? (
@@ -59,7 +79,7 @@ export function ChartPanel({
         </div>
         {aside}
       </header>
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="relative min-h-0 flex-1">{children}</div>
     </section>
   );
 }
@@ -75,7 +95,7 @@ function SoftTooltip({
 }) {
   if (!active || rows.length === 0) return null;
   return (
-    <div className="rounded-[var(--radius-sm)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 shadow-[var(--shadow-md)]">
+    <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)]/95 px-3 py-2 shadow-[var(--shadow-md)] backdrop-blur-sm">
       {label ? (
         <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">{label}</p>
       ) : null}
@@ -108,7 +128,6 @@ export type DayPoint = {
   dayNum: string;
 };
 
-/** Soft area: CRM inflow last 14 days */
 export function DashboardLeadTrend({
   data,
   weekOverWeek,
@@ -117,6 +136,7 @@ export function DashboardLeadTrend({
   weekOverWeek: number;
 }) {
   const fillId = useId();
+  const strokeId = useId();
   const total = data.reduce((s, d) => s + d.count, 0);
   const peak = Math.max(...data.map((d) => d.count), 0);
   const wowLabel =
@@ -128,9 +148,9 @@ export function DashboardLeadTrend({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-3 flex flex-wrap items-end gap-6">
+      <div className="mb-4 flex flex-wrap items-end gap-6">
         <div>
-          <p className="text-[2rem] font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
+          <p className="text-[2.25rem] font-semibold tracking-[-0.03em] tabular-nums text-[var(--text-primary)]">
             {total}
             <span className="ml-2 text-[length:var(--text-body)] font-medium text-[var(--text-muted)]">
               yeni aday
@@ -140,11 +160,12 @@ export function DashboardLeadTrend({
             {wowLabel}
           </p>
         </div>
-        <div className="ml-auto flex gap-5 text-[length:var(--text-caption)]">
+        <div className="ml-auto flex gap-5 rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2.5 text-[length:var(--text-caption)]">
           <div>
             <p className="text-[var(--text-muted)]">Zirve</p>
             <p className="font-semibold tabular-nums text-[var(--text-primary)]">{peak}</p>
           </div>
+          <div className="w-px bg-[var(--border)]" aria-hidden />
           <div>
             <p className="text-[var(--text-muted)]">Ort. / gün</p>
             <p className="font-semibold tabular-nums text-[var(--text-primary)]">
@@ -153,14 +174,18 @@ export function DashboardLeadTrend({
           </div>
         </div>
       </div>
-      <div className="h-[220px] w-full">
+      <div className="h-[228px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 8, right: 6, left: -18, bottom: 0 }}>
             <defs>
               <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={GREEN_MID} stopOpacity={0.38} />
-                <stop offset="55%" stopColor={GREEN_MID} stopOpacity={0.1} />
+                <stop offset="0%" stopColor={GREEN_MID} stopOpacity={0.42} />
+                <stop offset="45%" stopColor={GREEN_SOFT} stopOpacity={0.12} />
                 <stop offset="100%" stopColor={GREEN_MID} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id={strokeId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={GREEN} />
+                <stop offset="100%" stopColor={GREEN_MID} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 8" stroke={GRID} vertical={false} />
@@ -198,8 +223,8 @@ export function DashboardLeadTrend({
             <Area
               type="monotone"
               dataKey="count"
-              stroke={GREEN}
-              strokeWidth={2.5}
+              stroke={`url(#${strokeId})`}
+              strokeWidth={2.75}
               fill={`url(#${fillId})`}
               activeDot={{ r: 5, fill: GREEN, stroke: "#fff", strokeWidth: 2 }}
             />
@@ -212,11 +237,11 @@ export function DashboardLeadTrend({
 
 export type StagePoint = { stage: string; label: string; count: number };
 
-/** Horizontal pipeline bars — open stages only */
 export function DashboardPipelineBars({ data }: { data: StagePoint[] }) {
   const open = data.filter((d) => d.stage !== "KAZANILDI" && d.stage !== "KAYBEDILDI");
   const max = Math.max(...open.map((d) => d.count), 1);
   const total = open.reduce((s, d) => s + d.count, 0);
+  const palette = [GREEN, GREEN_MID, GREEN_SOFT, "#0f7a8a", INFO, WARN, NEUTRAL];
 
   if (total === 0) {
     return (
@@ -227,7 +252,7 @@ export function DashboardPipelineBars({ data }: { data: StagePoint[] }) {
   }
 
   return (
-    <div className="h-[260px] w-full">
+    <div className="h-[268px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={open}
@@ -263,12 +288,9 @@ export function DashboardPipelineBars({ data }: { data: StagePoint[] }) {
               />
             )}
           />
-          <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={16} fill={GREEN_MID}>
+          <Bar dataKey="count" radius={[0, 10, 10, 0]} maxBarSize={15}>
             {open.map((row, i) => (
-              <Cell
-                key={row.stage}
-                fill={i === 0 ? GREEN : i < 3 ? GREEN_MID : "var(--chart-cat-5)"}
-              />
+              <Cell key={row.stage} fill={palette[i % palette.length]} />
             ))}
           </Bar>
         </BarChart>
@@ -283,13 +305,7 @@ export type ReceivablePoint = {
   overLimit: boolean;
 };
 
-export function DashboardReceivables({
-  data,
-  formatValue,
-}: {
-  data: ReceivablePoint[];
-  formatValue: (kurus: number) => string;
-}) {
+export function DashboardReceivables({ data }: { data: ReceivablePoint[] }) {
   const rows = useMemo(
     () =>
       data.map((d) => ({
@@ -334,7 +350,7 @@ export function DashboardReceivables({
                       ? [
                           {
                             name: row.name,
-                            value: formatValue(row.balanceKurus),
+                            value: formatMoney(money(row.balanceKurus)),
                             color: row.overLimit ? DANGER : WARN,
                           },
                         ]
@@ -344,9 +360,9 @@ export function DashboardReceivables({
               );
             }}
           />
-          <Bar dataKey="value" radius={[0, 8, 8, 0]} maxBarSize={18}>
+          <Bar dataKey="value" radius={[0, 10, 10, 0]} maxBarSize={16}>
             {rows.map((row) => (
-              <Cell key={row.name} fill={row.overLimit ? DANGER : WARN} fillOpacity={0.85} />
+              <Cell key={row.name} fill={row.overLimit ? DANGER : WARN} fillOpacity={0.88} />
             ))}
           </Bar>
         </BarChart>
@@ -359,7 +375,6 @@ export type StockSlice = { key: string; label: string; value: number; color: str
 
 export function DashboardStockDonut({ data }: { data: StockSlice[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
-  const midId = useId();
 
   if (total === 0) {
     return (
@@ -371,18 +386,19 @@ export function DashboardStockDonut({ data }: { data: StockSlice[] }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="relative mx-auto h-[180px] w-full max-w-[220px]">
+      <div className="relative mx-auto h-[176px] w-full max-w-[210px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               dataKey="value"
               nameKey="label"
-              innerRadius="62%"
-              outerRadius="88%"
-              paddingAngle={2}
+              innerRadius="64%"
+              outerRadius="90%"
+              paddingAngle={3}
+              cornerRadius={4}
               stroke="var(--surface)"
-              strokeWidth={2}
+              strokeWidth={3}
             >
               {data.map((d) => (
                 <Cell key={d.key} fill={d.color} />
@@ -408,11 +424,8 @@ export function DashboardStockDonut({ data }: { data: StockSlice[] }) {
             />
           </PieChart>
         </ResponsiveContainer>
-        <div
-          className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"
-          id={midId}
-        >
-          <p className="text-[1.5rem] font-semibold tabular-nums text-[var(--text-primary)]">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <p className="text-[1.6rem] font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
             {total}
           </p>
           <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">lot</p>
@@ -420,7 +433,10 @@ export function DashboardStockDonut({ data }: { data: StockSlice[] }) {
       </div>
       <ul className="mt-3 space-y-2">
         {data.map((d) => (
-          <li key={d.key} className="flex items-center justify-between gap-2 text-[length:var(--text-body)]">
+          <li
+            key={d.key}
+            className="flex items-center justify-between gap-2 text-[length:var(--text-body)]"
+          >
             <span className="flex items-center gap-2 text-[var(--text-secondary)]">
               <span
                 className="size-2.5 shrink-0 rounded-full"
@@ -460,18 +476,19 @@ export function DashboardOutcomeDonut({ won, lost }: { won: number; lost: number
 
   return (
     <div className="flex h-full flex-col">
-      <div className="relative mx-auto h-[160px] w-full max-w-[200px]">
+      <div className="relative mx-auto h-[168px] w-full max-w-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               dataKey="value"
               nameKey="label"
-              innerRadius="64%"
-              outerRadius="90%"
+              innerRadius="66%"
+              outerRadius="92%"
               paddingAngle={3}
+              cornerRadius={4}
               stroke="var(--surface)"
-              strokeWidth={2}
+              strokeWidth={3}
             >
               {data.map((d) => (
                 <Cell key={d.key} fill={d.color} />
@@ -498,15 +515,21 @@ export function DashboardOutcomeDonut({ won, lost }: { won: number; lost: number
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <p className="text-[1.35rem] font-semibold tabular-nums text-[var(--text-primary)]">
+          <p className="text-[1.5rem] font-semibold tracking-tight tabular-nums text-[var(--text-primary)]">
             %{rate}
           </p>
           <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">kazanma</p>
         </div>
       </div>
-      <div className="mt-2 flex justify-center gap-4 text-[length:var(--text-caption)]">
-        <span className="tabular-nums text-[var(--success-text)]">{won} kazanıldı</span>
-        <span className="tabular-nums text-[var(--text-muted)]">{lost} kaybedildi</span>
+      <div className="mt-3 flex justify-center gap-5 text-[length:var(--text-caption)]">
+        <span className="inline-flex items-center gap-1.5 tabular-nums text-[var(--success-text)]">
+          <span className="size-1.5 rounded-full bg-[var(--success-solid)]" aria-hidden />
+          {won} kazanıldı
+        </span>
+        <span className="inline-flex items-center gap-1.5 tabular-nums text-[var(--text-muted)]">
+          <span className="size-1.5 rounded-full bg-[var(--neutral-solid)]" aria-hidden />
+          {lost} kaybedildi
+        </span>
       </div>
     </div>
   );
@@ -518,7 +541,7 @@ export function DashboardChannelBars({
   data: { channel: string; label: string; count: number }[];
 }) {
   const rows = data.filter((d) => d.count > 0);
-  const colors = [GREEN, GREEN_MID, INFO, WARN, "var(--chart-cat-5)", NEUTRAL];
+  const colors = [GREEN, GREEN_MID, INFO, WARN, "#0f7a8a", NEUTRAL];
 
   if (rows.length === 0) {
     return (
@@ -529,7 +552,7 @@ export function DashboardChannelBars({
   }
 
   return (
-    <div className="h-[200px] w-full">
+    <div className="h-[208px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={rows} margin={{ top: 12, right: 8, left: -12, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 8" stroke={GRID} vertical={false} />
@@ -539,7 +562,7 @@ export function DashboardChannelBars({
             axisLine={false}
             tickLine={false}
             interval={0}
-            angle={-15}
+            angle={-12}
             textAnchor="end"
             height={48}
           />
@@ -569,7 +592,7 @@ export function DashboardChannelBars({
               />
             )}
           />
-          <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={36}>
+          <Bar dataKey="count" radius={[10, 10, 0, 0]} maxBarSize={34}>
             {rows.map((row, i) => (
               <Cell key={row.channel} fill={colors[i % colors.length]} />
             ))}

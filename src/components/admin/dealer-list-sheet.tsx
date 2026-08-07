@@ -26,6 +26,7 @@ import { ListToolbar } from "@/components/ui/list-toolbar";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 import { createDealerAction, updateDealerAction } from "@/app/(panel)/panel/bayiler/actions";
 import { startImpersonation } from "@/components/workspace/impersonation-banner";
+import { cn } from "@/lib/utils";
 
 const STATUS_LABEL: Record<string, string> = {
   BASVURU: "Başvuru",
@@ -72,8 +73,10 @@ const STATUSES = ["BASVURU", "INCELEME", "ONAYLI", "AKTIF", "RISKLI", "BLOKE", "
 const MEMBERSHIP_TIERS = ["STANDART", "PREMIUM", "VIP"] as const;
 const PAYMENT_METHODS = ["VADELI", "PESIN", "HAVALE", "KARMA"] as const;
 
-const selectClassName =
-  "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const fieldControlClass =
+  "h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm text-stone-900 outline-none transition-colors placeholder:text-stone-400 focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-500";
+
+const selectClassName = fieldControlClass;
 
 export type DealerRow = {
   id: string;
@@ -114,9 +117,9 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-[length:var(--text-caption)] text-[var(--text-muted)]">
+      <Label htmlFor={id} className="text-sm font-medium text-stone-700 dark:text-zinc-300">
         {label}
-        {required ? <span className="text-[var(--danger-text)]"> *</span> : null}
+        {required ? <span className="text-red-600"> *</span> : null}
       </Label>
       {children}
     </div>
@@ -125,11 +128,13 @@ function Field({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3">
-      <h3 className="text-[length:var(--text-caption)] font-semibold tracking-[0.04em] text-[var(--text-muted)] uppercase">
-        {title}
-      </h3>
-      <div className="space-y-3">{children}</div>
+    <section className="space-y-4">
+      <div className="border-b border-stone-100 pb-2 dark:border-zinc-800">
+        <h3 className="text-xs font-medium tracking-wide text-stone-500 uppercase dark:text-zinc-500">
+          {title}
+        </h3>
+      </div>
+      <div className="space-y-4">{children}</div>
     </section>
   );
 }
@@ -176,7 +181,7 @@ export function DealerListSheet({
         minSize: 180,
         cell: ({ row }) => (
           <span
-            className="block max-w-[220px] truncate font-medium text-[var(--text-primary)]"
+            className="block max-w-[220px] truncate font-medium text-stone-900 dark:text-zinc-50"
             title={row.original.unvan}
           >
             {row.original.unvan}
@@ -189,7 +194,7 @@ export function DealerListSheet({
         cell: ({ getValue }) => {
           const type = String(getValue());
           return (
-            <span className="whitespace-nowrap text-[var(--text-secondary)]">
+            <span className="whitespace-nowrap text-stone-600 dark:text-zinc-400">
               {DEALER_TYPE_LABEL[type] ?? type}
             </span>
           );
@@ -212,7 +217,9 @@ export function DealerListSheet({
         accessorKey: "city",
         header: "Şehir",
         cell: ({ getValue }) => (
-          <span className="text-[var(--text-secondary)]">{(getValue() as string | null) || "-"}</span>
+          <span className="text-stone-600 dark:text-zinc-400">
+            {(getValue() as string | null) || "-"}
+          </span>
         ),
       },
       {
@@ -222,7 +229,10 @@ export function DealerListSheet({
         cell: ({ getValue }) => {
           const email = getValue() as string | null;
           return (
-            <span className="block max-w-[180px] truncate text-[var(--text-secondary)]" title={email ?? undefined}>
+            <span
+              className="block max-w-[180px] truncate text-stone-600 dark:text-zinc-400"
+              title={email ?? undefined}
+            >
               {email || "-"}
             </span>
           );
@@ -232,7 +242,7 @@ export function DealerListSheet({
         accessorKey: "phone",
         header: "Telefon",
         cell: ({ getValue }) => (
-          <span className="whitespace-nowrap tabular-nums text-[var(--text-secondary)]">
+          <span className="whitespace-nowrap tabular-nums text-stone-600 dark:text-zinc-400">
             {(getValue() as string | null) || "-"}
           </span>
         ),
@@ -244,13 +254,13 @@ export function DealerListSheet({
           row.original.priceListName ? (
             <Link
               href="/panel/fiyat-listeleri"
-              className="text-[var(--text-secondary)] hover:text-[var(--primary-solid)] hover:underline"
+              className="text-stone-600 hover:text-[#1B5E3A] hover:underline dark:text-zinc-400"
               onClick={(e) => e.stopPropagation()}
             >
               {row.original.priceListName}
             </Link>
           ) : (
-            <span className="text-[var(--text-muted)]">-</span>
+            <span className="text-stone-400">-</span>
           ),
       },
       {
@@ -266,6 +276,7 @@ export function DealerListSheet({
                 variant="ghost"
                 size="icon-sm"
                 aria-label="İşlemler"
+                className="text-stone-400 hover:text-stone-700"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="size-4" />
@@ -280,7 +291,7 @@ export function DealerListSheet({
                   router.refresh();
                 }}
               >
-                Bu bayi olarak görüntüle
+                Bu hesap olarak görüntüle
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -291,18 +302,20 @@ export function DealerListSheet({
   );
 
   return (
-    <div className="space-y-3">
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Ünvan, şehir, e-posta veya telefon ara…"
-        trailing={
-          <Button type="button" onClick={openCreate} className="h-8 gap-1.5">
-            <Plus className="size-4" />
-            Yeni bayi
-          </Button>
-        }
-      />
+    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="border-b border-stone-200 px-3 py-2 dark:border-zinc-800">
+        <ListToolbar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Ünvan, şehir, e-posta veya telefon ara…"
+          trailing={
+            <Button type="button" onClick={openCreate} className="h-9 gap-1.5">
+              <Plus className="size-4" />
+              Yeni bayi/müşteri
+            </Button>
+          }
+        />
+      </div>
 
       <DataTable
         data={dealers}
@@ -328,12 +341,12 @@ export function DealerListSheet({
           return hay.includes(q);
         }}
         onRowOpen={openEdit}
-        emptyTitle="Bayi kaydı yok"
-        emptyDescription="Yeni bayi ekleyerek listeyi oluşturun."
+        emptyTitle="Bayi/müşteri kaydı yok"
+        emptyDescription="Yeni bayi/müşteri ekleyerek listeyi oluşturun."
         emptyAction={
           <Button type="button" onClick={openCreate} className="gap-1.5">
             <Plus className="size-4" />
-            Yeni bayi
+            Yeni bayi/müşteri
           </Button>
         }
         filterEmptyTitle="Filtre sonucu boş"
@@ -341,12 +354,12 @@ export function DealerListSheet({
       />
 
       <Sheet open={mode !== "closed"} onOpenChange={(open) => !open && close()}>
-        <SheetContent className="w-full gap-0 p-0 sm:max-w-lg">
-          <SheetHeader className="border-b border-[var(--border)] px-4 py-3 text-left">
-            <SheetTitle className="pr-8">
-              {mode === "edit" ? "Bayi düzenle" : "Yeni bayi"}
+        <SheetContent className="w-full gap-0 border-stone-200 bg-white p-0 sm:max-w-lg dark:border-zinc-800 dark:bg-zinc-950">
+          <SheetHeader className="space-y-1 border-b border-stone-200 px-5 py-4 text-left dark:border-zinc-800">
+            <SheetTitle className="pr-8 text-lg font-semibold tracking-tight text-stone-900 dark:text-zinc-50">
+              {mode === "edit" ? "Bayi/müşteri düzenle" : "Yeni bayi/müşteri"}
             </SheetTitle>
-            <SheetDescription>
+            <SheetDescription className="text-sm text-stone-500 dark:text-zinc-400">
               Bayi, HORECA, zincir market ve ara toptancı kayıtları aynı formdan yönetilir.
             </SheetDescription>
           </SheetHeader>
@@ -361,7 +374,7 @@ export function DealerListSheet({
               <input type="hidden" name="id" value={editing.id} />
             ) : null}
 
-            <div className="flex-1 space-y-6 overflow-y-auto px-4 py-4">
+            <div className="flex-1 space-y-8 overflow-y-auto bg-stone-50/60 px-5 py-5 dark:bg-zinc-950">
               <Section title="Firma bilgileri">
                 <Field id="dealer-unvan" label="Ünvan" required>
                   <Input
@@ -370,7 +383,7 @@ export function DealerListSheet({
                     defaultValue={editing?.unvan ?? ""}
                     required
                     aria-required="true"
-                    className="h-9"
+                    className={fieldControlClass}
                   />
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
@@ -413,7 +426,7 @@ export function DealerListSheet({
                       id="dealer-vergi-no"
                       name="vergiNo"
                       defaultValue={editing?.vergiNo ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                   <Field id="dealer-vergi-dairesi" label="Vergi dairesi">
@@ -421,7 +434,7 @@ export function DealerListSheet({
                       id="dealer-vergi-dairesi"
                       name="vergiDairesi"
                       defaultValue={editing?.vergiDairesi ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                 </div>
@@ -450,7 +463,7 @@ export function DealerListSheet({
                       name="email"
                       type="email"
                       defaultValue={editing?.email ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                   <Field id="dealer-phone" label="Telefon">
@@ -459,7 +472,7 @@ export function DealerListSheet({
                       name="phone"
                       type="tel"
                       defaultValue={editing?.phone ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                 </div>
@@ -468,7 +481,7 @@ export function DealerListSheet({
                     id="dealer-address"
                     name="addressLine"
                     defaultValue={editing?.addressLine ?? ""}
-                    className="h-9"
+                    className={fieldControlClass}
                   />
                 </Field>
                 <div className="grid grid-cols-2 gap-3">
@@ -477,7 +490,7 @@ export function DealerListSheet({
                       id="dealer-city"
                       name="city"
                       defaultValue={editing?.city ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                   <Field id="dealer-district" label="İlçe">
@@ -485,7 +498,7 @@ export function DealerListSheet({
                       id="dealer-district"
                       name="district"
                       defaultValue={editing?.district ?? ""}
-                      className="h-9"
+                      className={fieldControlClass}
                     />
                   </Field>
                 </div>
@@ -494,7 +507,7 @@ export function DealerListSheet({
                     id="dealer-delivery-address"
                     name="deliveryAddressLine"
                     defaultValue={editing?.deliveryAddressLine ?? ""}
-                    className="h-9"
+                    className={fieldControlClass}
                   />
                 </Field>
               </Section>
@@ -521,7 +534,7 @@ export function DealerListSheet({
                       id="dealer-iban"
                       name="iban"
                       defaultValue={editing?.iban ?? ""}
-                      className="h-9"
+                      className={cn(fieldControlClass, "font-mono text-[13px]")}
                       autoComplete="off"
                     />
                   </Field>
@@ -539,7 +552,7 @@ export function DealerListSheet({
                           ? editing.creditLimitKurus / 100
                           : ""
                       }
-                      className="h-9"
+                      className={cn(fieldControlClass, "tabular-nums")}
                     />
                   </Field>
                   <Field id="dealer-payment-term" label="Vade (gün)">
@@ -548,7 +561,7 @@ export function DealerListSheet({
                       name="paymentTermDays"
                       type="number"
                       defaultValue={editing?.paymentTermDays ?? ""}
-                      className="h-9"
+                      className={cn(fieldControlClass, "tabular-nums")}
                     />
                   </Field>
                 </div>
@@ -557,7 +570,7 @@ export function DealerListSheet({
                     id="dealer-delivery-zone"
                     name="deliveryZoneCode"
                     defaultValue={editing?.deliveryZoneCode ?? ""}
-                    className="h-9"
+                    className={fieldControlClass}
                   />
                 </Field>
               </Section>
@@ -597,20 +610,27 @@ export function DealerListSheet({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="h-10 w-full border-stone-200 text-stone-700 hover:bg-white dark:border-zinc-700 dark:text-zinc-300"
                     onClick={() => impersonate(editing)}
                   >
-                    Bu bayi olarak görüntüle
+                    Bu hesap olarak görüntüle
                   </Button>
                 ) : null}
               </Section>
             </div>
 
-            <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t border-[var(--border)] bg-[var(--surface)] px-4 py-3">
-              <Button type="button" variant="outline" onClick={close}>
+            <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t border-stone-200 bg-white px-5 py-3.5 dark:border-zinc-800 dark:bg-zinc-950">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={close}
+                className="h-10 text-stone-600 hover:text-stone-900"
+              >
                 İptal
               </Button>
-              <Button type="submit">{mode === "edit" ? "Kaydet" : "Oluştur"}</Button>
+              <Button type="submit" className="h-10 min-w-[6.5rem]">
+                {mode === "edit" ? "Kaydet" : "Oluştur"}
+              </Button>
             </div>
           </form>
         </SheetContent>

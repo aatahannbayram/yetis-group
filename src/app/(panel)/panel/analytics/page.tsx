@@ -121,7 +121,7 @@ export default async function AdminAnalyticsPage() {
       <section className="mt-4 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
         <ChartPanel
           title="Aşama hunisi"
-          subtitle="Bayi adaylarının pipeline dağılımı"
+          subtitle="Bayi/Müşteri adaylarının pipeline dağılımı"
           href="/panel/bayi-adaylari"
         >
           <StageFunnelChart data={snap.crm.stageCounts} />
@@ -157,7 +157,7 @@ export default async function AdminAnalyticsPage() {
       <section className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <MetricBlock
           icon={Users2}
-          title="Bayiler"
+          title="Bayi/Müşteriler"
           href="/panel/bayiler"
           rows={[
             { label: "Toplam", value: String(snap.dealers.total) },

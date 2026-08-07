@@ -19,6 +19,14 @@ function createPrismaClient() {
     globalForPrisma.pgPool ??
     new Pool({
       connectionString: env.DATABASE_URL,
+      // Bounded + fail-fast: an unbounded pool with no connect timeout can
+      // hang a request forever if connections pile up (e.g. across restarts
+      // that don't cleanly release them back to a pooled endpoint like
+      // Neon), which then reads as a stuck process to the host's watchdog
+      // and triggers a restart loop instead of a clear, fast error.
+      max: 10,
+      connectionTimeoutMillis: 10_000,
+      idleTimeoutMillis: 30_000,
     });
 
   if (env.NODE_ENV !== "production") {

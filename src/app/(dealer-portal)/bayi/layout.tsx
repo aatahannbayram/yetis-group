@@ -34,14 +34,14 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
 
   if (!dealerId) {
     if (staff) redirect("/panel");
-    redirect("/");
+    redirect("/urunler");
   }
 
   const dealer = await prisma.dealer.findUnique({
     where: { id: dealerId },
     select: { id: true, unvan: true },
   });
-  if (!dealer) redirect(staff ? "/panel" : "/");
+  if (!dealer) redirect(staff ? "/panel" : "/urunler");
 
   const [unreadNotifications, cart] = await Promise.all([
     countUnreadDealer(dealer.id),

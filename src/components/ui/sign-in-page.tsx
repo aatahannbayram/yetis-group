@@ -212,7 +212,9 @@ function SignInForm({ onNeedSignup }: { onNeedSignup: () => void }) {
 
     const me = await fetch("/api/me").then((res) => (res.ok ? res.json() : null));
     setPending(false);
-    const destination = me?.isStaff ? "/panel" : me?.hasDealer ? "/bayi" : "/urunler";
+    // Staff -> panel; everyone else -> dealer portal. /bayi self-guards and
+    // bounces non-dealers to /urunler, so this avoids any session-cookie race.
+    const destination = me?.isStaff ? "/panel" : "/bayi";
     router.push(destination);
     router.refresh();
   }

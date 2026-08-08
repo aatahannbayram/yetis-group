@@ -46,8 +46,11 @@ async function main() {
     const doc = new PDFDocument({
       size: "A4",
       margins: { top: 26, bottom: 40, left: 34, right: 34 },
+      // pdfkit supports `font: false` at runtime to skip loading its bundled
+      // default font before custom fonts are registered below; @types/pdfkit
+      // only declares `font?: string`, so the cast must go through `unknown`.
       font: false,
-    } as ConstructorParameters<typeof PDFDocument>[0]);
+    } as unknown as ConstructorParameters<typeof PDFDocument>[0]);
     doc.registerFont("TR", FONT_REG);
     doc.registerFont("TR-Bold", FONT_BOLD);
 
@@ -60,7 +63,6 @@ async function main() {
     const right = doc.page.width - doc.page.margins.right;
     const pageWidth = right - left;
     const top = doc.page.margins.top;
-    // Keep all content above this so PDFKit never auto-creates page 2
     const safeBottom = doc.page.height - doc.page.margins.bottom - 4;
 
     doc.save();
@@ -112,9 +114,8 @@ async function main() {
       y += 11;
     };
 
-    // --- 1 ---
-    h2("1. Gosterim sonucu (canli dogrulama)");
-    bullet("Degisiklik canlida dogrulandi. Bayi kontrol paneli: /bayi");
+    h2("1. Gösterim sonucu (canlı doğrulama)");
+    bullet("Değişiklik canlıda doğrulandı. Bayi kontrol paneli: /bayi");
 
     const box1H = 72;
     roundedRect(doc, left, y, pageWidth, box1H, SURFACE, LINE);
@@ -123,11 +124,11 @@ async function main() {
     doc.restore();
 
     const showRows: Array<[string, string]> = [
-      ["Baslik", "Hos geldiniz, Test Bayi"],
-      ["Etiket", "MARKET / SARKUTERI"],
-      ["Ust menu", "Ozet | Siparis | Gecmis | Teslimat | Cari"],
-      ["Diger", "Belgeler / Firsatlar / Adresler / Firma"],
-      ["Ozet", "Kredi limiti, gecen siparisi tekrarla, kayitli listeler, son siparis durumu"],
+      ["Başlık", "Hoş geldiniz, Test Bayi"],
+      ["Etiket", "MARKET / ŞARKÜTERİ"],
+      ["Üst menü", "Özet | Sipariş | Geçmiş | Teslimat | Cari"],
+      ["Diğer", "Belgeler / Fırsatlar / Adresler / Firma"],
+      ["Özet", "Kredi limiti, geçen siparişi tekrarla, kayıtlı listeler, son sipariş durumu"],
     ];
     let ry = y + 6;
     for (const [k, v] of showRows) {
@@ -143,15 +144,13 @@ async function main() {
     }
     y += box1H + 7;
 
-    // --- 2 ---
-    h2("2. Bayi paneline giris adimlari");
-    bullet(`1. Magazada sag ust "Bayi Girisi" butonu -> ${SITE}/auth`);
-    bullet('2. Bayi e-postasi + sifre ile "Giris Yap".');
-    bullet("3. Otomatik /bayi paneline dusersin (oncesinde /urunler magazasina gidiyordu).");
+    h2("2. Bayi paneline giriş adımları");
+    bullet(`1. Mağazada sağ üst "Bayi Girişi" butonu -> ${SITE}/auth`);
+    bullet('2. Bayi e-postası + şifre ile "Giriş Yap".');
+    bullet("3. Otomatik /bayi paneline düşersin (önceden /urunler mağazasına gidiyordu).");
     y += 2;
 
-    // --- 3 ---
-    h2("3. Demo giris bilgileri");
+    h2("3. Demo giriş bilgileri");
     const colGap = 8;
     const colW = (pageWidth - colGap) / 2;
     const box2H = 78;
@@ -164,17 +163,17 @@ async function main() {
 
     const leftCreds: Array<[string, string]> = [
       ["Bayi e-posta", "bayi@yetisgrup.test"],
-      ["Sifre", "YetisDemo1!"],
+      ["Şifre", "YetisDemo1!"],
       ["HORECA e-posta", "horeca@yetisgrup.test"],
-      ["HORECA sifre", "YetisDemo1!"],
+      ["HORECA şifre", "YetisDemo1!"],
     ];
     const rightCreds: Array<[string, string]> = [
       ["Site", SITE],
-      ["Giris", `${SITE}/auth`],
+      ["Giriş", `${SITE}/auth`],
       ["Bayi paneli", `${SITE}/bayi`],
-      ["Yonetim", `${SITE}/panel`],
+      ["Yönetim", `${SITE}/panel`],
       ["Admin e-posta", "admin@yetisgrup.test"],
-      ["Admin sifre", "YetisDemo1!"],
+      ["Admin şifre", "YetisDemo1!"],
     ];
 
     ry = y + 7;
@@ -209,29 +208,27 @@ async function main() {
       .font("TR")
       .fontSize(7)
       .fillColor(BRAND)
-      .text("Sifreler DB'de yoksa bir kez: pnpm demo:passwords", left + 9, y + 5, {
+      .text("Şifreler DB'de yoksa bir kez: pnpm demo:passwords", left + 9, y + 5, {
         width: pageWidth - 18,
         lineBreak: false,
       });
     y += 24;
 
-    // --- 4 ---
-    h2("4. Yonlendirme notlari");
+    h2("4. Yönlendirme notları");
     bullet("- Personel (admin@yetisgrup.test) -> /panel");
-    bullet("- Bayi kaydi olan kullanici -> /bayi");
-    bullet("- Bayi kaydi olmayan / onay bekleyen -> /urunler");
+    bullet("- Bayi kaydı olan kullanıcı -> /bayi");
+    bullet("- Bayi kaydı olmayan / onay bekleyen -> /urunler");
     y += 2;
 
-    // --- 5 ---
-    h2("5. Bayi paneli ekran haritasi");
+    h2("5. Bayi paneli ekran haritası");
     const routes: Array<[string, string]> = [
-      ["/bayi", "Ozet: hos geldin, kredi limiti, tekrarla, listeler, son siparis"],
-      ["/bayi/siparis", "Siparis / sepet workspace"],
-      ["/bayi/siparislerim", "Siparis gecmisi (Gecmis)"],
+      ["/bayi", "Özet: hoş geldin, kredi limiti, tekrarla, listeler, son sipariş"],
+      ["/bayi/siparis", "Sipariş / sepet workspace"],
+      ["/bayi/siparislerim", "Sipariş geçmişi (Geçmiş)"],
       ["/bayi/teslimat", "Teslimat takibi"],
       ["/bayi/cari", "Cari bakiye ve hareketler"],
       ["/bayi/belgeler", "Belgeler (proforma vb.)"],
-      ["/bayi/firsatlar", "Firsatlar"],
+      ["/bayi/firsatlar", "Fırsatlar"],
       ["/bayi/adreslerim", "Teslimat adresleri"],
       ["/bayi/firmam", "Firma bilgileri"],
       ["/bayi/bildirimler", "Bildirimler"],
@@ -245,7 +242,7 @@ async function main() {
     doc.restore();
     doc.font("TR-Bold").fontSize(7).fillColor("#FFFFFF");
     doc.text("Rota", left + 7, y + 3, { width: 120, lineBreak: false });
-    doc.text("Aciklama", left + 135, y + 3, { width: pageWidth - 145, lineBreak: false });
+    doc.text("Açıklama", left + 135, y + 3, { width: pageWidth - 145, lineBreak: false });
     y += th;
 
     routes.forEach(([route, desc], i) => {
@@ -267,14 +264,13 @@ async function main() {
     });
     y += 6;
 
-    // --- 6 ---
-    h2("6. Onerilen sunum akisi");
-    bullet(`1. ${SITE} -> "Bayi Girisi" -> auth`);
-    bullet("2. bayi@yetisgrup.test / YetisDemo1! -> /bayi ozet");
-    bullet("3. Siparis -> urun ekle / sepet");
-    bullet("4. Gecmis + Teslimat");
+    h2("6. Önerilen sunum akışı");
+    bullet(`1. ${SITE} -> "Bayi Girişi" -> auth`);
+    bullet("2. bayi@yetisgrup.test / YetisDemo1! -> /bayi özet");
+    bullet("3. Sipariş -> ürün ekle / sepet");
+    bullet("4. Geçmiş + Teslimat");
     bullet("5. Cari + Belgeler (proforma)");
-    bullet(`6. Istege bagli: ${SITE}/panel (admin)`);
+    bullet(`6. İsteğe bağlı: ${SITE}/panel (admin)`);
     y += 3;
 
     const noteH = 28;
@@ -283,7 +279,7 @@ async function main() {
       .font("TR-Bold")
       .fontSize(7)
       .fillColor(BRAND)
-      .text("Magaza vs bayi paneli", left + 9, y + 4, {
+      .text("Mağaza vs bayi paneli", left + 9, y + 4, {
         width: pageWidth - 18,
         lineBreak: false,
       });
@@ -292,15 +288,14 @@ async function main() {
       .fontSize(7)
       .fillColor(INK)
       .text(
-        `Vitrin: ${SITE} ve /urunler. Operasyon: /bayi. Bayi hesabi her iki yuzeye de erisebilir.`,
+        `Vitrin: ${SITE} ve /urunler. Operasyon: /bayi. Bayi hesabı her iki yüzeye de erişebilir.`,
         left + 9,
         y + 15,
         { width: pageWidth - 18, lineBreak: false },
       );
     y += noteH + 8;
 
-    // Footer inside safe area (prevents blank page 2)
-    const footerY = Math.min(y + 4, safeBottom - 14);
+    const footerY = Math.min(y + 2, safeBottom - 14);
     doc
       .moveTo(left, footerY)
       .lineTo(right, footerY)
@@ -312,7 +307,7 @@ async function main() {
       .fontSize(6.5)
       .fillColor(MUTED)
       .text(
-        "Yetis Grup  |  Temiz Gidaya Eris, Saglikli Yetis  |  info@yetisgrup.com",
+        "Yetiş Grup  |  Temiz Gıdaya Eriş, Sağlıklı Yetiş  |  info@yetisgrup.com",
         left,
         footerY + 4,
         { width: pageWidth, align: "center", lineBreak: false },

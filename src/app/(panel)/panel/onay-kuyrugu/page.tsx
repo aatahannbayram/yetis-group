@@ -12,18 +12,16 @@ import { formatMoney } from "@/lib/format/money";
 import { formatDateTime } from "@/lib/format/date";
 import { money } from "@/domain/money";
 
-const QUEUE_STATUSES = new Set(["SUBMITTED", "UNDER_REVIEW"]);
+const QUEUE_STATUSES = ["SUBMITTED", "UNDER_REVIEW"] as const;
 
 export default async function OnayKuyruguPage() {
-  const [allOrders, dealers, variants, priceLists, carts] = await Promise.all([
-    listOrders(),
+  const [queueOrders, dealers, variants, priceLists, carts] = await Promise.all([
+    listOrders({ statusIn: [...QUEUE_STATUSES] }),
     listDealers(),
     listShippableVariants(),
     listPriceListOptions(),
     listActiveCartsForAdmin(),
   ]);
-
-  const queueOrders = allOrders.filter((o) => QUEUE_STATUSES.has(o.status));
 
   const rows: OrderRow[] = queueOrders.map((o) => ({
     id: o.id,

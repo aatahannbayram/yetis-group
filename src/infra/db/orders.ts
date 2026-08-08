@@ -3,8 +3,9 @@ import { assertOrderTransition, type OrderStatus } from "@/domain/order/state-ma
 import { addLedgerEntry } from "@/infra/db/ledger";
 import { notifyOrderCreated, notifyOrderStatusChanged } from "@/infra/db/notifications";
 
-export async function listOrders() {
+export async function listOrders(filter?: { statusIn?: OrderStatus[] }) {
   return prisma.order.findMany({
+    where: filter?.statusIn ? { status: { in: filter.statusIn } } : undefined,
     orderBy: { createdAt: "desc" },
     include: {
       dealer: { select: { id: true, unvan: true, dealerType: true, email: true } },

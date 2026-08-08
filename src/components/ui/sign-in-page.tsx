@@ -212,7 +212,8 @@ function SignInForm({ onNeedSignup }: { onNeedSignup: () => void }) {
 
     const me = await fetch("/api/me").then((res) => (res.ok ? res.json() : null));
     setPending(false);
-    router.push(me?.isStaff ? "/panel" : "/urunler");
+    const destination = me?.isStaff ? "/panel" : me?.hasDealer ? "/bayi" : "/urunler";
+    router.push(destination);
     router.refresh();
   }
 

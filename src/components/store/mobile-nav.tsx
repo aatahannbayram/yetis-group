@@ -30,10 +30,12 @@ const linkClass =
 export function MobileNav({
   isLoggedIn,
   isStaff,
+  hasDealer = false,
   overlay = false,
 }: {
   isLoggedIn: boolean;
   isStaff: boolean;
+  hasDealer?: boolean;
   overlay?: boolean;
 }) {
   const router = useRouter();
@@ -93,6 +95,15 @@ export function MobileNav({
                 <SheetClose asChild>
                   <Link href="/panel" className={linkClass}>
                     Yönetim Paneli
+                  </Link>
+                </SheetClose>
+              </li>
+            ) : null}
+            {hasDealer ? (
+              <li>
+                <SheetClose asChild>
+                  <Link href="/bayi" className={linkClass}>
+                    Bayi Panelim
                   </Link>
                 </SheetClose>
               </li>

@@ -7,7 +7,7 @@ import { MobileNav } from "@/components/store/mobile-nav";
 import { StoreUserMenu } from "@/components/store/store-user-menu";
 import { StickyHeaderShell } from "@/components/store/sticky-header-shell";
 import { auth } from "@/infra/auth/server";
-import { isStaffUser } from "@/infra/db/users";
+import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -43,12 +43,18 @@ function AuthActionsFallback({ isOverlay }: { isOverlay: boolean }) {
 
 async function HeaderAuthActions({ isOverlay }: { isOverlay: boolean }) {
   const session = await auth.api.getSession({ headers: await headers() });
-  const isStaff = session ? await isStaffUser(session.user.id) : false;
+  const [isStaff, dealerId] = session
+    ? await Promise.all([isStaffUser(session.user.id), getUserDealerId(session.user.id)])
+    : [false, null];
 
   return (
     <>
       {session ? (
-        <StoreUserMenu userName={session.user.name} isStaff={isStaff} />
+        <StoreUserMenu
+          userName={session.user.name}
+          isStaff={isStaff}
+          hasDealer={dealerId !== null}
+        />
       ) : (
         <div className="hidden items-center gap-2 sm:flex">
           <Link
@@ -70,7 +76,12 @@ async function HeaderAuthActions({ isOverlay }: { isOverlay: boolean }) {
           </Link>
         </div>
       )}
-      <MobileNav isLoggedIn={!!session} isStaff={isStaff} overlay={isOverlay} />
+      <MobileNav
+        isLoggedIn={!!session}
+        isStaff={isStaff}
+        hasDealer={dealerId !== null}
+        overlay={isOverlay}
+      />
     </>
   );
 }

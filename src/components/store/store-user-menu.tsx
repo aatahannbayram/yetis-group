@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Store, User } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,15 @@ function initials(name: string) {
   return name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 }
 
-export function StoreUserMenu({ userName, isStaff }: { userName: string; isStaff: boolean }) {
+export function StoreUserMenu({
+  userName,
+  isStaff,
+  hasDealer,
+}: {
+  userName: string;
+  isStaff: boolean;
+  hasDealer: boolean;
+}) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -49,6 +57,14 @@ export function StoreUserMenu({ userName, isStaff }: { userName: string; isStaff
             <Link href="/panel">
               <LayoutDashboard />
               Yönetim Paneli
+            </Link>
+          </DropdownMenuItem>
+        ) : null}
+        {hasDealer ? (
+          <DropdownMenuItem asChild>
+            <Link href="/bayi">
+              <Store />
+              Bayi Panelim
             </Link>
           </DropdownMenuItem>
         ) : null}

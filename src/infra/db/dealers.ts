@@ -99,6 +99,32 @@ export async function updateDealer(id: string, input: DealerInput) {
   return prisma.dealer.update({ where: { id }, data: input });
 }
 
+export type DealerContactInfoInput = {
+  email: string | null;
+  phone: string | null;
+  city: string | null;
+  district: string | null;
+  addressLine: string | null;
+};
+
+/**
+ * Narrow, dealer-portal-safe update: contact/billing-address fields only.
+ * Never touches unvan, vergi, status, credit limit, price list or sales rep
+ * - those stay staff-only (edited via updateDealer in the admin panel).
+ */
+export async function updateDealerContactInfo(dealerId: string, input: DealerContactInfoInput) {
+  return prisma.dealer.update({
+    where: { id: dealerId },
+    data: {
+      email: input.email,
+      phone: input.phone,
+      city: input.city,
+      district: input.district,
+      addressLine: input.addressLine,
+    },
+  });
+}
+
 /**
  * After better-auth sign-up: attach BASVURU dealer + CRM lead.
  * Idempotent if the user already has a dealerId.

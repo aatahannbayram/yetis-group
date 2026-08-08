@@ -6,6 +6,9 @@ import { availableKgFromMovements } from "@/infra/db/inventory";
 import { formatDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
+import { DealerOffersList, type DealerOffer } from "@/components/dealer/dealer-offers-list";
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /** SKT'ye 21 gün kalan, sevkiyat edilebilir lotlar: bayiye "fırsat" olarak gösterilir. */
 export default async function BayiFirsatlarPage() {
@@ -31,24 +34,30 @@ export default async function BayiFirsatlarPage() {
     take: 24,
   });
 
-  const offers = lots
-    .map((lot) => {
-      const available = availableKgFromMovements(lot.movements);
-      return {
-        id: lot.id,
-        lotNumber: lot.lotNumber,
-        expirationDate: lot.expirationDate,
-        availableKg: available.toNumber(),
-        sku: lot.variant.sku,
-        packSize: lot.variant.packSize,
-        priceKurus: lot.variant.pricePerUnitKurus,
-        productName: lot.variant.product.name,
-        slug: lot.variant.product.slug,
-      };
-    })
-    .filter((o) => o.availableKg > 0);
-
   const kgFmt = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 });
+
+  const offers: DealerOffer[] = [];
+  for (const lot of lots) {
+    const availableKg = availableKgFromMovements(lot.movements).toNumber();
+    if (availableKg <= 0) continue;
+    const daysLeft = Math.max(
+      0,
+      Math.ceil((lot.expirationDate.getTime() - now.getTime()) / MS_PER_DAY),
+    );
+    offers.push({
+      id: lot.id,
+      productName: lot.variant.product.name,
+      slug: lot.variant.product.slug,
+      imageUrl: lot.variant.product.imageUrl,
+      packLabel: lot.variant.packSize ?? lot.variant.sku,
+      lotNumber: lot.lotNumber,
+      sku: lot.variant.sku,
+      expiryLabel: formatDate(lot.expirationDate),
+      daysLeft,
+      remainingKgLabel: kgFmt.format(availableKg),
+      priceLabel: formatMoney(money(lot.variant.pricePerUnitKurus)),
+    });
+  }
 
   return (
     <div className="space-y-6 pb-24 sm:pb-6">
@@ -76,35 +85,7 @@ export default async function BayiFirsatlarPage() {
           </Link>
         </div>
       ) : (
-        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
-          {offers.map((o) => (
-            <li
-              key={o.id}
-              className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
-            >
-              <div className="min-w-0">
-                <p className="font-semibold text-[var(--panel-ink)]">{o.productName}</p>
-                <p className="mt-0.5 text-xs text-[var(--panel-ink-muted)]">
-                  {o.packSize ?? o.sku} · Lot {o.lotNumber} · SKT {formatDate(o.expirationDate)}
-                </p>
-                <p className="mt-1 text-sm text-amber-800">
-                  Kalan: {kgFmt.format(o.availableKg)} kg
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <p className="text-sm font-semibold tabular-nums">
-                  {formatMoney(money(o.priceKurus))}
-                </p>
-                <Link
-                  href="/bayi/siparis"
-                  className="inline-flex h-9 items-center rounded-lg bg-[var(--primary-solid)] px-3 text-xs font-semibold text-white hover:bg-[var(--primary-hover)]"
-                >
-                  Siparişe git
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <DealerOffersList offers={offers} />
       )}
     </div>
   );

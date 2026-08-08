@@ -5,6 +5,7 @@ import { prisma } from "@/infra/db/client";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
+import { DealerProfileFields } from "@/components/dealer/dealer-profile-fields";
 
 const TYPE_LABEL: Record<string, string> = {
   BAYI: "Market / Şarküteri",
@@ -48,7 +49,7 @@ export default async function BayiFirmamPage() {
       <header className="border-b border-[var(--panel-border)] pb-4">
         <h1 className="text-2xl font-semibold tracking-tight text-[var(--panel-ink)]">Firmam</h1>
         <p className="mt-1 text-sm text-[var(--panel-ink-muted)]">
-          Ticari kimlik ve hesap bilgileri (değişiklik için destek)
+          Ticari kimlik ve hesap bilgileri
         </p>
       </header>
 
@@ -78,31 +79,25 @@ export default async function BayiFirmamPage() {
           </div>
         </div>
 
-        <dl className="grid gap-0 sm:grid-cols-2">
-          <Field label="Vergi no" value={dealer.vergiNo} />
-          <Field label="Vergi dairesi" value={dealer.vergiDairesi} />
-          <Field label="E-posta" value={dealer.email} />
-          <Field label="Telefon" value={dealer.phone} />
-          <Field label="Şehir / ilçe" value={[dealer.district, dealer.city].filter(Boolean).join(" / ") || null} />
-          <Field label="Fatura adresi" value={dealer.addressLine} />
-          <Field
-            label="Kredi limiti"
-            value={dealer.creditLimitKurus != null ? formatMoney(money(dealer.creditLimitKurus)) : null}
-          />
-          <Field
-            label="Vade"
-            value={dealer.paymentTermDays != null ? `${dealer.paymentTermDays} gün` : null}
-          />
-          <Field label="Fiyat listesi" value={dealer.priceList?.name ?? null} />
-          <Field
-            label="Satış temsilcisi"
-            value={
-              dealer.salesRep
-                ? `${dealer.salesRep.name}${dealer.salesRep.email ? ` · ${dealer.salesRep.email}` : ""}`
-                : null
-            }
-          />
-        </dl>
+        <DealerProfileFields
+          vergiNo={dealer.vergiNo}
+          vergiDairesi={dealer.vergiDairesi}
+          email={dealer.email}
+          phone={dealer.phone}
+          city={dealer.city}
+          district={dealer.district}
+          addressLine={dealer.addressLine}
+          creditLimitLabel={
+            dealer.creditLimitKurus != null ? formatMoney(money(dealer.creditLimitKurus)) : null
+          }
+          paymentTermLabel={dealer.paymentTermDays != null ? `${dealer.paymentTermDays} gün` : null}
+          priceListName={dealer.priceList?.name ?? null}
+          salesRepLabel={
+            dealer.salesRep
+              ? `${dealer.salesRep.name}${dealer.salesRep.email ? ` · ${dealer.salesRep.email}` : ""}`
+              : null
+          }
+        />
       </section>
 
       <section>
@@ -136,17 +131,6 @@ export default async function BayiFirmamPage() {
         </Link>{" "}
         üzerinden yazın.
       </p>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string | null | undefined }) {
-  return (
-    <div className="border-t border-[var(--panel-border)] px-4 py-3 sm:border-t-0 sm:odd:border-r sm:[&:nth-child(-n+2)]:border-t">
-      <dt className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
-        {label}
-      </dt>
-      <dd className="mt-1 text-sm text-[var(--panel-ink)]">{value?.trim() || "—"}</dd>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -207,13 +208,19 @@ export function DealerOrderWorkspace({
               const amount = qty[product.id] ?? v.moq;
               return (
                 <li key={product.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] sm:size-20">
+                  <Link
+                    href={`/urunler/${product.slug}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="group/img relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] sm:size-20"
+                    title={`${product.name} detayını aç`}
+                  >
                     {product.imageUrl ? (
                       <Image
                         src={product.imageUrl}
-                        alt=""
+                        alt={product.name}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover/img:scale-105"
                         sizes="80px"
                       />
                     ) : (
@@ -221,16 +228,23 @@ export function DealerOrderWorkspace({
                         <Package className="size-7" aria-hidden />
                       </span>
                     )}
-                  </div>
+                  </Link>
 
                   <div className="min-w-0 flex-1 space-y-2">
                     <div>
                       <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
                         {product.categoryName}
                       </p>
-                      <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)]">
-                        {product.name}
-                      </h2>
+                      <Link
+                        href={`/urunler/${product.slug}`}
+                        target="_blank"
+                        rel="noopener"
+                        className="block"
+                      >
+                        <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)] transition-colors hover:text-[var(--primary-text)]">
+                          {product.name}
+                        </h2>
+                      </Link>
                     </div>
 
                     {product.variants.length > 1 ? (

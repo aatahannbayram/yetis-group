@@ -20,6 +20,10 @@ export async function middleware(request: NextRequest) {
     const res = await fetch(mapUrl, {
       headers: { Accept: "application/json" },
       next: { revalidate: 300 },
+      // Middleware runs on almost every request. Without a bound here, a
+      // stall on this internal call (DB hiccup, cold start) blocks every
+      // page on the site instead of just this redirect check.
+      signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) return NextResponse.next();
     const map = (await res.json()) as Record<string, { to: string; code: number }>;

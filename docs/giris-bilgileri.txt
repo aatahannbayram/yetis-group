@@ -1,0 +1,48 @@
+Yetiş Grup - Demo giriş bilgileri
+================================
+
+Ortak şifre (tüm demo hesaplar): YetisDemo1!
+
+Şifreleri veritabanına yazmak için (local / staging):
+  pnpm demo:passwords
+
+
+CANLI (prod)
+------------
+Giriş:     https://yetisgrup.com/auth
+Bayi panel: https://yetisgrup.com/bayi
+Yönetim:   https://yetisgrup.com/panel
+Mağaza:    https://yetisgrup.com/urunler
+
+
+LOCAL
+-----
+Giriş:     http://localhost:3000/auth
+Bayi panel: http://localhost:3000/bayi
+Yönetim:   http://localhost:3000/panel
+
+
+DEMO HESAPLAR
+-------------
+
+1) Personel (admin)
+   E-posta: admin@yetisgrup.test
+   Şifre:   YetisDemo1!
+   Giriş sonrası: /panel
+
+2) Bayi (market / şarküteri)
+   E-posta: bayi@yetisgrup.test
+   Şifre:   YetisDemo1!
+   Giriş sonrası: /bayi
+
+3) HORECA
+   E-posta: horeca@yetisgrup.test
+   Şifre:   YetisDemo1!
+   Giriş sonrası: /bayi
+
+
+NOT
+---
+- Giriş tek sayfadan: /auth (mağaza üst menü "Bayi Girişi").
+- Bayi hesabı bir Dealer kaydına bağlı olmalı; aksi halde /bayi açılmaz.
+- Prod'da giriş çalışmıyorsa bir kez prod DATABASE_URL ile pnpm demo:passwords çalıştırın.

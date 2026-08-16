@@ -770,15 +770,23 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum OrderPaymentMethod {
+  HAVALE
+  CARI
+  ONLINE
+}
+
 model Order {
-  id         String      @id @default(cuid())
-  dealerId   String
-  dealer     Dealer      @relation(fields: [dealerId], references: [id])
-  status     OrderStatus @default(SUBMITTED)
-  totalKurus Int
-  note       String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id            String              @id @default(cuid())
+  dealerId      String
+  dealer        Dealer              @relation(fields: [dealerId], references: [id])
+  status        OrderStatus         @default(SUBMITTED)
+  totalKurus    Int
+  note          String?
+  paymentMethod OrderPaymentMethod?
+  paidAt        DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   lines     OrderLine[]
   events    OrderEvent[]

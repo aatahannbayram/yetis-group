@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   Building2,
   Check,
+  CreditCard,
   Landmark,
   Minus,
   Package,
@@ -45,6 +46,11 @@ type PaymentInfo = {
   note: string;
 };
 
+type CariInfo = {
+  eligible: boolean;
+  availableKurus: number | null;
+};
+
 function stockLabel(kg: number) {
   const tone = stockTone(kg);
   return { text: stockAvailabilityLabel(kg), tone };
@@ -58,10 +64,12 @@ export function DealerOrderWorkspace({
   products,
   initialCart,
   payment,
+  cari,
 }: {
   products: DealerCatalogProduct[];
   initialCart: DealerCartView | null;
   payment: PaymentInfo;
+  cari: CariInfo;
 }) {
   const router = useRouter();
   const [cart, setCart] = useState<DealerCartView | null>(initialCart);
@@ -75,8 +83,8 @@ export function DealerOrderWorkspace({
     return init;
   });
   const [qty, setQty] = useState<Record<string, number>>({});
-  const [paymentMethod, setPaymentMethod] = useState<"BANK_TRANSFER" | "ON_ACCOUNT">(
-    payment.bankTransferEnabled ? "BANK_TRANSFER" : "ON_ACCOUNT",
+  const [paymentMethod, setPaymentMethod] = useState<"HAVALE" | "CARI" | "ONLINE">(
+    payment.bankTransferEnabled ? "HAVALE" : "ONLINE",
   );
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -424,23 +432,32 @@ export function DealerOrderWorkspace({
               </legend>
               {payment.bankTransferEnabled ? (
                 <PaymentOption
-                  active={paymentMethod === "BANK_TRANSFER"}
-                  onSelect={() => setPaymentMethod("BANK_TRANSFER")}
+                  active={paymentMethod === "HAVALE"}
+                  onSelect={() => setPaymentMethod("HAVALE")}
                   icon={Landmark}
                   title="Havale / EFT"
                   description="Sipariş sonrası IBAN bilgisi"
                 />
               ) : null}
               <PaymentOption
-                active={paymentMethod === "ON_ACCOUNT"}
-                onSelect={() => setPaymentMethod("ON_ACCOUNT")}
-                icon={Wallet}
-                title="Cari hesap"
-                description="Vade ve limit üzerinden"
+                active={paymentMethod === "ONLINE"}
+                onSelect={() => setPaymentMethod("ONLINE")}
+                icon={CreditCard}
+                title="Online ödeme"
+                description="Kartla anında öde"
               />
+              {cari.eligible ? (
+                <PaymentOption
+                  active={paymentMethod === "CARI"}
+                  onSelect={() => setPaymentMethod("CARI")}
+                  icon={Wallet}
+                  title="Cari hesap"
+                  description="Vade ve limit üzerinden"
+                />
+              ) : null}
             </fieldset>
 
-            {paymentMethod === "BANK_TRANSFER" && payment.bankTransferEnabled ? (
+            {paymentMethod === "HAVALE" && payment.bankTransferEnabled ? (
               <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--surface-3)]/60 p-3 text-xs text-[var(--panel-ink)]">
                 <p className="flex items-center gap-1.5 font-semibold">
                   <Building2 className="size-3.5" aria-hidden />
@@ -451,6 +468,18 @@ export function DealerOrderWorkspace({
                 {payment.note ? (
                   <p className="mt-2 text-[var(--panel-ink-muted)]">{payment.note}</p>
                 ) : null}
+              </div>
+            ) : null}
+
+            {paymentMethod === "CARI" && cari.eligible && cari.availableKurus != null ? (
+              <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--surface-3)]/60 p-3 text-xs text-[var(--panel-ink)]">
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <Wallet className="size-3.5" aria-hidden />
+                  Kullanılabilir limit
+                </p>
+                <p className="mt-1 tabular-nums text-[var(--panel-ink-muted)]">
+                  {formatMoney(money(cari.availableKurus))}
+                </p>
               </div>
             ) : null}
 

@@ -23,6 +23,7 @@ export default async function AdminOrdersPage() {
     status: o.status,
     totalKurus: o.totalKurus,
     note: o.note,
+    paymentMethod: o.paymentMethod,
     createdAt: o.createdAt.toISOString(),
     lines: o.lines.map((l) => ({
       id: l.id,

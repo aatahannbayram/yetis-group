@@ -7,10 +7,8 @@ import {
   removeCartLine,
   setCartLineQuantity,
 } from "@/infra/db/cart";
-import {
-  createOrderFromCart,
-  type DealerPaymentMethod,
-} from "@/infra/db/orders";
+import { createOrderFromCart } from "@/infra/db/orders";
+import type { OrderPaymentMethod } from "@/generated/prisma";
 import { resolveDealerContext } from "@/features/dealer/actions";
 
 export type DealerCartLineView = {
@@ -128,7 +126,7 @@ export async function dealerRemoveLineAction(
 }
 
 export async function dealerSubmitOrderAction(input: {
-  paymentMethod: DealerPaymentMethod;
+  paymentMethod: OrderPaymentMethod;
   note?: string;
 }): Promise<{ ok: true; orderId: string } | { ok: false; error: string }> {
   const pair = await dealerCart(false);

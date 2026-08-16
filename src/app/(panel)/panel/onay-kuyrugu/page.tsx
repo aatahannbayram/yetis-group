@@ -31,6 +31,7 @@ export default async function OnayKuyruguPage() {
     status: o.status,
     totalKurus: o.totalKurus,
     note: o.note,
+    paymentMethod: o.paymentMethod,
     createdAt: o.createdAt.toISOString(),
     lines: o.lines.map((l) => ({
       id: l.id,

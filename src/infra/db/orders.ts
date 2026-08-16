@@ -2,6 +2,35 @@ import { prisma } from "@/infra/db/client";
 import { assertOrderTransition, type OrderStatus } from "@/domain/order/state-machine";
 import { addLedgerEntry } from "@/infra/db/ledger";
 import { notifyOrderCreated, notifyOrderStatusChanged } from "@/infra/db/notifications";
+import { calculateBalance, canUseOnAccount } from "@/domain/ledger";
+import { captureMockPayment } from "@/infra/payments/mock-provider";
+import type { OrderPaymentMethod } from "@/generated/prisma";
+
+const OPEN_ORDER_STATUSES: OrderStatus[] = [
+  "DRAFT",
+  "SUBMITTED",
+  "UNDER_REVIEW",
+  "CONFIRMED",
+  "PREPARING",
+  "SHIPPED",
+];
+
+/**
+ * Bayinin cari hesap için toplam açık borç maruziyeti: teslim edilmiş
+ * siparişlerin ledger bakiyesi + henüz teslim edilmemiş CARI siparişlerin
+ * toplamı (teslim edilenler zaten ledger'da olduğu için tekrar sayılmaz).
+ */
+export async function getDealerCreditExposure(dealerId: string): Promise<number> {
+  const [entries, openCariOrders] = await Promise.all([
+    prisma.ledgerEntry.findMany({ where: { dealerId }, select: { type: true, amountKurus: true } }),
+    prisma.order.findMany({
+      where: { dealerId, paymentMethod: "CARI", status: { in: OPEN_ORDER_STATUSES } },
+      select: { totalKurus: true },
+    }),
+  ]);
+  const openCariTotal = openCariOrders.reduce((sum, o) => sum + o.totalKurus, 0);
+  return calculateBalance(entries) + openCariTotal;
+}
 
 export async function listOrders(filter?: { statusIn?: OrderStatus[] }) {
   return prisma.order.findMany({
@@ -75,6 +104,8 @@ export async function createOrder(input: {
   dealerId: string;
   lines: { variantId: string; quantity: number }[];
   note?: string;
+  paymentMethod?: OrderPaymentMethod;
+  paidAt?: Date;
 }) {
   if (input.lines.length === 0) throw new Error("En az bir ürün satırı gerekli");
   if (input.lines.some((l) => !Number.isInteger(l.quantity) || l.quantity <= 0)) {
@@ -106,6 +137,8 @@ export async function createOrder(input: {
       totalKurus,
       note: input.note,
       status: "SUBMITTED",
+      paymentMethod: input.paymentMethod,
+      paidAt: input.paidAt,
       lines: { create: lineData },
       events: { create: { status: "SUBMITTED", note: "Sipariş oluşturuldu" } },
     },
@@ -130,14 +163,12 @@ export async function createOrder(input: {
   return order;
 }
 
-export type DealerPaymentMethod = "BANK_TRANSFER" | "ON_ACCOUNT";
-
 /** Converts a server cart into a SUBMITTED order and clears cart lines. */
 export async function createOrderFromCart(input: {
   cartId: string;
   dealerId: string;
   note?: string;
-  paymentMethod?: DealerPaymentMethod;
+  paymentMethod: OrderPaymentMethod;
 }) {
   const cart = await prisma.cart.findUnique({
     where: { id: input.cartId },
@@ -149,16 +180,35 @@ export async function createOrderFromCart(input: {
   }
   if (cart.lines.length === 0) throw new Error("Sepet boş");
 
+  const totalKurus = cart.lines.reduce((sum, l) => sum + l.unitPriceKurus * l.quantity, 0);
+
+  if (input.paymentMethod === "CARI") {
+    // İstemciye asla güvenme: yetki her seferinde sunucuda taze verilerle doğrulanır.
+    const dealer = await prisma.dealer.findUniqueOrThrow({
+      where: { id: input.dealerId },
+      select: { paymentMethod: true, creditLimitKurus: true },
+    });
+    const exposureKurus = await getDealerCreditExposure(input.dealerId);
+    const eligibility = canUseOnAccount({
+      dealerPaymentMethod: dealer.paymentMethod,
+      creditLimitKurus: dealer.creditLimitKurus,
+      exposureKurus,
+      orderTotalKurus: totalKurus,
+    });
+    if (!eligibility.ok) throw new Error(eligibility.reason);
+  }
+
   const paymentLabel =
-    input.paymentMethod === "BANK_TRANSFER"
+    input.paymentMethod === "HAVALE"
       ? "Ödeme: Banka havalesi / EFT"
-      : input.paymentMethod === "ON_ACCOUNT"
+      : input.paymentMethod === "CARI"
         ? "Ödeme: Cari hesap"
-        : null;
+        : "Ödeme: Online (kart)";
   const note = [paymentLabel, input.note?.trim()].filter(Boolean).join("\n") || undefined;
 
   const order = await createOrder({
     dealerId: input.dealerId,
+    paymentMethod: input.paymentMethod,
     lines: cart.lines.map((line) => ({
       variantId: line.variantId,
       quantity: line.quantity,
@@ -167,6 +217,14 @@ export async function createOrderFromCart(input: {
   });
 
   await prisma.cartLine.deleteMany({ where: { cartId: cart.id } });
+
+  if (input.paymentMethod === "ONLINE") {
+    const capture = await captureMockPayment({ orderId: order.id, amountKurus: totalKurus });
+    if (capture.ok) {
+      await prisma.order.update({ where: { id: order.id }, data: { paidAt: new Date() } });
+    }
+  }
+
   return order;
 }
 

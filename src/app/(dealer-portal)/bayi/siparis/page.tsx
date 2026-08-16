@@ -6,6 +6,9 @@ import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonatio
 import { getDealerCatalog } from "@/infra/db/dealer-catalog";
 import { getPaymentSettings } from "@/infra/db/payment-settings";
 import { getOrCreateCart } from "@/infra/db/cart";
+import { getDealerById } from "@/infra/db/dealers";
+import { getDealerCreditExposure } from "@/infra/db/orders";
+import { canUseOnAccount } from "@/domain/ledger";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
 import type { DealerCartView } from "./actions";
 
@@ -20,7 +23,7 @@ export default async function BayiSiparisPage() {
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const [products, payment, cart] = await Promise.all([
+  const [products, payment, cart, dealer, exposureKurus] = await Promise.all([
     getDealerCatalog(dealerId),
     getPaymentSettings(),
     getOrCreateCart({
@@ -28,7 +31,21 @@ export default async function BayiSiparisPage() {
       dealerId,
       createGuest: Boolean(impId && staff),
     }),
+    getDealerById(dealerId),
+    getDealerCreditExposure(dealerId),
   ]);
+
+  const cariEligibility = canUseOnAccount({
+    dealerPaymentMethod: dealer?.paymentMethod ?? null,
+    creditLimitKurus: dealer?.creditLimitKurus ?? null,
+    exposureKurus,
+    orderTotalKurus: 0,
+  });
+  const cari = {
+    eligible: cariEligibility.ok,
+    availableKurus:
+      dealer?.creditLimitKurus != null ? Math.max(0, dealer.creditLimitKurus - exposureKurus) : null,
+  };
 
   const initialCart: DealerCartView | null = cart
     ? {
@@ -60,6 +77,7 @@ export default async function BayiSiparisPage() {
         iban: payment.iban,
         note: payment.note,
       }}
+      cari={cari}
     />
   );
 }

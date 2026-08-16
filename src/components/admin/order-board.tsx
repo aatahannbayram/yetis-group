@@ -20,6 +20,9 @@ import {
   ClipboardCheck,
   Package,
   UserPlus,
+  Landmark,
+  Wallet,
+  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -86,6 +89,8 @@ export type ProformaSummaryRow = {
   totalKurus: number;
 };
 
+export type OrderPaymentMethodRow = "HAVALE" | "CARI" | "ONLINE" | null;
+
 export type OrderRow = {
   id: string;
   dealerId: string;
@@ -94,11 +99,30 @@ export type OrderRow = {
   status: OrderStatus;
   totalKurus: number;
   note: string | null;
+  paymentMethod: OrderPaymentMethodRow;
   createdAt: string;
   lines: OrderLineRow[];
   events: OrderEventRow[];
   shipments: ShipmentSummaryRow[];
   proforma: ProformaSummaryRow | null;
+};
+
+const PAYMENT_LABEL: Record<NonNullable<OrderPaymentMethodRow>, string> = {
+  HAVALE: "Havale / EFT",
+  CARI: "Cari hesap",
+  ONLINE: "Online ödeme",
+};
+
+const PAYMENT_TONE: Record<NonNullable<OrderPaymentMethodRow>, StatusTone> = {
+  HAVALE: "info",
+  CARI: "warning",
+  ONLINE: "success",
+};
+
+const PAYMENT_ICON: Record<NonNullable<OrderPaymentMethodRow>, LucideIcon> = {
+  HAVALE: Landmark,
+  CARI: Wallet,
+  ONLINE: CreditCard,
 };
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -257,6 +281,13 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
             tone={STATUS_TONE[order.status]}
             icon={STATUS_ICON[order.status]}
           />
+          {order.paymentMethod ? (
+            <StatusBadge
+              label={PAYMENT_LABEL[order.paymentMethod]}
+              tone={PAYMENT_TONE[order.paymentMethod]}
+              icon={PAYMENT_ICON[order.paymentMethod]}
+            />
+          ) : null}
         </div>
         <SheetDescription>
           Sipariş #{order.id.slice(-6)} · {formatDateTime(new Date(order.createdAt))}
@@ -1076,6 +1107,15 @@ export function OrderBoard({
             {row.original.lines.length}
           </span>
         ),
+      },
+      {
+        accessorKey: "paymentMethod",
+        header: "Ödeme",
+        cell: ({ row }) => {
+          const pm = row.original.paymentMethod;
+          if (!pm) return <span className="text-[var(--text-muted)]">Belirtilmemiş</span>;
+          return <StatusBadge label={PAYMENT_LABEL[pm]} tone={PAYMENT_TONE[pm]} icon={PAYMENT_ICON[pm]} />;
+        },
       },
       {
         id: "total",

@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   ChevronLeft,
   ChevronRight,
@@ -9,7 +10,7 @@ import {
   Link2,
   Loader2,
   Star,
-  Trash2,
+  X,
   ZoomIn,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +30,7 @@ export function ProductGallery({
   uploadImageAction,
   deleteMediaAction,
   setPrimaryMediaAction,
+  reorderMediaAction,
 }: {
   productId: string;
   slug: string;
@@ -37,6 +39,7 @@ export function ProductGallery({
   uploadImageAction: (formData: FormData) => Promise<void>;
   deleteMediaAction: (formData: FormData) => Promise<void>;
   setPrimaryMediaAction: (formData: FormData) => Promise<void>;
+  reorderMediaAction: (productId: string, slug: string, orderedIds: string[]) => Promise<void>;
 }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -47,14 +50,93 @@ export function ProductGallery({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounter = useRef(0);
 
+  const [items, setItems] = useState(media);
+  const [syncedMedia, setSyncedMedia] = useState(media);
+  if (media !== syncedMedia) {
+    setSyncedMedia(media);
+    setItems(media);
+  }
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [, startReorderTransition] = useTransition();
+
+  function moveItem(from: number, to: number) {
+    if (from === to) return;
+    setItems((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  function commitOrder(current: MediaItem[]) {
+    startReorderTransition(async () => {
+      try {
+        await reorderMediaAction(
+          productId,
+          slug,
+          current.map((m) => m.id),
+        );
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Sıralama kaydedilemedi");
+      }
+    });
+  }
+
+  function handleDelete(target: MediaItem) {
+    const index = items.findIndex((m) => m.id === target.id);
+    setItems((prev) => prev.filter((m) => m.id !== target.id));
+    void (async () => {
+      try {
+        const fd = new FormData();
+        fd.set("id", target.id);
+        fd.set("slug", slug);
+        await deleteMediaAction(fd);
+        toast.success("Görsel silindi", {
+          action: {
+            label: "Geri al",
+            onClick: () => {
+              const undoFd = new FormData();
+              undoFd.set("productId", productId);
+              undoFd.set("slug", slug);
+              undoFd.set("url", target.url);
+              void addMediaAction(undoFd);
+            },
+          },
+        });
+      } catch (err) {
+        setItems((prev) => {
+          const next = [...prev];
+          next.splice(Math.min(index, next.length), 0, target);
+          return next;
+        });
+        toast.error(err instanceof Error ? err.message : "Görsel silinemedi");
+      }
+    })();
+  }
+
+  function handleSetPrimary(target: MediaItem) {
+    void (async () => {
+      try {
+        const fd = new FormData();
+        fd.set("id", target.id);
+        fd.set("slug", slug);
+        await setPrimaryMediaAction(fd);
+        toast.success("Birincil görsel güncellendi");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Birincil görsel ayarlanamadı");
+      }
+    })();
+  }
+
   const openAt = (index: number) => setLightboxIndex(index);
   const close = () => setLightboxIndex(null);
   const step = (delta: number) => {
-    if (lightboxIndex === null || media.length === 0) return;
-    setLightboxIndex((lightboxIndex + delta + media.length) % media.length);
+    if (lightboxIndex === null || items.length === 0) return;
+    setLightboxIndex((lightboxIndex + delta + items.length) % items.length);
   };
 
-  const active = lightboxIndex !== null ? media[lightboxIndex] : null;
+  const active = lightboxIndex !== null ? items[lightboxIndex] : null;
 
   function uploadFiles(files: FileList | File[]) {
     const all = Array.from(files);
@@ -66,6 +148,7 @@ export function ProductGallery({
 
     setQueued(list.length);
     startTransition(async () => {
+      let uploaded = 0;
       for (const file of list) {
         const formData = new FormData();
         formData.set("productId", productId);
@@ -73,11 +156,15 @@ export function ProductGallery({
         formData.set("file", file);
         try {
           await uploadImageAction(formData);
+          uploaded += 1;
         } catch (err) {
           setUploadError(err instanceof Error ? err.message : "Yükleme başarısız oldu");
         } finally {
           setQueued((n) => Math.max(0, n - 1));
         }
+      }
+      if (uploaded > 0) {
+        toast.success(uploaded === 1 ? "Görsel yüklendi" : `${uploaded} görsel yüklendi`);
       }
     });
   }
@@ -91,60 +178,77 @@ export function ProductGallery({
 
   return (
     <>
-      {media.length > 0 ? (
+      {items.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {media.map((m, index) => (
-            <div key={m.id} className="group/tile space-y-1.5">
-              <button
-                type="button"
-                onClick={() => openAt(index)}
-                className="group relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--panel-border)] bg-[var(--surface-3)]"
-              >
-                <Image
-                  src={m.url}
-                  alt={m.alt ?? ""}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="180px"
-                />
-                <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/20 group-hover:opacity-100">
-                  <ZoomIn className="size-5 text-white drop-shadow" aria-hidden />
-                </div>
+          {items.map((m, index) => (
+            <div
+              key={m.id}
+              draggable
+              onDragStart={(e) => {
+                setDragIndex(index);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dragIndex === null || dragIndex === index) return;
+                moveItem(dragIndex, index);
+                setDragIndex(index);
+              }}
+              onDragEnd={() => {
+                setDragIndex(null);
+                commitOrder(items);
+              }}
+              className={cn(
+                "group/tile cursor-grab space-y-1.5 active:cursor-grabbing",
+                dragIndex === index && "opacity-50",
+              )}
+            >
+              <div className="group relative aspect-square w-full overflow-hidden rounded-[var(--radius-card)] border border-[var(--panel-border)] bg-[var(--surface-3)]">
+                <button
+                  type="button"
+                  onClick={() => openAt(index)}
+                  className="absolute inset-0"
+                  aria-label="Görseli büyüt"
+                >
+                  <Image
+                    src={m.url}
+                    alt={m.alt ?? ""}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    sizes="180px"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/20 group-hover:opacity-100">
+                    <ZoomIn className="size-5 text-white drop-shadow" aria-hidden />
+                  </div>
+                </button>
                 {m.isPrimary ? (
-                  <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--primary-solid)] px-2 py-0.5 text-[10px] font-semibold text-white shadow-[var(--shadow-sm)]">
+                  <span className="pointer-events-none absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-[var(--primary-solid)] px-2 py-0.5 text-[10px] font-semibold text-white shadow-[var(--shadow-sm)]">
                     <Star className="size-2.5 fill-current" aria-hidden />
                     Birincil
                   </span>
                 ) : null}
-              </button>
-              <div className="flex items-center justify-between gap-1 opacity-0 transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100">
-                {!m.isPrimary ? (
-                  <form action={setPrimaryMediaAction}>
-                    <input type="hidden" name="id" value={m.id} />
-                    <input type="hidden" name="slug" value={slug} />
-                    <button
-                      type="submit"
-                      className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)]"
-                    >
-                      <Star className="size-3" aria-hidden />
-                      Birincil yap
-                    </button>
-                  </form>
-                ) : (
-                  <span />
-                )}
-                <form action={deleteMediaAction}>
-                  <input type="hidden" name="id" value={m.id} />
-                  <input type="hidden" name="slug" value={slug} />
-                  <button
-                    type="submit"
-                    className="inline-flex size-6 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger-text)]"
-                    aria-label="Görseli sil"
-                  >
-                    <Trash2 className="size-3.5" aria-hidden />
-                  </button>
-                </form>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(m);
+                  }}
+                  className="absolute right-1.5 top-1.5 inline-flex size-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-[var(--danger-solid)] group-hover/tile:opacity-100 focus-visible:opacity-100"
+                  aria-label="Görseli sil"
+                >
+                  <X className="size-3.5" aria-hidden />
+                </button>
               </div>
+              {!m.isPrimary ? (
+                <button
+                  type="button"
+                  onClick={() => handleSetPrimary(m)}
+                  className="inline-flex h-6 items-center gap-1 rounded-full px-2 text-[11px] font-medium text-[var(--text-muted)] opacity-0 transition-opacity hover:bg-[var(--surface-3)] hover:text-[var(--text-primary)] group-hover/tile:opacity-100 focus-visible:opacity-100"
+                >
+                  <Star className="size-3" aria-hidden />
+                  Birincil yap
+                </button>
+              ) : null}
             </div>
           ))}
         </div>
@@ -218,8 +322,19 @@ export function ProductGallery({
       <div className="mt-2">
         {urlMode ? (
           <form
-            action={addMediaAction}
-            onSubmit={() => setUrlMode(false)}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              void (async () => {
+                try {
+                  await addMediaAction(formData);
+                  toast.success("Görsel eklendi");
+                  setUrlMode(false);
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Görsel eklenemedi");
+                }
+              })();
+            }}
             className="flex flex-col gap-2 sm:flex-row"
           >
             <input type="hidden" name="productId" value={productId} />
@@ -261,7 +376,7 @@ export function ProductGallery({
                 className="object-contain"
                 sizes="90vw"
               />
-              {media.length > 1 ? (
+              {items.length > 1 ? (
                 <>
                   <button
                     type="button"
@@ -280,7 +395,7 @@ export function ProductGallery({
                     <ChevronRight className="size-5" />
                   </button>
                   <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/40 px-2.5 py-1 text-caption text-white">
-                    {lightboxIndex! + 1} / {media.length}
+                    {lightboxIndex! + 1} / {items.length}
                   </div>
                 </>
               ) : null}

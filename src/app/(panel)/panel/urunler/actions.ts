@@ -6,7 +6,12 @@ import { updateVariantBasePrice } from "@/infra/db/pricing";
 import { addStockMovement, createLot } from "@/infra/db/inventory";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
-import { addProductMedia, deleteProductMedia, setPrimaryMedia } from "@/infra/db/media";
+import {
+  addProductMedia,
+  deleteProductMedia,
+  reorderProductMedia,
+  setPrimaryMedia,
+} from "@/infra/db/media";
 import { saveUploadedImage } from "@/infra/storage/local";
 import { upsertProductAttributeValue, listAttributeDefinitions } from "@/infra/db/attributes";
 import { createProduct, createVariant, updateProductDescription } from "@/infra/db/products";
@@ -46,24 +51,39 @@ export async function createProductAction(formData: FormData) {
   const unitFactor = Number(String(formData.get("unitFactor") ?? "1").replace(",", "."));
   const vatPercent = Number(String(formData.get("vatPercent") ?? "1").replace(",", "."));
   const packagingType = String(formData.get("packagingType") ?? "KOLI") as PackagingType;
+  const moq = Number(String(formData.get("moq") ?? "1").replace(",", "."));
+  const shelfLifeDays = Number(String(formData.get("shelfLifeDays") ?? "").replace(",", "."));
 
   if (!name) throw new Error("Ürün adı gerekli");
   if (!Number.isFinite(priceTl) || priceTl < 0) throw new Error("Geçerli bir fiyat girin");
 
-  await createProduct({
+  const product = await createProduct({
     name,
     description: String(formData.get("description") ?? ""),
     primaryCategoryId,
     producerId,
     sku: String(formData.get("sku") ?? "").trim() || undefined,
+    barcode: String(formData.get("barcode") ?? "").trim() || null,
     packSize: String(formData.get("packSize") ?? "").trim() || null,
     packagingType,
     unitFactor: Number.isFinite(unitFactor) && unitFactor > 0 ? unitFactor : 1,
+    moq: Number.isFinite(moq) && moq > 0 ? moq : 1,
     pricePerUnitKurus: Math.round(priceTl * 100),
     vatRateBasisPoints: Number.isFinite(vatPercent)
       ? Math.round(vatPercent * 100)
       : 100,
+    storageCondition: String(formData.get("storageCondition") ?? "").trim() || null,
+    shelfLifeDays: Number.isFinite(shelfLifeDays) && shelfLifeDays > 0 ? Math.round(shelfLifeDays) : null,
+    requiresColdChain: formData.get("requiresColdChain") === "on",
+    usageTips: String(formData.get("usageTips") ?? ""),
+    techSheetUrl: String(formData.get("techSheetUrl") ?? "").trim() || null,
   });
+
+  const image = formData.get("image");
+  if (image instanceof File && image.size > 0) {
+    const url = await saveUploadedImage(image, product.id);
+    await addProductMedia({ productId: product.id, url, isPrimary: true });
+  }
 
   revalidatePath("/panel/urunler");
   revalidatePath("/urunler");
@@ -190,6 +210,13 @@ export async function deleteMediaAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const slug = String(formData.get("slug") ?? "");
   await deleteProductMedia(id);
+  revalidatePath(`/panel/urunler/${slug}`);
+  revalidatePath(`/urunler/${slug}`);
+}
+
+export async function reorderMediaAction(productId: string, slug: string, orderedIds: string[]) {
+  await requireStaff();
+  await reorderProductMedia(productId, orderedIds);
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath(`/urunler/${slug}`);
 }

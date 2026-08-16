@@ -21,7 +21,6 @@ import { listAttributeDefinitions } from "@/infra/db/attributes";
 import { getGroupPricesForVariants } from "@/infra/db/pricing";
 import { LotManager } from "@/components/admin/lot-manager";
 import { ProductGallery } from "@/components/admin/product-gallery";
-import { EditableTextarea } from "@/components/admin/editable-textarea";
 import { ProductVariantPricing } from "@/components/admin/product-variant-pricing";
 import { StatCard } from "@/components/admin/stat-card";
 import {
@@ -38,6 +37,7 @@ import { cn } from "@/lib/utils";
 import {
   addMediaAction,
   deleteMediaAction,
+  reorderMediaAction,
   setPrimaryMediaAction,
   uploadProductImageAction,
   saveProductDepthAction,
@@ -203,18 +203,8 @@ export default async function AdminProductDetailPage({
                   id="description"
                   initialValue={product.description}
                   onSave={saveDescription}
-                >
-                  {({ value, onChange }) => (
-                    <EditableTextarea
-                      deferSave
-                      value={product.description}
-                      controlledValue={value}
-                      onControlledChange={onChange}
-                      onSave={saveDescription}
-                      placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
-                    />
-                  )}
-                </DescriptionField>
+                  placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
+                />
               </div>
             </section>
 
@@ -430,6 +420,7 @@ export default async function AdminProductDetailPage({
               uploadImageAction={uploadProductImageAction}
               deleteMediaAction={deleteMediaAction}
               setPrimaryMediaAction={setPrimaryMediaAction}
+              reorderMediaAction={reorderMediaAction}
             />
           </section>
         </TabsContent>

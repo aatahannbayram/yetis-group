@@ -1,15 +1,33 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ComponentType,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
+import { toast } from "sonner";
 import {
   ArrowUpRight,
+  ChevronDown,
+  ImagePlus,
+  Info,
+  Layers,
+  Loader2,
   Maximize2,
+  Minimize2,
+  Package,
   PackageSearch,
   Plus,
   Boxes,
+  X,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -38,6 +56,8 @@ function formatStockKg(kg: number) {
   return `${kgFormatter.format(kg)} kg`;
 }
 
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+
 const PACKAGING_TYPES = [
   { value: "TENEKE", label: "Teneke" },
   { value: "VAKUM", label: "Vakum" },
@@ -47,7 +67,9 @@ const PACKAGING_TYPES = [
 ] as const;
 
 const selectClass =
-  "h-10 w-full rounded-lg border border-stone-200 bg-white px-3 text-sm outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
+  "h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text-primary)] outline-none transition-shadow placeholder:text-[var(--text-muted)] focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
+
+const fieldLabelClass = "text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]";
 
 export type ProductRowVariant = {
   id: string;
@@ -93,6 +115,8 @@ export function ProductListSheet({
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [density, setDensity] = useState<Density>("comfortable");
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
+  const [fullScreen, setFullScreen] = useState(false);
+  const [isCreating, startCreateTransition] = useTransition();
   const selected = products.find((p) => p.id === selectedId) ?? null;
 
   function openCreate() {
@@ -105,9 +129,24 @@ export function ProductListSheet({
     setMode("detail");
   }
 
+  function submitCreate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    startCreateTransition(async () => {
+      try {
+        await createProductAction(formData);
+        toast.success("Ürün oluşturuldu");
+        close();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Ürün oluşturulamadı");
+      }
+    });
+  }
+
   function close() {
     setMode("closed");
     setSelectedId(null);
+    setFullScreen(false);
   }
 
   const categoryNames = useMemo(() => {
@@ -344,128 +383,238 @@ export function ProductListSheet({
       )}
 
       <Sheet open={mode !== "closed"} onOpenChange={(open) => !open && close()}>
-        <SheetContent className="w-full overflow-y-auto border-stone-200 sm:max-w-lg dark:border-zinc-800">
+        <SheetContent
+          className={cn(
+            "flex w-full flex-col overflow-hidden border-[var(--border)] bg-[var(--surface)] p-0",
+            fullScreen ? "sm:max-w-full" : "sm:max-w-lg",
+          )}
+          style={fullScreen ? { width: "100vw", maxWidth: "100vw" } : undefined}
+        >
+          <button
+            type="button"
+            onClick={() => setFullScreen((v) => !v)}
+            className="absolute top-3 right-12 inline-flex size-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--primary-text)]"
+            title={fullScreen ? "Daralt" : "Tam ekran"}
+            aria-label={fullScreen ? "Daralt" : "Tam ekran"}
+          >
+            {fullScreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </button>
+
           {mode === "create" ? (
             <>
-              <SheetHeader>
+              <SheetHeader className="border-b border-[var(--border)] pb-4">
                 <SheetTitle>Yeni ürün</SheetTitle>
                 <SheetDescription>
-                  Ürün ve varsayılan paket birlikte oluşur. Fotoğraf ve lotu sonra ekleyebilirsiniz.
+                  Ürün, görseli ve varsayılan paketi tek seferde oluşturun. Lotu daha sonra ekleyebilirsiniz.
                 </SheetDescription>
               </SheetHeader>
 
-              <form
-                action={createProductAction}
-                onSubmit={close}
-                className="flex-1 space-y-4 overflow-y-auto px-4 pb-4"
-              >
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-stone-500">Ürün adı</label>
-                  <Input name="name" required placeholder="Örn. Beyaz Peynir 17 kg Teneke" className="h-10" />
+              <form onSubmit={submitCreate} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+                  <div className={cn(fullScreen ? "grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2 lg:items-start" : "space-y-6")}>
+                    <div className="space-y-6">
+                      <FormSection icon={Info} title="Temel bilgiler">
+                        <div className="space-y-1.5">
+                          <label className={fieldLabelClass}>Ürün adı</label>
+                          <Input
+                            name="name"
+                            required
+                            placeholder="Örn. Beyaz Peynir 17 kg Teneke"
+                            className={selectClass}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <label className={fieldLabelClass}>Açıklama</label>
+                          <textarea
+                            name="description"
+                            rows={3}
+                            className={cn(selectClass, "min-h-[5rem] py-2")}
+                            placeholder="Mağazada görünecek kısa açıklama"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Kategori</label>
+                            <select name="primaryCategoryId" required className={selectClass} defaultValue="">
+                              <option value="" disabled>
+                                Seçin
+                              </option>
+                              {categories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Üretici</label>
+                            <select name="producerId" required className={selectClass} defaultValue="">
+                              <option value="" disabled>
+                                Seçin
+                              </option>
+                              {producers.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </FormSection>
+
+                      <FormSection icon={ImagePlus} title="Görsel">
+                        <CreateImageDropzone />
+                      </FormSection>
+                    </div>
+
+                    <div className="space-y-6">
+                      <FormSection icon={Package} title="Paket & fiyat">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>SKU</label>
+                            <Input name="sku" placeholder="Boş = otomatik" className={selectClass} />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Barkod</label>
+                            <Input name="barcode" placeholder="Örn. 8690000000000" className={selectClass} />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Ambalaj</label>
+                            <select name="packagingType" className={selectClass} defaultValue="KOLI">
+                              {PACKAGING_TYPES.map((t) => (
+                                <option key={t.value} value={t.value}>
+                                  {t.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Paket boyutu</label>
+                            <Input name="packSize" placeholder="Örn. 17 kg teneke" className={selectClass} />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Birim (kg)</label>
+                            <Input
+                              name="unitFactor"
+                              type="number"
+                              step="0.001"
+                              min="0.001"
+                              defaultValue="1"
+                              required
+                              className={cn(selectClass, "tabular-nums")}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Min. sipariş adedi</label>
+                            <Input
+                              name="moq"
+                              type="number"
+                              step="1"
+                              min="1"
+                              defaultValue="1"
+                              className={cn(selectClass, "tabular-nums")}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Fiyat (₺)</label>
+                            <Input
+                              name="priceTl"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              required
+                              placeholder="0,00"
+                              className={cn(selectClass, "tabular-nums")}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>KDV %</label>
+                            <Input
+                              name="vatPercent"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              defaultValue="1"
+                              className={cn(selectClass, "tabular-nums")}
+                            />
+                          </div>
+                        </div>
+                      </FormSection>
+
+                      <CollapsibleSection icon={Layers} title="Derinlik" subtitle="Opsiyonel">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Saklama koşulu</label>
+                            <Input
+                              name="storageCondition"
+                              placeholder="Örn. +4°C soğuk zincir"
+                              className={selectClass}
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className={fieldLabelClass}>Raf ömrü (gün)</label>
+                            <Input name="shelfLifeDays" type="number" step="1" min="0" className={selectClass} />
+                          </div>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm font-medium text-[var(--text-secondary)]">
+                          <input
+                            type="checkbox"
+                            name="requiresColdChain"
+                            defaultChecked
+                            className="size-4 rounded border-[var(--border-strong)] text-[var(--primary-solid)] focus:ring-[var(--primary-solid)]/30"
+                          />
+                          Soğuk zincir gerekli
+                        </label>
+                        <div className="space-y-1.5">
+                          <label className={fieldLabelClass}>Kullanım önerisi</label>
+                          <textarea
+                            name="usageTips"
+                            rows={2}
+                            className={cn(selectClass, "min-h-[3.5rem] py-2")}
+                            placeholder="Örn. Açıldıktan sonra 5 gün içinde tüketin"
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className={fieldLabelClass}>Teknik föy URL</label>
+                          <Input name="techSheetUrl" type="url" placeholder="https://…" className={selectClass} />
+                        </div>
+                      </CollapsibleSection>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-stone-500">Açıklama</label>
-                  <textarea
-                    name="description"
-                    rows={3}
-                    className={cn(selectClass, "min-h-[5rem] py-2")}
-                    placeholder="Mağazada görünecek kısa açıklama"
-                  />
+                <div className="border-t border-[var(--border)] bg-[var(--surface)] p-4">
+                  <Button
+                    type="submit"
+                    disabled={isCreating}
+                    className="h-11 w-full gap-1.5 rounded-full bg-[var(--primary-solid)] text-white hover:bg-[var(--primary-hover)]"
+                  >
+                    {isCreating ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden />
+                    ) : (
+                      <Plus className="size-4" aria-hidden />
+                    )}
+                    {isCreating ? "Oluşturuluyor…" : "Ürünü oluştur"}
+                  </Button>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">Kategori</label>
-                    <select name="primaryCategoryId" required className={selectClass} defaultValue="">
-                      <option value="" disabled>
-                        Seçin
-                      </option>
-                      {categories.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">Üretici</label>
-                    <select name="producerId" required className={selectClass} defaultValue="">
-                      <option value="" disabled>
-                        Seçin
-                      </option>
-                      {producers.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">SKU</label>
-                    <Input name="sku" placeholder="Boş = otomatik" className="h-10" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">Ambalaj</label>
-                    <select name="packagingType" className={selectClass} defaultValue="KOLI">
-                      {PACKAGING_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>
-                          {t.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-stone-500">Paket boyutu</label>
-                  <Input name="packSize" placeholder="Örn. 17 kg teneke" className="h-10" />
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">Birim (kg)</label>
-                    <Input
-                      name="unitFactor"
-                      type="number"
-                      step="0.001"
-                      min="0.001"
-                      defaultValue="1"
-                      required
-                      className="h-10"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">Fiyat (₺)</label>
-                    <Input
-                      name="priceTl"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      required
-                      placeholder="0,00"
-                      className="h-10"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-medium text-stone-500">KDV %</label>
-                    <Input name="vatPercent" type="number" step="0.01" min="0" defaultValue="1" className="h-10" />
-                  </div>
-                </div>
-
-                <Button type="submit" className="h-10 w-full bg-[#1B5E3A] text-white hover:bg-[#164e31]">
-                  Ürünü oluştur
-                </Button>
               </form>
             </>
           ) : null}
 
           {mode === "detail" && selected ? (
             <>
-              <SheetHeader>
+              <SheetHeader className="border-b border-[var(--border)] pb-4">
                 <div className="flex items-start gap-3">
                   <ProductThumb product={selected} size={56} className="rounded-xl" />
                   <div className="min-w-0">
@@ -475,7 +624,7 @@ export function ProductListSheet({
                 </div>
               </SheetHeader>
 
-              <div className="flex-1 space-y-6 overflow-y-auto px-4 pb-4">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-5">
                 <div className="flex flex-wrap gap-2">
                   <StockBadge kg={selected.stockKg} />
                   <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
@@ -643,7 +792,18 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         "dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700",
       )}
     >
-      <button type="button" onClick={onOpen} className="block w-full text-left">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onOpen}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpen();
+          }
+        }}
+        className="block w-full cursor-pointer text-left"
+      >
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-zinc-800">
           {cover ? (
             <Image
@@ -703,7 +863,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
             </span>
           </div>
         </div>
-      </button>
+      </div>
 
       <div className="flex items-center justify-between gap-2 border-t border-stone-100 px-3 py-2 dark:border-zinc-800">
         <p className="truncate font-mono text-[11px] text-stone-400">
@@ -719,6 +879,179 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         </Link>
       </div>
     </article>
+  );
+}
+
+function FormSection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-4 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+      <div className="flex items-center gap-2">
+        <span className="flex size-7 items-center justify-center rounded-lg bg-[var(--primary-subtle)] text-[var(--primary-text)]">
+          <Icon className="size-3.5" aria-hidden />
+        </span>
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
+}
+
+function CollapsibleSection({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 p-4 text-left sm:p-5"
+        aria-expanded={open}
+      >
+        <span className="flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center rounded-lg bg-[var(--surface-3)] text-[var(--text-muted)]">
+            <Icon className="size-3.5" aria-hidden />
+          </span>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">{title}</span>
+          {subtitle ? (
+            <span className="text-[length:var(--text-caption)] text-[var(--text-muted)]">{subtitle}</span>
+          ) : null}
+        </span>
+        <ChevronDown
+          className={cn("size-4 text-[var(--text-muted)] transition-transform", open && "rotate-180")}
+          aria-hidden
+        />
+      </button>
+      {open ? <div className="space-y-4 border-t border-[var(--border)] p-4 sm:p-5">{children}</div> : null}
+    </section>
+  );
+}
+
+function CreateImageDropzone() {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+
+  function clearFile() {
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setFileName(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function applyFiles(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setError("Desteklenmeyen dosya türü. JPG, PNG, WEBP, AVIF veya GIF kullanın");
+      return;
+    }
+    setError(null);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    if (inputRef.current) inputRef.current.files = dt.files;
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setFileName(file.name);
+  }
+
+  return (
+    <div>
+      {preview ? (
+        <div className="flex items-center gap-3 rounded-[var(--radius-card)] border border-[var(--border)] bg-[var(--surface-2)] p-3">
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview before upload */}
+            <img src={preview} alt="" className="size-full object-cover" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-[var(--text-primary)]">{fileName}</p>
+            <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">Kapak görseli</p>
+          </div>
+          <button
+            type="button"
+            onClick={clearFile}
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[var(--text-muted)] transition-colors hover:bg-[var(--danger-subtle)] hover:text-[var(--danger-text)]"
+            aria-label="Görseli kaldır"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "relative flex flex-col items-center justify-center gap-2 rounded-[var(--radius-card)] border-2 border-dashed p-6 text-center transition-colors duration-[var(--motion-hover)]",
+            dragActive
+              ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)]"
+              : "border-[var(--border-strong)] bg-[var(--surface-2)] hover:border-[var(--primary-solid)]/60",
+          )}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            dragCounter.current += 1;
+            setDragActive(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            dragCounter.current -= 1;
+            if (dragCounter.current <= 0) setDragActive(false);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            dragCounter.current = 0;
+            applyFiles(e.dataTransfer.files);
+          }}
+        >
+          <span className="flex size-10 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--primary-text)] shadow-[var(--shadow-sm)]">
+            <ImagePlus className="size-5" aria-hidden />
+          </span>
+          <p className="text-sm font-medium text-[var(--text-primary)]">Görseli buraya sürükleyip bırakın</p>
+          <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">
+            veya{" "}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="font-medium text-[var(--primary-text)] underline-offset-2 hover:underline"
+            >
+              bilgisayardan seçin
+            </button>{" "}
+            · JPG, PNG, WEBP, AVIF, GIF · en fazla 8 MB
+          </p>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        name="image"
+        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        className="sr-only"
+        onChange={(e) => applyFiles(e.target.files)}
+      />
+      {error ? <p className="mt-1.5 text-[length:var(--text-caption)] text-[var(--danger-text)]">{error}</p> : null}
+    </div>
   );
 }
 

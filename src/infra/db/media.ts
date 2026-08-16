@@ -60,6 +60,18 @@ export async function deleteProductMedia(id: string) {
   }
 }
 
+export async function reorderProductMedia(productId: string, orderedIds: string[]) {
+  const existing = await prisma.productMedia.findMany({
+    where: { productId },
+    select: { id: true },
+  });
+  const validIds = new Set(existing.map((m) => m.id));
+  const ordered = orderedIds.filter((id) => validIds.has(id));
+  await prisma.$transaction(
+    ordered.map((id, index) => prisma.productMedia.update({ where: { id }, data: { sortOrder: index } })),
+  );
+}
+
 export async function setPrimaryMedia(id: string) {
   const media = await prisma.productMedia.findUniqueOrThrow({ where: { id } });
   await prisma.productMedia.updateMany({

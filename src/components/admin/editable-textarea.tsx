@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, Pencil, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 const textareaClass =
@@ -84,8 +85,13 @@ export function EditableTextarea({
           disabled={isPending}
           onClick={() =>
             startTransition(async () => {
-              await onSave(draft);
-              setEditing(false);
+              try {
+                await onSave(draft);
+                setEditing(false);
+                toast.success("Kaydedildi");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Kaydedilemedi");
+              }
             })
           }
         >

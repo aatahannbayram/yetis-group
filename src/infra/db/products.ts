@@ -38,7 +38,7 @@ export async function getProductBySlug(slug: string) {
       primaryCategory: true,
       producer: true,
       variants: { where: { isActive: true }, orderBy: { sortOrder: "asc" } },
-      media: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }] },
+      media: { orderBy: [{ sortOrder: "asc" }] },
       attributeValues: {
         include: {
           attribute: true,
@@ -62,11 +62,18 @@ export type CreateProductInput = {
   primaryCategoryId: string;
   producerId: string;
   sku?: string;
+  barcode?: string | null;
   packSize?: string | null;
   packagingType?: PackagingType;
   unitFactor: number;
+  moq?: number;
   pricePerUnitKurus: number;
   vatRateBasisPoints?: number;
+  storageCondition?: string | null;
+  shelfLifeDays?: number | null;
+  requiresColdChain?: boolean;
+  usageTips?: string;
+  techSheetUrl?: string | null;
 };
 
 async function uniqueSlug(base: string): Promise<string> {
@@ -117,13 +124,20 @@ export async function createProduct(input: CreateProductInput) {
       description: input.description?.trim() ?? "",
       producerId: input.producerId,
       primaryCategoryId: input.primaryCategoryId,
+      storageCondition: input.storageCondition?.trim() || null,
+      shelfLifeDays: input.shelfLifeDays ?? null,
+      requiresColdChain: input.requiresColdChain ?? true,
+      usageTips: input.usageTips?.trim() ?? "",
+      techSheetUrl: input.techSheetUrl?.trim() || null,
       categories: { create: { categoryId: input.primaryCategoryId } },
       variants: {
         create: {
           sku,
+          barcode: input.barcode?.trim() || null,
           packagingType: input.packagingType ?? "KOLI",
           packSize: input.packSize?.trim() || null,
           unitFactor: input.unitFactor,
+          moq: input.moq && input.moq > 0 ? Math.round(input.moq) : 1,
           pricePerUnitKurus: Math.round(input.pricePerUnitKurus),
           vatRateBasisPoints: input.vatRateBasisPoints ?? 100,
         },

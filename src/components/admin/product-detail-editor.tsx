@@ -10,7 +10,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 import { ProductDetailSaveBar } from "@/components/admin/product-detail-save-bar";
+import { EditableTextarea } from "@/components/admin/editable-textarea";
 
 type SaveFn = () => Promise<void>;
 type ResetFn = () => void;
@@ -123,8 +125,11 @@ export function ProductDetailEditor({ children }: { children: ReactNode }) {
       }
       setDirtyIds(new Set());
       setSaved(true);
+      toast.success("Değişiklikler kaydedildi");
       if (savedTimer.current) clearTimeout(savedTimer.current);
       savedTimer.current = setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Kaydetme başarısız oldu");
     } finally {
       setSaving(false);
     }
@@ -225,15 +230,12 @@ export function DescriptionField({
   id,
   initialValue,
   onSave,
-  children,
+  placeholder,
 }: {
   id: string;
   initialValue: string;
   onSave: (value: string) => Promise<void>;
-  children: (props: {
-    value: string;
-    onChange: (value: string) => void;
-  }) => ReactNode;
+  placeholder?: string;
 }) {
   const { setDirty, registerSave, registerReset } = useProductDetailEditor();
   const [value, setValue] = useState(initialValue);
@@ -263,14 +265,16 @@ export function DescriptionField({
   }, [id, registerReset, registerSave, setDirty]);
 
   return (
-    <>
-      {children({
-        value,
-        onChange: (next) => {
-          setValue(next);
-          setDirty(id, next !== baseline.current);
-        },
-      })}
-    </>
+    <EditableTextarea
+      deferSave
+      value={initialValue}
+      controlledValue={value}
+      onControlledChange={(next) => {
+        setValue(next);
+        setDirty(id, next !== baseline.current);
+      }}
+      onSave={onSave}
+      placeholder={placeholder}
+    />
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { money } from "@/domain/money";
@@ -48,10 +49,17 @@ export function EditablePrice({
         onClick={() =>
           startTransition(async () => {
             const kurus = Math.round(Number(value) * 100);
-            if (Number.isFinite(kurus) && kurus > 0) {
-              await onSave(kurus);
+            if (!Number.isFinite(kurus) || kurus <= 0) {
+              toast.error("Geçerli bir fiyat girin");
+              return;
             }
-            setEditing(false);
+            try {
+              await onSave(kurus);
+              setEditing(false);
+              toast.success("Fiyat güncellendi");
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Fiyat güncellenemedi");
+            }
           })
         }
       >

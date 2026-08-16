@@ -14,6 +14,7 @@ import { ImpersonationBanner } from "@/components/workspace/impersonation-banner
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
 import { MotionShell } from "@/components/motion/motion-shell";
 import type { Metadata } from "next";
 
@@ -76,6 +77,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           />
           <AiAssistantDock pageContext="Yetiş operasyon paneli" />
         </SidebarProvider>
+        <Toaster />
       </AdminShell>
     </TooltipProvider>
   );

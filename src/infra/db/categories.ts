@@ -70,3 +70,22 @@ export async function updateCategory(
     },
   });
 }
+
+export async function deleteCategory(id: string) {
+  const category = await prisma.category.findUniqueOrThrow({
+    where: { id },
+    include: {
+      children: { select: { id: true } },
+      _count: { select: { primaryProducts: true, productLinks: true } },
+    },
+  });
+
+  if (category.children.length > 0) {
+    throw new Error("Bu kategorinin alt kategorileri var. Önce onları silin veya taşıyın.");
+  }
+  if (category._count.primaryProducts > 0 || category._count.productLinks > 0) {
+    throw new Error("Bu kategoriye bağlı ürünler var. Önce onları başka bir kategoriye taşıyın.");
+  }
+
+  await prisma.category.delete({ where: { id } });
+}

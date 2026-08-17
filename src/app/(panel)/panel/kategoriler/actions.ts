@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
-import { createCategory, updateCategory } from "@/infra/db/categories";
+import { createCategory, deleteCategory, updateCategory } from "@/infra/db/categories";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -29,6 +29,24 @@ export async function toggleCategoryAction(formData: FormData) {
   const active = String(formData.get("active") ?? "") === "true";
   if (!id) throw new Error("id gerekli");
   await updateCategory(id, { active: !active });
+  revalidatePath("/panel/kategoriler");
+  revalidatePath("/urunler");
+}
+
+export async function updateCategoryAction(id: string, name: string) {
+  await requireStaff();
+  const trimmed = name.trim();
+  if (!id) throw new Error("id gerekli");
+  if (!trimmed) throw new Error("Kategori adı gerekli");
+  await updateCategory(id, { name: trimmed });
+  revalidatePath("/panel/kategoriler");
+  revalidatePath("/urunler");
+}
+
+export async function deleteCategoryAction(id: string) {
+  await requireStaff();
+  if (!id) throw new Error("id gerekli");
+  await deleteCategory(id);
   revalidatePath("/panel/kategoriler");
   revalidatePath("/urunler");
 }

@@ -1,10 +1,9 @@
 import { listCategoryTreeAdmin } from "@/infra/db/categories";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { createCategoryAction, toggleCategoryAction } from "./actions";
+import { CategoryNode } from "@/components/admin/category-node";
+import { createCategoryAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-type CatRow = Awaited<ReturnType<typeof listCategoryTreeAdmin>>[number];
 
 export default async function AdminCategoriesPage() {
   const categories = await listCategoryTreeAdmin();
@@ -57,46 +56,6 @@ export default async function AdminCategoriesPage() {
           ))
         )}
       </div>
-    </div>
-  );
-}
-
-function CategoryNode({
-  category,
-  all,
-  depth,
-}: {
-  category: CatRow;
-  all: CatRow[];
-  depth: number;
-}) {
-  const children = all.filter((c) => c.parentId === category.id);
-
-  return (
-    <div>
-      <div
-        className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 hover:bg-muted/50"
-        style={{ paddingLeft: `${12 + depth * 20}px` }}
-      >
-        <div className="min-w-0">
-          <p className="truncate text-body-sm font-medium text-foreground">{category.name}</p>
-          <p className="text-caption text-muted-foreground">
-            /{category.slug} · {category._count.primaryProducts} birincil ·{" "}
-            {category._count.productLinks} bağlantı
-            {!category.active ? " · pasif" : ""}
-          </p>
-        </div>
-        <form action={toggleCategoryAction}>
-          <input type="hidden" name="id" value={category.id} />
-          <input type="hidden" name="active" value={String(category.active)} />
-          <Button type="submit" variant="outline" size="sm">
-            {category.active ? "Pasifleştir" : "Aktifleştir"}
-          </Button>
-        </form>
-      </div>
-      {children.map((child) => (
-        <CategoryNode key={child.id} category={child} all={all} depth={depth + 1} />
-      ))}
     </div>
   );
 }

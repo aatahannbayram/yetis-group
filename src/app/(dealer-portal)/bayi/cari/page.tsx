@@ -1,16 +1,25 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Wallet } from "lucide-react";
+import { ArrowRight, Clock, Wallet } from "lucide-react";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
 import { calculateBalance } from "@/domain/ledger";
+import { listOrdersForDealer } from "@/infra/db/orders";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { formatMoney } from "@/lib/format/money";
 import { formatDate } from "@/lib/format/date";
 import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
+
+const OPEN_STATUSES = new Set(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "CONFIRMED", "PREPARING", "SHIPPED"]);
+
+const PAYMENT_LABEL: Record<string, string> = {
+  HAVALE: "Havale / EFT",
+  CARI: "Cari hesap",
+  ONLINE: "Online ödeme",
+};
 
 export default async function BayiCariPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -23,15 +32,20 @@ export default async function BayiCariPage() {
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const dealer = await prisma.dealer.findUniqueOrThrow({
-    where: { id: dealerId },
-    select: {
-      unvan: true,
-      creditLimitKurus: true,
-      paymentTermDays: true,
-      ledgerEntries: { orderBy: { createdAt: "desc" } },
-    },
-  });
+  const [dealer, orders] = await Promise.all([
+    prisma.dealer.findUniqueOrThrow({
+      where: { id: dealerId },
+      select: {
+        unvan: true,
+        creditLimitKurus: true,
+        paymentTermDays: true,
+        ledgerEntries: { orderBy: { createdAt: "desc" } },
+      },
+    }),
+    listOrdersForDealer(dealerId),
+  ]);
+
+  const pendingOrders = orders.filter((o) => OPEN_STATUSES.has(o.status));
 
   const balanceKurus = calculateBalance(dealer.ledgerEntries);
   const recent = dealer.ledgerEntries.slice(0, 40);
@@ -93,6 +107,49 @@ export default async function BayiCariPage() {
             Sipariş ver <ArrowRight className="size-3" />
           </Link>
         </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold text-[var(--panel-ink)]">Bekleyen siparişler</h2>
+        {pendingOrders.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
+            Bekleyen (henüz teslim edilmemiş) sipariş yok.
+          </p>
+        ) : (
+          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+            {pendingOrders.map((order) => {
+              const awaitingPayment = order.paymentMethod !== "CARI" && !order.paidAt;
+              return (
+                <li key={order.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[var(--panel-ink)]">
+                      Sipariş #{order.id.slice(-6)}
+                    </p>
+                    <p className="text-xs text-[var(--panel-ink-muted)]">
+                      {formatDate(order.createdAt)} ·{" "}
+                      {order.paymentMethod ? PAYMENT_LABEL[order.paymentMethod] : "Ödeme belirtilmemiş"}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {awaitingPayment ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[var(--warning-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--warning-text)]">
+                        <Clock className="size-3" aria-hidden />
+                        Ödeme bekleniyor
+                      </span>
+                    ) : order.paidAt ? (
+                      <span className="inline-flex items-center rounded-full bg-[var(--success-subtle)] px-2 py-0.5 text-[11px] font-medium text-[var(--success-text)]">
+                        Ödendi
+                      </span>
+                    ) : null}
+                    <p className="text-sm font-semibold tabular-nums text-[var(--panel-ink)]">
+                      {formatMoney(money(order.totalKurus))}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       <section>

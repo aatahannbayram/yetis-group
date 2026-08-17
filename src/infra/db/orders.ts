@@ -297,3 +297,33 @@ export async function transitionOrder(
 
   return prisma.order.findUniqueOrThrow({ where: { id: orderId } });
 }
+
+/**
+ * Havale/EFT (veya ödeme yöntemi belirtilmemiş) bir siparişi "ödendi" olarak
+ * işaretler. Cari bir ön-ödeme (ODEME) kaydı açar; teslimatta oluşan BORC
+ * kaydıyla netleşir. CARİ siparişlerde ön-ödeme kavramı yok (vade/teslimat
+ * sonrası faturalanır).
+ */
+export async function confirmOrderPayment(orderId: string) {
+  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  if (order.paymentMethod === "CARI") {
+    throw new Error("Cari hesap siparişleri için ödeme onayı gerekmez");
+  }
+  if (order.paidAt) {
+    throw new Error("Bu sipariş zaten ödendi olarak işaretli");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({ where: { id: orderId }, data: { paidAt: new Date() } });
+    await tx.ledgerEntry.create({
+      data: {
+        dealerId: order.dealerId,
+        type: "ODEME",
+        amountKurus: order.totalKurus,
+        description: `Sipariş #${order.id.slice(-6)} ödemesi alındı`,
+      },
+    });
+  });
+
+  return prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+}

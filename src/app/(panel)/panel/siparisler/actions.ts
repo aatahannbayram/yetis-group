@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
-import { createOrder, transitionOrder } from "@/infra/db/orders";
+import { confirmOrderPayment, createOrder, transitionOrder } from "@/infra/db/orders";
 import { createShipment } from "@/infra/db/shipments";
 import { prisma } from "@/infra/db/client";
 import type { OrderStatus } from "@/domain/order/state-machine";
@@ -49,6 +49,17 @@ export async function transitionOrderAction(formData: FormData) {
   await transitionOrder(orderId, status, { note, cancelReason });
   revalidatePath("/panel/siparisler");
   revalidatePath("/panel/cari");
+}
+
+export async function confirmOrderPaymentAction(formData: FormData) {
+  await requireStaff();
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) throw new Error("Sipariş gerekli");
+
+  await confirmOrderPayment(orderId);
+  revalidatePath("/panel/siparisler");
+  revalidatePath("/panel/cari");
+  revalidatePath("/bayi/cari");
 }
 
 export async function createShipmentFromOrderAction(formData: FormData) {

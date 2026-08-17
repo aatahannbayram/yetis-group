@@ -23,6 +23,8 @@ import {
   Landmark,
   Wallet,
   CreditCard,
+  CircleDollarSign,
+  TriangleAlert,
   type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,10 +48,12 @@ import { cn } from "@/lib/utils";
 import {
   createOrderAction,
   transitionOrderAction,
+  confirmOrderPaymentAction,
   createShipmentFromOrderAction,
   reissueProformaAction,
   sendProformaEmailAction,
 } from "@/app/(panel)/panel/siparisler/actions";
+import { toast } from "sonner";
 import { createDealerQuickAction } from "@/app/(panel)/panel/bayiler/actions";
 import { nextOrderStatuses, type OrderStatus } from "@/domain/order/state-machine";
 
@@ -100,6 +104,7 @@ export type OrderRow = {
   totalKurus: number;
   note: string | null;
   paymentMethod: OrderPaymentMethodRow;
+  paidAt: string | null;
   createdAt: string;
   lines: OrderLineRow[];
   events: OrderEventRow[];
@@ -124,6 +129,27 @@ const PAYMENT_ICON: Record<NonNullable<OrderPaymentMethodRow>, LucideIcon> = {
   CARI: Wallet,
   ONLINE: CreditCard,
 };
+
+/** CARİ'de ön ödeme kavramı yok; diğer yöntemlerde ödendi/bekliyor noktası. */
+function PaymentPendingDot({
+  paidAt,
+  paymentMethod,
+}: {
+  paidAt: string | null;
+  paymentMethod: OrderPaymentMethodRow;
+}) {
+  if (paymentMethod === "CARI") return null;
+  return (
+    <span
+      className={cn(
+        "inline-block size-1.5 rounded-full",
+        paidAt ? "bg-[var(--success-solid)]" : "bg-[var(--warning-solid)]",
+      )}
+      title={paidAt ? "Ödendi" : "Ödeme bekleniyor"}
+      aria-label={paidAt ? "Ödendi" : "Ödeme bekleniyor"}
+    />
+  );
+}
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   DRAFT: "Taslak",
@@ -232,6 +258,7 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
   const nextStatuses = nextOrderStatuses(order.status);
   const advanceStatuses = nextStatuses.filter((s) => s !== "CANCELLED");
   const canCancel = nextStatuses.includes("CANCELLED");
+  const awaitingPayment = order.paymentMethod !== "CARI" && !order.paidAt;
 
   function advance(status: OrderStatus, cancelReasonValue?: string) {
     setError(null);
@@ -246,6 +273,20 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
         setCancelReason("");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Durum güncellenemedi.");
+      }
+    });
+  }
+
+  function confirmPayment() {
+    setError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("orderId", order.id);
+      try {
+        await confirmOrderPaymentAction(formData);
+        toast.success("Ödeme alındı olarak işaretlendi");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Ödeme işaretlenemedi");
       }
     });
   }
@@ -287,6 +328,13 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
               tone={PAYMENT_TONE[order.paymentMethod]}
               icon={PAYMENT_ICON[order.paymentMethod]}
             />
+          ) : null}
+          {order.paymentMethod !== "CARI" ? (
+            order.paidAt ? (
+              <StatusBadge label={`Ödendi · ${formatDate(new Date(order.paidAt))}`} tone="success" icon={CircleDollarSign} />
+            ) : (
+              <StatusBadge label="Ödeme bekleniyor" tone="warning" icon={TriangleAlert} />
+            )
           ) : null}
         </div>
         <SheetDescription>
@@ -469,6 +517,26 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
             <CircleAlert className="size-3.5 shrink-0" />
             {error}
           </p>
+        ) : null}
+
+        {awaitingPayment && advanceStatuses.includes("CONFIRMED") ? (
+          <p className="flex items-center gap-1.5 rounded-[var(--radius-sm)] bg-[var(--warning-subtle)] px-3 py-2 text-[length:var(--text-caption)] text-[var(--warning-text)]">
+            <TriangleAlert className="size-3.5 shrink-0" />
+            Bu sipariş henüz ödendi olarak işaretlenmedi.
+          </p>
+        ) : null}
+
+        {awaitingPayment ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isPending}
+            onClick={confirmPayment}
+            className="gap-1.5 border-[var(--success-border)] text-[var(--success-text)] hover:bg-[var(--success-subtle)]"
+          >
+            <CircleDollarSign className="size-3.5" />
+            Ödeme alındı olarak işaretle
+          </Button>
         ) : null}
 
         {advanceStatuses.length > 0 || canCancel ? (
@@ -1113,8 +1181,20 @@ export function OrderBoard({
         header: "Ödeme",
         cell: ({ row }) => {
           const pm = row.original.paymentMethod;
-          if (!pm) return <span className="text-[var(--text-muted)]">Belirtilmemiş</span>;
-          return <StatusBadge label={PAYMENT_LABEL[pm]} tone={PAYMENT_TONE[pm]} icon={PAYMENT_ICON[pm]} />;
+          if (!pm) {
+            return (
+              <span className="inline-flex items-center gap-1.5 text-[var(--text-muted)]">
+                Belirtilmemiş
+                <PaymentPendingDot paidAt={row.original.paidAt} paymentMethod={pm} />
+              </span>
+            );
+          }
+          return (
+            <span className="inline-flex items-center gap-1.5">
+              <StatusBadge label={PAYMENT_LABEL[pm]} tone={PAYMENT_TONE[pm]} icon={PAYMENT_ICON[pm]} />
+              <PaymentPendingDot paidAt={row.original.paidAt} paymentMethod={pm} />
+            </span>
+          );
         },
       },
       {

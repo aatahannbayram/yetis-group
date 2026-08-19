@@ -5,6 +5,7 @@ import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EditablePrice } from "@/components/admin/editable-price";
+import { EditableVariantPackaging } from "@/components/admin/editable-variant-packaging";
 import {
   Table,
   TableBody,
@@ -16,6 +17,7 @@ import {
 import {
   createVariantAction,
   updateGroupPriceAction,
+  updateVariantPackagingAction,
   updateVariantPriceAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import { cn } from "@/lib/utils";
@@ -187,7 +189,12 @@ export function ProductVariantPricing({
               <TableRow key={v.id} className="border-stone-200 dark:border-zinc-800">
                 <TableCell className="font-mono text-xs text-stone-500">{v.sku}</TableCell>
                 <TableCell className="text-stone-700 dark:text-zinc-300">
-                  {packLabel(v.packSize, v.packagingType)}
+                  <EditableVariantPackaging
+                    packSize={v.packSize}
+                    packagingType={v.packagingType}
+                    unitFactor={v.unitFactor}
+                    onSave={(input) => updateVariantPackagingAction(v.id, input, slug)}
+                  />
                 </TableCell>
                 <TableCell className="tabular-nums text-stone-500">
                   {v.baseUnit} · ×{v.unitFactor}

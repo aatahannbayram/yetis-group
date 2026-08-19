@@ -14,7 +14,12 @@ import {
 } from "@/infra/db/media";
 import { saveUploadedImage } from "@/infra/storage/local";
 import { upsertProductAttributeValue, listAttributeDefinitions } from "@/infra/db/attributes";
-import { createProduct, createVariant, updateProductDescription } from "@/infra/db/products";
+import {
+  createProduct,
+  createVariant,
+  updateProductDescription,
+  updateVariantPackaging,
+} from "@/infra/db/products";
 import { prisma } from "@/infra/db/client";
 import type { PackagingType } from "@/generated/prisma";
 import { upsertPriceListItem } from "@/infra/db/pricing";
@@ -115,6 +120,26 @@ export async function createVariantAction(formData: FormData) {
     moq: Number.isFinite(moq) && moq > 0 ? Math.round(moq) : 1,
   });
 
+  if (slug) {
+    revalidatePath(`/panel/urunler/${slug}`);
+    revalidatePath(`/urunler/${slug}`);
+  }
+  revalidatePath("/panel/urunler");
+  revalidatePath("/panel/fiyat-listeleri");
+  revalidatePath("/urunler");
+}
+
+export async function updateVariantPackagingAction(
+  variantId: string,
+  input: { packagingType: PackagingType; packSize: string; unitFactor: number },
+  slug?: string,
+) {
+  await requireStaff();
+  await updateVariantPackaging(variantId, {
+    packagingType: input.packagingType,
+    packSize: input.packSize.trim() || null,
+    unitFactor: input.unitFactor,
+  });
   if (slug) {
     revalidatePath(`/panel/urunler/${slug}`);
     revalidatePath(`/urunler/${slug}`);

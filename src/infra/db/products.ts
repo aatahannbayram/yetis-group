@@ -219,6 +219,30 @@ export async function createVariant(input: CreateVariantInput) {
   return variant;
 }
 
+export type UpdateVariantPackagingInput = {
+  packagingType: PackagingType;
+  packSize: string | null;
+  unitFactor: number;
+};
+
+/** Kayıttan sonra ambalaj/paket boyutu/birim katsayısını düzeltmek için. */
+export async function updateVariantPackaging(
+  variantId: string,
+  input: UpdateVariantPackagingInput,
+) {
+  if (!Number.isFinite(input.unitFactor) || input.unitFactor <= 0) {
+    throw new Error("Birim katsayısı 0'dan büyük olmalı");
+  }
+  return prisma.productVariant.update({
+    where: { id: variantId },
+    data: {
+      packagingType: input.packagingType,
+      packSize: input.packSize?.trim() || null,
+      unitFactor: input.unitFactor,
+    },
+  });
+}
+
 export type ProductWithVariants = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
 export function defaultVariant(product: ProductWithVariants) {

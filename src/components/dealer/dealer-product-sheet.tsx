@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Image from "next/image";
-import { CalendarClock, MapPin, Minus, Package, Plus, Snowflake } from "lucide-react";
+import { CalendarClock, MapPin, Package, Snowflake } from "lucide-react";
 import type { DealerCatalogProduct, DealerCatalogVariant } from "@/infra/db/dealer-catalog";
 import {
   Sheet,
@@ -15,14 +15,8 @@ import { splitPdpCopy } from "@/components/store/pdp-description";
 import { formatMoney } from "@/lib/format/money";
 import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
 import { cn } from "@/lib/utils";
-
-const PACK_LABEL: Record<string, string> = {
-  TENEKE: "Teneke",
-  VAKUM: "Vakum",
-  KOLI: "Koli",
-  KUTU: "Kutu",
-  DOKME: "Dökme",
-};
+import { packLabel, salesUnitLabel } from "@/lib/format/packaging";
+import { QtyInput } from "@/components/ui/qty-input";
 
 function formatKg(n: number) {
   return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
@@ -108,7 +102,7 @@ export function DealerProductSheet({
                 {product.name}
               </SheetTitle>
               <SheetDescription className="text-[var(--panel-ink-muted)]">
-                {variant.packSize ?? PACK_LABEL[variant.packagingType] ?? variant.sku}
+                {packLabel(variant.packSize, variant.packagingType)}
                 {" · "}
                 {variant.sku}
               </SheetDescription>
@@ -162,7 +156,7 @@ export function DealerProductSheet({
 
               {product.variants.length > 1 ? (
                 <div>
-                  <p className="text-xs font-medium text-[var(--panel-ink)]">Ambalaj</p>
+                  <p className="text-xs font-medium text-[var(--panel-ink)]">Cins</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {product.variants.map((opt) => (
                       <button
@@ -176,7 +170,7 @@ export function DealerProductSheet({
                             : "border-[var(--panel-border)] text-[var(--panel-ink-muted)] hover:border-[var(--primary-solid)]/40",
                         )}
                       >
-                        {opt.packSize ?? PACK_LABEL[opt.packagingType] ?? opt.sku}
+                        {packLabel(opt.packSize, opt.packagingType)}
                       </button>
                     ))}
                   </div>
@@ -189,6 +183,9 @@ export function DealerProductSheet({
                 <div>
                   <p className="text-xl font-semibold tabular-nums text-[var(--panel-ink)]">
                     {formatMoney(variant.unitPrice)}
+                    <span className="ml-1 text-xs font-medium text-[var(--panel-ink-muted)]">
+                      / {salesUnitLabel(variant.packagingType)}
+                    </span>
                   </p>
                   <p
                     className={cn(
@@ -207,26 +204,14 @@ export function DealerProductSheet({
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="inline-flex items-center rounded-md border border-[var(--panel-border)]">
-                  <button
-                    type="button"
-                    className="flex size-10 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)]"
-                    onClick={() => onQty(Math.max(variant.moq, amount - 1))}
-                    aria-label="Azalt"
-                  >
-                    <Minus className="size-3.5" />
-                  </button>
-                  <span className="w-10 text-center text-sm tabular-nums">{amount}</span>
-                  <button
-                    type="button"
-                    className="flex size-10 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)] disabled:opacity-30"
-                    disabled={amount >= maxQty}
-                    onClick={() => onQty(Math.min(amount + 1, maxQty))}
-                    aria-label="Artır"
-                  >
-                    <Plus className="size-3.5" />
-                  </button>
-                </div>
+                <QtyInput
+                  value={amount}
+                  min={variant.moq}
+                  max={Math.max(variant.moq, maxQty)}
+                  disabled={pending || insufficientForMoq || outOfStock}
+                  ariaLabel={salesUnitLabel(variant.packagingType)}
+                  onCommit={onQty}
+                />
                 <button
                   type="button"
                   disabled={pending || insufficientForMoq || outOfStock}
@@ -238,7 +223,7 @@ export function DealerProductSheet({
               </div>
               {!insufficientForMoq && !outOfStock ? (
                 <p className="text-[11px] text-[var(--panel-ink-muted)]">
-                  Maks. {maxQty} adet ({formatKg(stockKg)} kg)
+                  Maks. {maxQty} {salesUnitLabel(variant.packagingType)} ({formatKg(stockKg)} kg)
                 </p>
               ) : null}
               {notice ? (

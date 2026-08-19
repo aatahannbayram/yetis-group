@@ -10,6 +10,7 @@ export type DealerOffer = {
   id: string;
   productName: string;
   slug: string;
+  variantId: string;
   imageUrl: string | null;
   packLabel: string;
   lotNumber: string;
@@ -31,7 +32,7 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
     <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {offers.map((o) => {
         const tone = urgencyTone(o.daysLeft);
-        const detailHref = `/bayi/siparis?urun=${encodeURIComponent(o.slug)}`;
+        const detailHref = `/bayi/siparis?urun=${encodeURIComponent(o.slug)}&cins=${encodeURIComponent(o.variantId)}`;
         return (
           <StaggerItem key={o.id}>
             <HoverLift className="h-full">

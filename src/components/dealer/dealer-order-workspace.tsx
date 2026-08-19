@@ -1,14 +1,14 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   Building2,
   Check,
   CreditCard,
   Landmark,
-  Minus,
   Package,
   Plus,
   Search,
@@ -16,6 +16,7 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
+import { QtyInput } from "@/components/ui/qty-input";
 import type { DealerCatalogProduct } from "@/infra/db/dealer-catalog";
 import type { DealerCartView } from "@/app/(dealer-portal)/bayi/siparis/actions";
 import {
@@ -25,18 +26,28 @@ import {
   dealerSubmitOrderAction,
 } from "@/app/(dealer-portal)/bayi/siparis/actions";
 import { DealerProductSheet } from "@/components/dealer/dealer-product-sheet";
+import { OrderCelebrate } from "@/components/store/order-celebrate";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  CreditCardForm,
+  type CardState,
+  type CardValidity,
+} from "@/components/ui/credit-card-form";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
 import { cn } from "@/lib/utils";
-
-const PACK_LABEL: Record<string, string> = {
-  TENEKE: "Teneke",
-  VAKUM: "Vakum",
-  KOLI: "Koli",
-  KUTU: "Kutu",
-  DOKME: "Dökme",
-};
+import { mixedQuantityNoun, packLabel, packagingTypeLabel, salesUnitLabel } from "@/lib/format/packaging";
+import { formatKg } from "@/lib/format/weight";
+import { kg } from "@/domain/weight";
 
 type PaymentInfo = {
   bankTransferEnabled: boolean;
@@ -51,13 +62,9 @@ type CariInfo = {
   availableKurus: number | null;
 };
 
-function stockLabel(kg: number) {
-  const tone = stockTone(kg);
-  return { text: stockAvailabilityLabel(kg), tone };
-}
-
-function formatKg(n: number) {
-  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
+function stockLabel(stockKg: number) {
+  const tone = stockTone(stockKg);
+  return { text: stockAvailabilityLabel(stockKg), tone };
 }
 
 /** Stoktaki kg'yi paket adedine çevirir (koli/teneke↔kg katsayısı üzerinden). */
@@ -71,12 +78,14 @@ export function DealerOrderWorkspace({
   products,
   initialCart,
   initialProductSlug,
+  initialCinsId,
   payment,
   cari,
 }: {
   products: DealerCatalogProduct[];
   initialCart: DealerCartView | null;
   initialProductSlug?: string | null;
+  initialCinsId?: string | null;
   payment: PaymentInfo;
   cari: CariInfo;
 }) {
@@ -88,6 +97,12 @@ export function DealerOrderWorkspace({
     const init: Record<string, string> = {};
     for (const p of products) {
       if (p.variants[0]) init[p.id] = p.variants[0].id;
+    }
+    if (initialProductSlug && initialCinsId) {
+      const match = products.find((p) => p.slug === initialProductSlug);
+      if (match?.variants.some((v) => v.id === initialCinsId)) {
+        init[match.id] = initialCinsId;
+      }
     }
     return init;
   });
@@ -102,7 +117,33 @@ export function DealerOrderWorkspace({
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [cardOk, setCardOk] = useState(false);
+  const [cardLast4, setCardLast4] = useState("");
+  const [draftCardOk, setDraftCardOk] = useState(false);
+  const [draftLast4, setDraftLast4] = useState("");
   const [pending, startTransition] = useTransition();
+  const reducedMotion = useReducedMotion();
+
+  const onCardChange = useCallback((state: CardState, validity: CardValidity) => {
+    setDraftCardOk(validity.allValid);
+    setDraftLast4(state.number.length >= 4 ? state.number.slice(-4) : "");
+  }, []);
+
+  function selectPaymentMethod(next: "HAVALE" | "CARI" | "ONLINE") {
+    setPaymentMethod(next);
+    if (next === "ONLINE" && !cardOk) {
+      setCardModalOpen(true);
+    }
+  }
+
+  function handleSaveCard() {
+    if (!draftCardOk) return;
+    setCardOk(true);
+    setCardLast4(draftLast4);
+    setCardModalOpen(false);
+  }
 
   const categories = useMemo(() => {
     const set = new Set(products.map((p) => p.categoryName));
@@ -115,11 +156,15 @@ export function DealerOrderWorkspace({
       if (category && p.categoryName !== category) return false;
       if (!q) return true;
       if (p.name.toLocaleLowerCase("tr-TR").includes(q)) return true;
-      return p.variants.some(
-        (v) =>
+      return p.variants.some((v) => {
+        const pack = packLabel(v.packSize, v.packagingType).toLocaleLowerCase("tr-TR");
+        const type = packagingTypeLabel(v.packagingType).toLocaleLowerCase("tr-TR");
+        return (
           v.sku.toLocaleLowerCase("tr-TR").includes(q) ||
-          (v.packSize?.toLocaleLowerCase("tr-TR").includes(q) ?? false),
-      );
+          pack.includes(q) ||
+          type.includes(q)
+        );
+      });
     });
   }, [products, search, category]);
 
@@ -130,6 +175,9 @@ export function DealerOrderWorkspace({
 
   const detailProduct = products.find((p) => p.id === detailId) ?? null;
   const detailVariant = detailProduct ? variantOf(detailProduct) : null;
+  const cartUnitNoun = mixedQuantityNoun(
+    (cart?.lines ?? []).map((l) => l.packagingType),
+  );
 
   function addProduct(product: DealerCatalogProduct) {
     const v = variantOf(product);
@@ -164,6 +212,10 @@ export function DealerOrderWorkspace({
   }
 
   function submit() {
+    if (paymentMethod === "ONLINE" && !cardOk) {
+      setCardModalOpen(true);
+      return;
+    }
     setMessage(null);
     setError(null);
     startTransition(async () => {
@@ -174,8 +226,11 @@ export function DealerOrderWorkspace({
       }
       setCart({ id: cart?.id ?? "", lines: [], itemCount: 0, totalKurus: 0 });
       setNote("");
-      router.push(`/bayi/siparislerim?yeni=${res.orderId}`);
-      router.refresh();
+      setCelebrate(true);
+      window.setTimeout(() => {
+        router.push(`/bayi/siparislerim?yeni=${res.orderId}`);
+        router.refresh();
+      }, 1100);
     });
   }
 
@@ -274,14 +329,25 @@ export function DealerOrderWorkspace({
                     </div>
 
                     {product.variants.length > 1 ? (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div>
+                        <p className="mb-1 text-[11px] font-medium text-[var(--panel-ink-muted)]">
+                          Cins
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
                         {product.variants.map((opt) => (
                           <button
                             key={opt.id}
                             type="button"
-                            onClick={() =>
-                              setSelected((s) => ({ ...s, [product.id]: opt.id }))
-                            }
+                            onClick={() => {
+                              setSelected((s) => ({ ...s, [product.id]: opt.id }));
+                              setQty((q) => {
+                                const current = q[product.id] ?? opt.moq;
+                                return {
+                                  ...q,
+                                  [product.id]: Math.max(opt.moq, current),
+                                };
+                              });
+                            }}
                             className={cn(
                               "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                               selected[product.id] === opt.id
@@ -289,13 +355,14 @@ export function DealerOrderWorkspace({
                                 : "border-[var(--panel-border)] text-[var(--panel-ink-muted)] hover:border-[var(--primary-solid)]/40",
                             )}
                           >
-                            {opt.packSize ?? PACK_LABEL[opt.packagingType] ?? opt.sku}
+                            {packLabel(opt.packSize, opt.packagingType)}
                           </button>
                         ))}
+                        </div>
                       </div>
                     ) : (
                       <p className="text-xs text-[var(--panel-ink-muted)]">
-                        {v.packSize ?? PACK_LABEL[v.packagingType]} · {v.sku}
+                        {packLabel(v.packSize, v.packagingType)} · {v.sku}
                       </p>
                     )}
 
@@ -318,57 +385,30 @@ export function DealerOrderWorkspace({
                   <div className="flex shrink-0 items-center justify-between gap-3 sm:flex-col sm:items-end">
                     <p className="text-lg font-semibold tabular-nums text-[var(--panel-ink)]">
                       {formatMoney(v.unitPrice)}
+                      <span className="ml-1 text-xs font-medium text-[var(--panel-ink-muted)]">
+                        / {salesUnitLabel(v.packagingType)}
+                      </span>
                     </p>
                     <div className="flex flex-col items-end gap-1">
-                      <div className="flex items-center gap-2">
-                        <div className="inline-flex items-center rounded-md border border-[var(--panel-border)]">
-                          <button
-                            type="button"
-                            className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)]"
-                            onClick={() =>
-                              setQty((q) => ({
-                                ...q,
-                                [product.id]: Math.max(v.moq, amount - 1),
-                              }))
-                            }
-                            aria-label="Azalt"
-                          >
-                            <Minus className="size-3.5" />
-                          </button>
-                          <input
-                            type="number"
-                            inputMode="numeric"
+                        <div className="flex items-center gap-2">
+                          <QtyInput
+                            value={amount}
                             min={v.moq}
                             max={Math.max(v.moq, maxQty)}
-                            value={amount}
-                            onChange={(e) => {
-                              const raw = Math.round(Number(e.target.value));
-                              const upper = Math.max(v.moq, maxQty);
-                              const next = Number.isFinite(raw)
-                                ? Math.min(Math.max(raw, v.moq), upper)
-                                : v.moq;
-                              setQty((q) => ({ ...q, [product.id]: next }));
-                            }}
-                            className="w-14 border-x border-[var(--panel-border)] bg-transparent text-center text-sm tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                            aria-label="Adet"
-                          />
-                          <button
-                            type="button"
-                            className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)] disabled:opacity-30"
-                            disabled={amount >= maxQty}
-                            onClick={() =>
-                              setQty((q) => ({ ...q, [product.id]: Math.min(amount + 1, maxQty) }))
+                            disabled={pending || insufficientForMoq}
+                            ariaLabel={salesUnitLabel(v.packagingType)}
+                            onCommit={(next) =>
+                              setQty((q) => ({ ...q, [product.id]: next }))
                             }
-                            aria-label="Artır"
-                          >
-                            <Plus className="size-3.5" />
-                          </button>
-                        </div>
+                          />
+                        <span className="text-xs font-medium text-[var(--panel-ink-muted)]">
+                          {salesUnitLabel(v.packagingType)}
+                        </span>
                         <button
                           type="button"
                           disabled={pending || insufficientForMoq}
                           onClick={() => addProduct(product)}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary-solid)] px-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-40"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--primary-solid)] px-3.5 text-sm font-semibold text-white transition-[transform,background-color] hover:bg-[var(--primary-hover)] active:scale-[0.97] disabled:opacity-40"
                         >
                           <Plus className="size-3.5" aria-hidden />
                           {insufficientForMoq ? "Stok yetersiz" : "Ekle"}
@@ -376,7 +416,7 @@ export function DealerOrderWorkspace({
                       </div>
                       {!insufficientForMoq ? (
                         <p className="text-[11px] text-[var(--panel-ink-muted)]">
-                          Maks. {maxQty} adet ({formatKg(v.stockKg)} kg)
+                          Maks. {maxQty} {salesUnitLabel(v.packagingType)} ({formatKg(kg(v.stockKg.toString()))})
                         </p>
                       ) : null}
                     </div>
@@ -389,78 +429,110 @@ export function DealerOrderWorkspace({
       </div>
 
       <aside className="lg:sticky lg:top-20">
-        <div className="overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white shadow-[var(--shadow-sm)]">
+        <div className="relative overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white shadow-[var(--shadow-sm)]">
+          <OrderCelebrate active={celebrate} />
+
           <div className="flex items-center justify-between border-b border-[var(--panel-border)] px-4 py-3">
             <div className="flex items-center gap-2">
               <ShoppingCart className="size-4 text-[var(--primary-text)]" aria-hidden />
               <h2 className="text-sm font-semibold text-[var(--panel-ink)]">Sepet</h2>
             </div>
             <span className="text-xs tabular-nums text-[var(--panel-ink-muted)]">
-              {cart?.itemCount ?? 0} adet
+              {cart?.itemCount ?? 0} {cartUnitNoun}
             </span>
           </div>
 
-          <div className="max-h-[42vh] space-y-3 overflow-y-auto px-4 py-3">
-            {!cart?.lines.length ? (
-              <p className="py-6 text-center text-sm text-[var(--panel-ink-muted)]">
-                Sepetiniz boş. Soldan ürün ekleyin.
+          {celebrate ? (
+            <motion.div
+              className="flex flex-col items-center px-4 py-10 text-center"
+              initial={reducedMotion ? false : { opacity: 0, y: 8, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <span className="flex size-14 items-center justify-center rounded-full bg-[var(--primary-subtle)]">
+                <Check className="size-6 text-[var(--primary-text)]" aria-hidden />
+              </span>
+              <p className="mt-3 text-[15px] font-semibold text-[var(--panel-ink)]">
+                Siparişiniz alındı
               </p>
-            ) : (
-              cart.lines.map((line) => (
-                <div key={line.id} className="flex gap-3">
-                  <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-[var(--surface-3)]">
-                    {line.imageUrl ? (
-                      <Image src={line.imageUrl} alt="" fill className="object-cover" sizes="48px" />
-                    ) : (
-                      <Package className="m-auto size-5 text-[var(--panel-ink-muted)]" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[var(--panel-ink)]">{line.name}</p>
-                    <p className="text-[11px] text-[var(--panel-ink-muted)]">
-                      {line.unitLabel} · {line.sku}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-between gap-2">
-                      <div className="inline-flex items-center rounded border border-[var(--panel-border)]">
-                        <button
-                          type="button"
-                          className="flex size-7 items-center justify-center"
-                          disabled={pending}
-                          onClick={() => changeQty(line.id, line.quantity - 1)}
-                        >
-                          <Minus className="size-3" />
-                        </button>
-                        <span className="w-6 text-center text-xs tabular-nums">{line.quantity}</span>
-                        <button
-                          type="button"
-                          className="flex size-7 items-center justify-center"
-                          disabled={pending}
-                          onClick={() => changeQty(line.id, line.quantity + 1)}
-                        >
-                          <Plus className="size-3" />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold tabular-nums">
-                          {formatMoney(money(line.lineTotalKurus))}
-                        </span>
-                        <button
-                          type="button"
-                          className="text-[var(--panel-ink-muted)] hover:text-[var(--danger-text)]"
-                          onClick={() => removeLine(line.id)}
-                          aria-label="Satırı sil"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+              <p className="mt-1 max-w-[16rem] text-[13px] leading-relaxed text-[var(--panel-ink-muted)]">
+                Sipariş listenize yönlendiriliyorsunuz…
+              </p>
+            </motion.div>
+          ) : (
+            <div className="max-h-[42vh] space-y-3 overflow-y-auto px-4 py-3">
+              {!cart?.lines.length ? (
+                <div className="flex flex-col items-center gap-2 py-10 text-center">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-[var(--surface-3)] text-[var(--panel-ink-muted)]">
+                    <ShoppingCart className="size-5" aria-hidden />
+                  </span>
+                  <p className="text-sm text-[var(--panel-ink-muted)]">
+                    Sepetiniz boş. Soldan ürün ekleyin.
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {cart.lines.map((line) => (
+                    <motion.div
+                      key={line.id}
+                      layout={!reducedMotion}
+                      initial={reducedMotion ? false : { opacity: 0, height: 0, y: -6 }}
+                      animate={{ opacity: 1, height: "auto", y: 0 }}
+                      exit={reducedMotion ? undefined : { opacity: 0, height: 0, y: -6 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      className="flex gap-3 overflow-hidden"
+                    >
+                      <div className="relative size-12 shrink-0 overflow-hidden rounded-md bg-[var(--surface-3)]">
+                        {line.imageUrl ? (
+                          <Image src={line.imageUrl} alt="" fill className="object-cover" sizes="48px" />
+                        ) : (
+                          <Package className="m-auto size-5 text-[var(--panel-ink-muted)]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 pb-3">
+                        <p className="truncate text-sm font-medium text-[var(--panel-ink)]">{line.name}</p>
+                        <p className="text-[11px] text-[var(--panel-ink-muted)]">
+                          {line.unitLabel} · {line.sku}
+                        </p>
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <QtyInput
+                            size="sm"
+                            value={line.quantity}
+                            min={1}
+                            max={(() => {
+                              const v = products
+                                .flatMap((p) => p.variants)
+                                .find((x) => x.id === line.variantId);
+                              if (!v) return undefined;
+                              return Math.max(1, maxOrderableQty(v.stockKg, v.unitFactor));
+                            })()}
+                            disabled={pending}
+                            ariaLabel={salesUnitLabel(line.packagingType)}
+                            onCommit={(next) => changeQty(line.id, next)}
+                          />
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold tabular-nums">
+                              {formatMoney(money(line.lineTotalKurus))}
+                            </span>
+                            <button
+                              type="button"
+                              className="text-[var(--panel-ink-muted)] transition-colors hover:text-[var(--danger-text)]"
+                              onClick={() => removeLine(line.id)}
+                              aria-label="Satırı sil"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          )}
 
-          <div className="space-y-3 border-t border-[var(--panel-border)] px-4 py-4">
+          <div className={cn("space-y-3 border-t border-[var(--panel-border)] px-4 py-4", celebrate && "hidden")}>
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-[var(--panel-ink-muted)]">Ara toplam</span>
               <span className="text-lg font-semibold tabular-nums text-[var(--panel-ink)]">
@@ -475,7 +547,7 @@ export function DealerOrderWorkspace({
               {payment.bankTransferEnabled ? (
                 <PaymentOption
                   active={paymentMethod === "HAVALE"}
-                  onSelect={() => setPaymentMethod("HAVALE")}
+                  onSelect={() => selectPaymentMethod("HAVALE")}
                   icon={Landmark}
                   title="Havale / EFT"
                   description="Sipariş sonrası IBAN bilgisi"
@@ -483,21 +555,43 @@ export function DealerOrderWorkspace({
               ) : null}
               <PaymentOption
                 active={paymentMethod === "ONLINE"}
-                onSelect={() => setPaymentMethod("ONLINE")}
+                onSelect={() => selectPaymentMethod("ONLINE")}
                 icon={CreditCard}
                 title="Online ödeme"
-                description="Kartla anında öde"
+                description={
+                  cardOk && cardLast4 ? `•••• ${cardLast4} kaydedildi` : "Kartla anında öde"
+                }
               />
               {cari.eligible ? (
                 <PaymentOption
                   active={paymentMethod === "CARI"}
-                  onSelect={() => setPaymentMethod("CARI")}
+                  onSelect={() => selectPaymentMethod("CARI")}
                   icon={Wallet}
                   title="Cari hesap"
                   description="Vade ve limit üzerinden"
                 />
               ) : null}
             </fieldset>
+
+            {paymentMethod === "ONLINE" ? (
+              <button
+                type="button"
+                onClick={() => setCardModalOpen(true)}
+                className="flex w-full items-center justify-between gap-3 rounded-lg border border-[var(--panel-border)] bg-[var(--surface-3)]/50 px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-3)]"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-[var(--panel-ink)]">Kart bilgileri</p>
+                  <p className="mt-0.5 text-[11px] text-[var(--panel-ink-muted)]">
+                    {cardOk && cardLast4
+                      ? `•••• ${cardLast4} kaydedildi. Düzenlemek için dokunun.`
+                      : "Kart numarasını güvenli formda girin."}
+                  </p>
+                </div>
+                <span className="shrink-0 text-[11px] font-semibold text-[var(--primary-text)]">
+                  {cardOk ? "Düzenle" : "Aç"}
+                </span>
+              </button>
+            ) : null}
 
             {paymentMethod === "HAVALE" && payment.bankTransferEnabled ? (
               <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--surface-3)]/60 p-3 text-xs text-[var(--panel-ink)]">
@@ -536,19 +630,28 @@ export function DealerOrderWorkspace({
               />
             </label>
 
-            {message ? (
-              <p className="flex items-center gap-1.5 text-xs text-[var(--primary-text)]">
-                <Check className="size-3.5" aria-hidden />
-                {message}
-              </p>
-            ) : null}
+            <AnimatePresence>
+              {message ? (
+                <motion.p
+                  key="message"
+                  initial={reducedMotion ? false : { opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+                  transition={{ duration: 0.18 }}
+                  className="flex items-center gap-1.5 text-xs text-[var(--primary-text)]"
+                >
+                  <Check className="size-3.5" aria-hidden />
+                  {message}
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
             {error ? <p className="text-xs text-[var(--danger-text)]">{error}</p> : null}
 
             <button
               type="button"
               disabled={pending || !cart?.lines.length}
               onClick={submit}
-              className="flex h-11 w-full items-center justify-center rounded-lg bg-[var(--panel-ink)] text-sm font-semibold text-white transition-[transform,background-color] hover:bg-black active:scale-[0.99] disabled:opacity-40"
+              className="flex h-11 w-full items-center justify-center rounded-full bg-[var(--panel-ink)] text-sm font-semibold text-white transition-[transform,background-color] hover:bg-black active:scale-[0.97] disabled:opacity-40"
             >
               {pending ? "Gönderiliyor…" : "Siparişi gönder"}
             </button>
@@ -581,6 +684,51 @@ export function DealerOrderWorkspace({
         notice={message}
         error={error}
       />
+
+      <Dialog open={cardModalOpen} onOpenChange={setCardModalOpen}>
+        <DialogContent
+          overlayClassName="z-[80]"
+          className="z-[80] max-h-[min(92dvh,820px)] w-full max-w-[calc(100%-1.25rem)] overflow-y-auto p-0 sm:max-w-lg"
+        >
+          <DialogHeader className="border-b border-[var(--panel-border)] px-5 py-4 pr-12">
+            <DialogTitle className="text-[1.125rem] font-semibold tracking-[-0.02em] text-[var(--panel-ink)]">
+              Kart ile ödeme
+            </DialogTitle>
+            <DialogDescription className="text-[13px] text-[var(--panel-ink-muted)]">
+              {formatMoney(money(cart?.totalKurus ?? 0))} · CVV ve tam numara saklanmaz
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-5 py-4">
+            <CreditCardForm
+              maskMiddle
+              showSubmit={false}
+              title="Kart bilgileri"
+              brandLabel="Yetiş Kart"
+              onChange={onCardChange}
+            />
+          </div>
+
+          <DialogFooter className="mx-0 mb-0 gap-2 rounded-b-xl border-t border-[var(--panel-border)] bg-[var(--surface-3)]/50 p-4 sm:justify-stretch">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 flex-1 rounded-full"
+              onClick={() => setCardModalOpen(false)}
+            >
+              Vazgeç
+            </Button>
+            <button
+              type="button"
+              disabled={!draftCardOk}
+              onClick={handleSaveCard}
+              className="inline-flex h-11 flex-[1.4] items-center justify-center rounded-full bg-[var(--primary-solid)] text-[14px] font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-50"
+            >
+              Kartı Kaydet
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

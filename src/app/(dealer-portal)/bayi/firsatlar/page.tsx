@@ -6,6 +6,7 @@ import { availableKgFromMovements } from "@/infra/db/inventory";
 import { formatDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
+import { packLabel } from "@/lib/format/packaging";
 import { DealerOffersList, type DealerOffer } from "@/components/dealer/dealer-offers-list";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -48,8 +49,9 @@ export default async function BayiFirsatlarPage() {
       id: lot.id,
       productName: lot.variant.product.name,
       slug: lot.variant.product.slug,
+      variantId: lot.variant.id,
       imageUrl: lot.variant.product.imageUrl,
-      packLabel: lot.variant.packSize ?? lot.variant.sku,
+      packLabel: packLabel(lot.variant.packSize, lot.variant.packagingType),
       lotNumber: lot.lotNumber,
       sku: lot.variant.sku,
       expiryLabel: formatDate(lot.expirationDate),

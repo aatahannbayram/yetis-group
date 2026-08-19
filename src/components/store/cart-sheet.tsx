@@ -27,6 +27,7 @@ import { useCart } from "@/components/store/cart-context";
 import { useSession } from "@/infra/auth/client";
 import { money, multiplyByQuantity, sum } from "@/domain/money";
 import { formatMoney } from "@/lib/format/money";
+import { mixedQuantityNoun, salesUnitLabel } from "@/lib/format/packaging";
 import {
   CreditCardForm,
   type CardState,
@@ -70,6 +71,7 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
     lines.map((line) => multiplyByQuantity(money(line.unitPriceKurus), line.quantity)),
   );
   const unitCount = lines.reduce((n, l) => n + l.quantity, 0);
+  const unitNoun = mixedQuantityNoun(lines.map((l) => l.packagingType));
 
   const onCardChange = useCallback((state: CardState, validity: CardValidity) => {
     setDraftCardOk(validity.allValid);
@@ -155,7 +157,7 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
               ? formatMoney(total)
               : lines.length === 0
                 ? "Henüz ürün yok"
-                : `${lines.length} kalem · ${unitCount} adet`}
+                : `${lines.length} kalem · ${unitCount} ${unitNoun}`}
           </SheetDescription>
         </SheetHeader>
 
@@ -231,8 +233,8 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                             >
                               <Minus className="size-3.5" aria-hidden />
                             </button>
-                            <span className="w-8 text-center text-[14px] font-semibold tabular-nums text-mkt-ink">
-                              {line.quantity}
+                            <span className="min-w-8 px-1 text-center text-[14px] font-semibold tabular-nums text-mkt-ink">
+                              {line.quantity} {salesUnitLabel(line.packagingType)}
                             </span>
                             <button
                               type="button"
@@ -247,11 +249,10 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                             <p className="text-[15px] font-semibold tabular-nums text-mkt-ink">
                               {formatMoney(money(line.lineTotalKurus))}
                             </p>
-                            {line.quantity > 1 ? (
-                              <p className="text-[11px] tabular-nums text-mkt-ink-muted">
-                                {formatMoney(money(line.unitPriceKurus))} / adet
-                              </p>
-                            ) : null}
+                            <p className="text-[11px] tabular-nums text-mkt-ink-muted">
+                              {formatMoney(money(line.unitPriceKurus))} /{" "}
+                              {salesUnitLabel(line.packagingType)}
+                            </p>
                           </div>
                         </div>
                       </div>

@@ -86,7 +86,7 @@ export default async function ProductsPage({
             </h1>
             <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
               {session
-                ? "Hikâye ve ambalaj burada. Fiyat, stok ve sipariş adedi bayi panelinde."
+                ? "Hikâye ve ambalaj burada. Fiyat, stok ve sipariş miktarı bayi panelinde."
                 : "Katalog herkese açık. Fiyat ve stok onaylı bayi girişi sonrası panelde görünür."}
             </p>
           </Reveal>
@@ -109,7 +109,10 @@ export default async function ProductsPage({
                   category: product.category,
                   imageUrl: catalogFallbackImage(product.category, product.imageUrl),
                   unitLabel: product.unitLabel,
+                  packagingType: product.packagingType,
+                  packSize: product.packSize,
                   kgPerUnit: product.kgPerUnit.toString(),
+                  cins: product.cins,
                   vatRateBasisPoints: product.vatRateBasisPoints,
                 }))}
               />
@@ -131,7 +134,7 @@ export default async function ProductsPage({
                 Fiyat ve stok yalnızca panelde.
               </h2>
               <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/70">
-                Onaylı hesapla liste fiyatınız, lot ve sipariş adedi açılır. Misafir katalogda hikâye kalır.
+                Onaylı hesapla liste fiyatınız, lot ve sipariş miktarı açılır. Misafir katalogda hikâye kalır.
               </p>
               <div className="mt-8 flex w-full flex-col gap-2.5 sm:flex-row">
                 {dealerId ? (

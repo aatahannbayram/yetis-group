@@ -2,6 +2,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
 import { PriceListsManager } from "@/components/admin/price-lists-manager";
 import { getPriceListsWithItems, listActiveVariantsForPicker } from "@/infra/db/pricing";
+import { packLabel } from "@/lib/format/packaging";
 
 export default async function AdminPriceListsPage() {
   const [priceLists, variants] = await Promise.all([
@@ -47,7 +48,7 @@ export default async function AdminPriceListsPage() {
               variantId: item.variantId,
               priceKurus: item.priceKurus,
               sku: item.variant.sku,
-              packLabel: item.variant.packSize ?? item.variant.packagingType,
+              packLabel: packLabel(item.variant.packSize, item.variant.packagingType),
               productName: item.variant.product.name,
               productSlug: item.variant.product.slug,
               imageUrl: item.variant.product.imageUrl,
@@ -56,7 +57,7 @@ export default async function AdminPriceListsPage() {
           variantOptions={variants.map((v) => ({
             id: v.id,
             sku: v.sku,
-            label: `${v.product.name} · ${v.sku}${v.packSize ? ` (${v.packSize})` : ""}`,
+            label: `${v.product.name} · ${v.sku} (${packLabel(v.packSize, v.packagingType)})`,
             basePriceTl: (v.pricePerUnitKurus / 100).toFixed(2),
           }))}
         />

@@ -31,7 +31,12 @@ export function ProductGrid({
       (p) =>
         p.name.toLocaleLowerCase("tr-TR").includes(q) ||
         p.category.toLocaleLowerCase("tr-TR").includes(q) ||
-        p.sku.toLocaleLowerCase("tr-TR").includes(q),
+        p.sku.toLocaleLowerCase("tr-TR").includes(q) ||
+        (p.cins ?? []).some(
+          (c) =>
+            c.packLabel.toLocaleLowerCase("tr-TR").includes(q) ||
+            c.packagingType.toLocaleLowerCase("tr-TR").includes(q),
+        ),
     );
   }, [products, query]);
 

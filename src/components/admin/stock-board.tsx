@@ -25,6 +25,7 @@ import {
   type RecordableMovementType,
 } from "@/domain/inventory/movements";
 import { formatDate } from "@/lib/format/date";
+import { packLabel } from "@/lib/format/packaging";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -158,7 +159,7 @@ export function StockBoard({
                           {row.productName}
                         </span>
                         <span className="block truncate text-xs text-stone-500">
-                          {row.packSize ?? row.packagingType}
+                          {packLabel(row.packSize, row.packagingType)}
                           {!row.productActive ? " · pasif ürün" : ""}
                         </span>
                       </span>
@@ -367,7 +368,7 @@ function LotRow({
             id={`qty-${lot.id}`}
             value={qty}
             onChange={(e) => setQty(e.target.value)}
-            className="h-8 w-24"
+            className="h-8 w-24 tabular-nums"
             inputMode="decimal"
             placeholder="0"
             required
@@ -477,9 +478,7 @@ function CreateLotPanel({
           name="initialKg"
           required
           inputMode="decimal"
-          placeholder="17"
-          step="0.001"
-          min="0.001"
+          placeholder="17,5"
         />
       </div>
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-5">

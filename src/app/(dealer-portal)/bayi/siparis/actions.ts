@@ -10,6 +10,7 @@ import {
 import { createOrderFromCart } from "@/infra/db/orders";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 import { resolveDealerContext } from "@/features/dealer/actions";
+import { packLabel } from "@/lib/format/packaging";
 
 export type DealerCartLineView = {
   id: string;
@@ -17,6 +18,7 @@ export type DealerCartLineView = {
   name: string;
   sku: string;
   unitLabel: string;
+  packagingType: string;
   imageUrl: string | null;
   quantity: number;
   unitPriceKurus: number;
@@ -38,7 +40,8 @@ function toCartView(
     variantId: line.variantId,
     name: line.variant.product.name,
     sku: line.variant.sku,
-    unitLabel: line.variant.packSize ?? line.variant.packagingType,
+    unitLabel: packLabel(line.variant.packSize, line.variant.packagingType),
+    packagingType: line.variant.packagingType,
     imageUrl: line.variant.product.imageUrl,
     quantity: line.quantity,
     unitPriceKurus: line.unitPriceKurus,
@@ -102,6 +105,9 @@ export async function dealerSetQtyAction(
   lineId: string,
   quantity: number,
 ): Promise<{ ok: true; cart: DealerCartView | null } | { ok: false; error: string }> {
+  if (!Number.isInteger(quantity) || quantity < 0) {
+    return { ok: false, error: "Geçerli adet girin" };
+  }
   try {
     await setCartLineQuantity(lineId, quantity);
     const cart = await fetchDealerCartAction();

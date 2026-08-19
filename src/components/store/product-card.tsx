@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Package } from "lucide-react";
 import type { Money } from "@/domain/money";
 import { catalogFallbackImage } from "@/content/catalog-images";
+import { cinsLine, uniquePackagingTypeLabels } from "@/lib/format/packaging";
 
 export type ProductListItem = {
   id: string;
@@ -13,7 +14,16 @@ export type ProductListItem = {
   category: string;
   imageUrl: string | null;
   unitLabel: string;
+  packagingType?: string;
+  packSize?: string | null;
   kgPerUnit: string | { toString(): string };
+  cins?: Array<{
+    id: string;
+    packagingType: string;
+    packSize: string | null;
+    unitFactor: string;
+    packLabel: string;
+  }>;
   unitPrice?: Money;
   moq?: number;
   vatRateBasisPoints?: number;
@@ -23,6 +33,34 @@ export type ProductListItem = {
 
 export function ProductCard({ product }: { product: ProductListItem }) {
   const imageSrc = catalogFallbackImage(product.category, product.imageUrl);
+  const cinsOptions =
+    product.cins && product.cins.length > 0
+      ? product.cins
+      : product.packagingType
+        ? [
+            {
+              id: product.variantId,
+              packagingType: product.packagingType,
+              packSize: product.packSize ?? null,
+              unitFactor: product.kgPerUnit.toString(),
+              packLabel: product.unitLabel,
+            },
+          ]
+        : [];
+  const typeLabels = uniquePackagingTypeLabels(cinsOptions.map((c) => c.packagingType));
+  const badge =
+    typeLabels.length === 0
+      ? null
+      : typeLabels.length === 1
+        ? typeLabels[0]
+        : `${typeLabels.length} cins`;
+  const summary = cinsLine(
+    cinsOptions.map((c) => ({
+      packSize: c.packSize,
+      packagingType: c.packagingType,
+      unitFactor: c.unitFactor,
+    })),
+  );
 
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-[color:var(--mkt-border)] bg-mkt-slab shadow-[0_1px_2px_rgb(33_28_22/0.04)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-[color:var(--mkt-border-strong,var(--mkt-border))] hover:shadow-[0_18px_36px_-14px_rgb(33_28_22/0.18)]">
@@ -40,6 +78,11 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             <Package className="size-10" aria-hidden />
           </div>
         )}
+        {badge ? (
+          <span className="absolute top-3 left-3 rounded-full bg-white/92 px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-mkt-ink shadow-sm">
+            {badge}
+          </span>
+        ) : null}
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-4">
@@ -49,7 +92,7 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             {product.name}
           </h3>
         </Link>
-        <p className="text-[12px] text-mkt-ink-muted">{product.unitLabel}</p>
+        <p className="text-[13px] text-mkt-ink-muted">{summary}</p>
         <Link
           href="/auth"
           className="mt-auto pt-3 text-[13px] font-medium text-mkt-green-text hover:underline"

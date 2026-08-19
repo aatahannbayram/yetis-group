@@ -9,6 +9,7 @@ import {
 } from "@/domain/proforma";
 import { renderProformaPdf } from "@/infra/pdf/proforma-pdf";
 import { sendProformaEmail } from "@/infra/email/proforma";
+import { packLabel } from "@/lib/format/packaging";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "proforma");
 
@@ -149,7 +150,7 @@ export async function issueProformaForOrder(
   });
 
   const lineInputs = order.lines.map((l, i) => {
-    const pack = l.variant.packSize ?? l.variant.packagingType;
+    const pack = packLabel(l.variant.packSize, l.variant.packagingType);
     return {
       description: `${l.variant.product.name} · ${pack}`,
       quantity: l.quantity,

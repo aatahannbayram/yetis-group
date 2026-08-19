@@ -32,6 +32,7 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PACKAGING_OPTIONS, cinsLine, packLabel } from "@/lib/format/packaging";
 import { DataTable } from "@/components/ui/data-table";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EditablePrice } from "@/components/admin/editable-price";
@@ -57,14 +58,6 @@ function formatStockKg(kg: number) {
 }
 
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
-
-const PACKAGING_TYPES = [
-  { value: "TENEKE", label: "Teneke" },
-  { value: "VAKUM", label: "Vakum" },
-  { value: "KOLI", label: "Koli" },
-  { value: "KUTU", label: "Kutu" },
-  { value: "DOKME", label: "Dökme" },
-] as const;
 
 const selectClass =
   "h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text-primary)] outline-none transition-shadow placeholder:text-[var(--text-muted)] focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
@@ -188,14 +181,21 @@ export function ProductListSheet({
         header: "Ürün",
         minSize: 200,
         cell: ({ row }) => {
-          const variant = row.original.variants[0];
           return (
             <div className="min-w-0 max-w-[280px]">
               <p className="truncate font-medium text-stone-900 dark:text-zinc-50" title={row.original.name}>
                 {row.original.name}
               </p>
               <p className="truncate text-xs text-stone-500">
-                {variant?.packSize ?? variant?.packagingType ?? "—"}
+                {row.original.variants.length
+                  ? cinsLine(
+                      row.original.variants.map((v) => ({
+                        packSize: v.packSize,
+                        packagingType: v.packagingType,
+                        unitFactor: v.unitFactor,
+                      })),
+                    )
+                  : "-"}
               </p>
             </div>
           );
@@ -486,7 +486,7 @@ export function ProductListSheet({
                           <div className="space-y-1.5">
                             <label className={fieldLabelClass}>Ambalaj</label>
                             <select name="packagingType" className={selectClass} defaultValue="KOLI">
-                              {PACKAGING_TYPES.map((t) => (
+                              {PACKAGING_OPTIONS.map((t) => (
                                 <option key={t.value} value={t.value}>
                                   {t.label}
                                 </option>
@@ -629,7 +629,7 @@ export function ProductListSheet({
                   <StockBadge kg={selected.stockKg} />
                   <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
                     <Boxes className="size-3" />
-                    {selected.variants.length} paket tipi
+                    {selected.variants.length} cins
                   </span>
                 </div>
 
@@ -645,7 +645,7 @@ export function ProductListSheet({
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">Paketler / fiyat</p>
+                  <p className="mb-1.5 text-xs font-medium text-stone-500">Cinsler / fiyat</p>
                   <div className="space-y-2">
                     {selected.variants.map((v) => (
                       <div
@@ -654,7 +654,7 @@ export function ProductListSheet({
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-stone-800 dark:text-zinc-100">
-                            {v.packSize ?? v.packagingType}
+                            {packLabel(v.packSize, v.packagingType)}
                           </p>
                           <p className="truncate font-mono text-[11px] text-stone-400">{v.sku}</p>
                         </div>
@@ -835,8 +835,15 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
               {product.name}
             </h3>
             <p className="mt-1 truncate text-xs text-stone-500">
-              {variant?.packSize ?? variant?.packagingType ?? "Paket yok"}
-              {product.variants.length > 1 ? ` · +${product.variants.length - 1} paket` : ""}
+              {product.variants.length
+                ? cinsLine(
+                    product.variants.map((v) => ({
+                      packSize: v.packSize,
+                      packagingType: v.packagingType,
+                      unitFactor: v.unitFactor,
+                    })),
+                  )
+                : "Cins yok"}
             </p>
           </div>
 

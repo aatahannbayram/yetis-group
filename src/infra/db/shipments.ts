@@ -3,6 +3,7 @@ import { getLotsForVariant } from "@/infra/db/inventory";
 import { suggestFefoShipment } from "@/domain/inventory/fefo";
 import { canTransitionShipment, type ShipmentStatus } from "@/domain/shipment";
 import { kg } from "@/domain/weight";
+import { packLabel } from "@/lib/format/packaging";
 
 export async function listShippableVariants() {
   const variants = await prisma.productVariant.findMany({
@@ -12,7 +13,7 @@ export async function listShippableVariants() {
   });
   return variants.map((v) => ({
     id: v.id,
-    label: `${v.product.name} · ${v.packSize ?? v.packagingType}`,
+    label: `${v.product.name} · ${packLabel(v.packSize, v.packagingType)}`,
   }));
 }
 

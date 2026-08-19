@@ -44,6 +44,7 @@ import type { Density } from "@/components/ui/density-toggle";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { formatDate, formatDateTime } from "@/lib/format/date";
+import { salesUnitLabel } from "@/lib/format/packaging";
 import { cn } from "@/lib/utils";
 import {
   createOrderAction,
@@ -63,6 +64,7 @@ export type OrderLineRow = {
   productName: string;
   imageUrl: string | null;
   packLabel: string;
+  packagingType: string;
   quantity: number;
   unitPriceKurus: number;
   lineTotalKurus: number;
@@ -360,8 +362,8 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
                       {line.productName}
                     </p>
                     <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">
-                      {line.packLabel} · {line.quantity} adet ·{" "}
-                      {formatMoney(money(line.unitPriceKurus))}/adet
+                      {line.packLabel} · {line.quantity} {salesUnitLabel(line.packagingType)} ·{" "}
+                      {formatMoney(money(line.unitPriceKurus))}/{salesUnitLabel(line.packagingType)}
                     </p>
                   </div>
                   <p className="shrink-0 tabular-nums font-semibold text-[var(--text-primary)]">
@@ -797,7 +799,7 @@ function CreateOrderForm({
                 type="number"
                 step="1"
                 min="1"
-                placeholder="adet"
+                placeholder="miktar"
                 className="h-10 w-24 shrink-0 rounded-xl"
               />
               <Button

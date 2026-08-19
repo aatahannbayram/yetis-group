@@ -3,6 +3,7 @@ import { ArrowRight, Package, Truck } from "lucide-react";
 import { requireDealerPortal } from "@/features/dealer/portal-context";
 import { listShipmentsForDealer } from "@/infra/db/shipments";
 import { formatDate, formatDateTime } from "@/lib/format/date";
+import { packLabel } from "@/lib/format/packaging";
 import { cn } from "@/lib/utils";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -74,7 +75,7 @@ export default async function BayiTeslimatPage() {
                   </span>
                 </div>
                 <p className="text-xs text-[var(--panel-ink-muted)]">
-                  {s.variant.packSize ?? s.variant.packagingType} · {s.variant.sku} ·{" "}
+                  {packLabel(s.variant.packSize, s.variant.packagingType)} · {s.variant.sku} ·{" "}
                   {kgFmt.format(Number(s.quantityKg))} kg
                   {s.order ? ` · Sipariş #${s.order.id.slice(-6)}` : ""}
                 </p>

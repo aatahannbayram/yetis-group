@@ -6,6 +6,7 @@ import { listDealers, listPriceListOptions } from "@/infra/db/dealers";
 import { listShippableVariants } from "@/infra/db/shipments";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
+import { packLabel } from "@/lib/format/packaging";
 
 export default async function AdminOrdersPage() {
   const [orders, dealers, variants, priceLists] = await Promise.all([
@@ -31,7 +32,8 @@ export default async function AdminOrdersPage() {
       variantId: l.variantId,
       productName: l.variant.product.name,
       imageUrl: l.variant.product.imageUrl,
-      packLabel: l.variant.packSize ?? l.variant.packagingType,
+      packLabel: packLabel(l.variant.packSize, l.variant.packagingType),
+      packagingType: l.variant.packagingType,
       quantity: l.quantity,
       unitPriceKurus: l.unitPriceKurus,
       lineTotalKurus: l.lineTotalKurus,

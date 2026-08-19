@@ -11,6 +11,7 @@ import {
 } from "@/infra/db/cart";
 import { getUserDealerId } from "@/infra/db/users";
 import { money } from "@/domain/money";
+import { packLabel } from "@/lib/format/packaging";
 
 export type CartViewLine = {
   id: string;
@@ -18,6 +19,7 @@ export type CartViewLine = {
   productId: string;
   name: string;
   unitLabel: string;
+  packagingType: string;
   imageUrl: string | null;
   quantity: number;
   unitPriceKurus: number;
@@ -45,7 +47,8 @@ function toView(cart: NonNullable<Awaited<ReturnType<typeof getOrCreateCart>>>):
     variantId: line.variantId,
     productId: line.variant.productId,
     name: line.variant.product.name,
-    unitLabel: line.variant.packSize ?? line.variant.packagingType,
+    unitLabel: packLabel(line.variant.packSize, line.variant.packagingType),
+    packagingType: line.variant.packagingType,
     imageUrl: line.variant.product.imageUrl,
     quantity: line.quantity,
     unitPriceKurus: line.unitPriceKurus,

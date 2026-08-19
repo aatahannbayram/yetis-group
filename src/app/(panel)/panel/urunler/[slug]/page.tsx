@@ -29,6 +29,7 @@ import {
 } from "@/components/admin/product-detail-editor";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
+import { cinsLine } from "@/lib/format/packaging";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -124,7 +125,14 @@ export default async function AdminProductDetailPage({
                 {product.name}
               </h1>
               <p className="mt-1 truncate text-sm text-stone-500 dark:text-zinc-400">
-                {product.primaryCategory.name} &middot; {variant.packSize ?? variant.packagingType}
+                {product.primaryCategory.name} &middot;{" "}
+                {cinsLine(
+                  product.variants.map((v) => ({
+                    packSize: v.packSize,
+                    packagingType: v.packagingType,
+                    unitFactor: v.unitFactor.toString(),
+                  })),
+                )}
                 {" · "}Üretici: {product.producer.name}
               </p>
             </div>

@@ -19,14 +19,7 @@ import {
   updateVariantPriceAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import { cn } from "@/lib/utils";
-
-const PACKAGING_TYPES = [
-  { value: "TENEKE", label: "Teneke" },
-  { value: "VAKUM", label: "Vakum" },
-  { value: "KOLI", label: "Koli" },
-  { value: "KUTU", label: "Kutu" },
-  { value: "DOKME", label: "Dökme" },
-] as const;
+import { PACKAGING_OPTIONS, packLabel } from "@/lib/format/packaging";
 
 const fieldClass =
   "h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-sm outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
@@ -79,9 +72,9 @@ export function ProductVariantPricing({
       <section className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 px-4 py-3 dark:border-zinc-800">
           <div>
-            <h2 className="text-sm font-semibold text-stone-900 dark:text-zinc-50">Paketler</h2>
+            <h2 className="text-sm font-semibold text-stone-900 dark:text-zinc-50">Cinsler</h2>
             <p className="text-xs text-stone-500">
-              Her paket ayrı SKU, stok ve fiyattır. Baz fiyat katalog varsayılanıdır.
+              Her cins ayrı SKU, stok, ambalaj ve fiyattır. Baz fiyat katalog varsayılanıdır.
             </p>
           </div>
           <Button
@@ -91,7 +84,7 @@ export function ProductVariantPricing({
             className="h-8 gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]"
           >
             <Plus className="size-3.5" />
-            Varyant ekle
+            Cins ekle
           </Button>
         </div>
 
@@ -118,7 +111,7 @@ export function ProductVariantPricing({
               </Field>
               <Field label="Ambalaj">
                 <select name="packagingType" className={fieldClass} defaultValue="KOLI">
-                  {PACKAGING_TYPES.map((t) => (
+                  {PACKAGING_OPTIONS.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
@@ -194,7 +187,7 @@ export function ProductVariantPricing({
               <TableRow key={v.id} className="border-stone-200 dark:border-zinc-800">
                 <TableCell className="font-mono text-xs text-stone-500">{v.sku}</TableCell>
                 <TableCell className="text-stone-700 dark:text-zinc-300">
-                  {v.packSize ?? v.packagingType}
+                  {packLabel(v.packSize, v.packagingType)}
                 </TableCell>
                 <TableCell className="tabular-nums text-stone-500">
                   {v.baseUnit} · ×{v.unitFactor}
@@ -262,7 +255,7 @@ export function ProductVariantPricing({
                   <TableRow key={v.id} className="border-stone-200 dark:border-zinc-800">
                     <TableCell className="sticky left-0 z-10 bg-white dark:bg-zinc-900">
                       <p className="text-sm font-medium text-stone-800 dark:text-zinc-100">
-                        {v.packSize ?? v.packagingType}
+                        {packLabel(v.packSize, v.packagingType)}
                       </p>
                       <p className="font-mono text-[11px] text-stone-400">{v.sku}</p>
                     </TableCell>

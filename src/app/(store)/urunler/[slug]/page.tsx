@@ -12,15 +12,13 @@ import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductAttributes, ProductJsonLd } from "@/components/store/product-attributes";
 import { PdpLead, PdpBody } from "@/components/store/pdp-description";
 import { PdpFacts } from "@/components/store/pdp-facts";
-import { PdpCommerceGate } from "@/components/store/pdp-commerce-gate";
+import { PdpCinsPicker } from "@/components/store/pdp-cins-picker";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { Reveal } from "@/components/store/reveal";
 import { ViewItemTracker } from "@/components/store/view-item-tracker";
 import { listRecipesForProduct } from "@/infra/db/content";
-import { formatKg } from "@/lib/format/weight";
-import { kg } from "@/domain/weight";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { JsonLdScript, breadcrumbJsonLd } from "@/lib/seo/json-ld";
 import { catalogFallbackImage } from "@/content/catalog-images";
@@ -134,17 +132,23 @@ export default async function ProductDetailPage({
                 <h1 className="mkt-display mt-4 text-balance text-[clamp(2rem,4.6vw,3.15rem)] text-mkt-ink">
                   {product.name}
                 </h1>
-                <p className="mkt-body mt-2">
-                  {product.unitLabel} · {formatKg(kg(product.kgPerUnit.toString()))}
-                </p>
 
-                <PdpLead text={product.description} />
-
-                {product.requiresColdChain ? (
-                  <p className="mkt-label mt-4 text-mkt-green-text">Soğuk zincir</p>
-                ) : null}
-
-                <PdpCommerceGate slug={product.slug} isDealer={isDealer} />
+                <PdpCinsPicker
+                  slug={product.slug}
+                  isDealer={isDealer}
+                  cinsler={product.variants.map((v) => ({
+                    id: v.id,
+                    packLabel: v.packLabel,
+                    packagingType: v.packagingType,
+                    packSize: v.packSize,
+                    unitFactor: v.unitFactor.toString(),
+                  }))}
+                >
+                  <PdpLead text={product.description} />
+                  {product.requiresColdChain ? (
+                    <p className="mkt-label mt-4 text-mkt-green-text">Soğuk zincir</p>
+                  ) : null}
+                </PdpCinsPicker>
 
                 <PdpBody text={product.description} />
 
@@ -200,7 +204,10 @@ export default async function ProductDetailPage({
                         category: p.category,
                         imageUrl: p.imageUrl,
                         unitLabel: p.unitLabel,
+                        packagingType: p.packagingType,
+                        packSize: p.packSize,
                         kgPerUnit: p.kgPerUnit.toString(),
+                        cins: p.cins,
                         vatRateBasisPoints: p.vatRateBasisPoints,
                       }}
                     />

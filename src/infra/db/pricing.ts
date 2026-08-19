@@ -3,6 +3,7 @@ import { getProductBySlug, getProducts, defaultVariant } from "@/infra/db/produc
 import { getShippableStockByVariant } from "@/infra/db/inventory";
 import { money } from "@/domain/money";
 import { slugifyTr } from "@/domain/catalog/slug";
+import { packLabel } from "@/lib/format/packaging";
 
 async function resolvePriceListId(userId: string | undefined) {
   if (!userId) return null;
@@ -48,12 +49,21 @@ export async function getProductsWithPricing(userId?: string, categorySlug?: str
         categorySlug: product.primaryCategory.slug,
         producerName: product.producer.name,
         sku: variant.sku,
-        unitLabel: variant.packSize ?? variant.packagingType,
+        packagingType: variant.packagingType,
+        packSize: variant.packSize,
+        unitLabel: packLabel(variant.packSize, variant.packagingType),
         kgPerUnit: variant.unitFactor,
         unitFactor: variant.unitFactor,
         moq: variant.moq ?? 1,
         vatRateBasisPoints: variant.vatRateBasisPoints,
         variantId: variant.id,
+        cins: product.variants.map((v) => ({
+          id: v.id,
+          packagingType: v.packagingType,
+          packSize: v.packSize,
+          unitFactor: v.unitFactor.toString(),
+          packLabel: packLabel(v.packSize, v.packagingType),
+        })),
         unitPrice: money(overrides.get(variant.id) ?? variant.pricePerUnitKurus),
         stockKg: stock ? stock.toNumber() : 0,
       },
@@ -93,11 +103,14 @@ export async function getProductBySlugWithPricing(slug: string, userId?: string)
       return {
         ...v,
         unitPrice: money(overrides.get(v.id) ?? v.pricePerUnitKurus),
+        packLabel: packLabel(v.packSize, v.packagingType),
         stockKg: stock ? stock.toNumber() : 0,
       };
     }),
     sku: variant.sku,
-    unitLabel: variant.packSize ?? variant.packagingType,
+    packagingType: variant.packagingType,
+    packSize: variant.packSize,
+    unitLabel: packLabel(variant.packSize, variant.packagingType),
     kgPerUnit: variant.unitFactor,
     unitFactor: variant.unitFactor,
     moq: variant.moq ?? 1,

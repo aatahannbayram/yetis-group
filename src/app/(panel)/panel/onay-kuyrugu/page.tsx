@@ -11,6 +11,7 @@ import { listActiveCartsForAdmin } from "@/infra/db/admin-analytics";
 import { formatMoney } from "@/lib/format/money";
 import { formatDateTime } from "@/lib/format/date";
 import { money } from "@/domain/money";
+import { packLabel } from "@/lib/format/packaging";
 
 const QUEUE_STATUSES = ["SUBMITTED", "UNDER_REVIEW"] as const;
 
@@ -39,7 +40,8 @@ export default async function OnayKuyruguPage() {
       variantId: l.variantId,
       productName: l.variant.product.name,
       imageUrl: l.variant.product.imageUrl,
-      packLabel: l.variant.packSize ?? l.variant.packagingType,
+      packLabel: packLabel(l.variant.packSize, l.variant.packagingType),
+      packagingType: l.variant.packagingType,
       quantity: l.quantity,
       unitPriceKurus: l.unitPriceKurus,
       lineTotalKurus: l.lineTotalKurus,

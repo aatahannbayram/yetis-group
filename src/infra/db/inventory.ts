@@ -1,6 +1,7 @@
 import { prisma } from "@/infra/db/client";
 import { add, kg, zeroKg } from "@/domain/weight";
 import { isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
+import { packLabel } from "@/lib/format/packaging";
 import {
   availableKgFromMovements,
   assertCanRecordMovement,
@@ -239,7 +240,7 @@ export async function listVariantsForStockPicker() {
   return variants.map((v) => ({
     id: v.id,
     slug: v.product.slug,
-    label: `${v.product.name} · ${v.packSize ?? v.packagingType} (${v.sku})`,
+    label: `${v.product.name} · ${packLabel(v.packSize, v.packagingType)} (${v.sku})`,
   }));
 }
 

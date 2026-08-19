@@ -1,6 +1,7 @@
 import { prisma } from "@/infra/db/client";
 import { availableKgFromMovements } from "@/infra/db/inventory";
 import { sortLotsByFefo, isLotExpired } from "@/domain/inventory/fefo";
+import { packLabel } from "@/lib/format/packaging";
 
 export async function getShippingOverview() {
   const lots = await prisma.lot.findMany({
@@ -47,7 +48,7 @@ export async function getShippingOverview() {
       categoryName: product.primaryCategory.name,
       variantId,
       sku: variant.sku,
-      packLabel: variant.packSize ?? variant.packagingType,
+      packLabel: packLabel(variant.packSize, variant.packagingType),
       lots: summarized.map((l) => ({
         id: l.id,
         lotNumber: l.lotNumber,

@@ -79,7 +79,7 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
       await createLotAction(variantId, slug, {
         lotNumber,
         expirationDate,
-        initialKg: Number(initialKg),
+        initialKg: Number(initialKg.replace(",", ".")),
       });
       setLotNumber("");
       setExpirationDate("");
@@ -114,16 +114,14 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="initialKg">Giriş Miktarı (kg)</Label>
-        <Input
-          id="initialKg"
-          type="number"
-          step="0.001"
-          min="0"
-          value={initialKg}
-          onChange={(e) => setInitialKg(e.target.value)}
-          placeholder="0.000"
-          required
-        />
+      <Input
+        id="initialKg"
+        inputMode="decimal"
+        value={initialKg}
+        onChange={(e) => setInitialKg(e.target.value)}
+        placeholder="17,5"
+        required
+      />
       </div>
       <Button type="submit" disabled={isPending} className="gap-1.5">
         <Plus className="size-4" aria-hidden />
@@ -152,7 +150,7 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
         await addStockMovementAction(slug, {
           lotId: lot.id,
           type,
-          quantityKg: Number(quantity),
+          quantityKg: Number(quantity.replace(",", ".")),
           note: note.trim() || undefined,
         });
         setQuantity("");
@@ -181,9 +179,7 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
         </SelectContent>
       </Select>
       <Input
-        type="number"
-        step="0.001"
-        min="0"
+        inputMode="decimal"
         value={quantity}
         onChange={(e) => setQuantity(e.target.value)}
         placeholder="kg"

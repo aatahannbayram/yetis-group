@@ -11,15 +11,16 @@ import { getDealerCreditExposure } from "@/infra/db/orders";
 import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
 import type { DealerCartView } from "./actions";
+import { packLabel } from "@/lib/format/packaging";
 
 export default async function BayiSiparisPage({
   searchParams,
 }: {
-  searchParams: Promise<{ urun?: string }>;
+  searchParams: Promise<{ urun?: string; cins?: string }>;
 }) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/auth");
-  const { urun } = await searchParams;
+  const { urun, cins } = await searchParams;
 
   const jar = await cookies();
   const impId = parseImpersonationCookie(jar.get(IMPERSONATE_COOKIE)?.value);
@@ -59,7 +60,8 @@ export default async function BayiSiparisPage({
           variantId: line.variantId,
           name: line.variant.product.name,
           sku: line.variant.sku,
-          unitLabel: line.variant.packSize ?? line.variant.packagingType,
+          unitLabel: packLabel(line.variant.packSize, line.variant.packagingType),
+          packagingType: line.variant.packagingType,
           imageUrl: line.variant.product.imageUrl,
           quantity: line.quantity,
           unitPriceKurus: line.unitPriceKurus,
@@ -75,6 +77,7 @@ export default async function BayiSiparisPage({
       products={products}
       initialCart={initialCart}
       initialProductSlug={urun ?? null}
+      initialCinsId={cins ?? null}
       payment={{
         bankTransferEnabled: payment.bankTransferEnabled,
         bankName: payment.bankName,

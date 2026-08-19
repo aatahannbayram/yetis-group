@@ -3,6 +3,7 @@ import type { ShipmentRow } from "@/components/admin/shipment-board";
 import { listShipments, listShippableVariants } from "@/infra/db/shipments";
 import { listDealers } from "@/infra/db/dealers";
 import { getShippingOverview } from "@/infra/db/shipping";
+import { packLabel } from "@/lib/format/packaging";
 
 export default async function PanelShipmentsPage() {
   const [shipments, dealers, variants, lotRows] = await Promise.all([
@@ -18,7 +19,7 @@ export default async function PanelShipmentsPage() {
     dealerName: s.dealer.unvan,
     dealerType: s.dealer.dealerType,
     productName: s.variant.product.name,
-    packLabel: s.variant.packSize ?? s.variant.packagingType,
+    packLabel: packLabel(s.variant.packSize, s.variant.packagingType),
     sku: s.variant.sku,
     quantityKg: s.quantityKg.toString(),
     status: s.status,

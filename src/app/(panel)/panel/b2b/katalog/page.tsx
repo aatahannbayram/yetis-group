@@ -2,11 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ExternalLink, Package, Pencil } from "lucide-react";
 import { getProducts } from "@/infra/db/products";
-import { getStockSummaryByProduct } from "@/infra/db/inventory";
+import { getShippableStockByVariant } from "@/infra/db/inventory";
 import { listCategories } from "@/infra/db/categories";
-import { zeroKg } from "@/domain/weight";
+import { kg } from "@/domain/weight";
 import { money } from "@/domain/money";
 import { formatMoney } from "@/lib/format/money";
+import { formatKg } from "@/lib/format/weight";
+import { packLabel, salesUnitLabel } from "@/lib/format/packaging";
 import { PageHeader } from "@/components/ui/page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
 import { cn } from "@/lib/utils";
@@ -17,16 +19,23 @@ export default async function AdminB2bCatalogPage({
   searchParams: Promise<{ kategori?: string }>;
 }) {
   const { kategori } = await searchParams;
-  const [products, stockByProduct, categories] = await Promise.all([
+  const [products, stockByVariant, categories] = await Promise.all([
     getProducts(kategori ? { categorySlug: kategori } : undefined),
-    getStockSummaryByProduct(),
+    getShippableStockByVariant(),
     listCategories(),
   ]);
 
   const roots = categories.filter((c) => !c.parentId);
-  const variantCount = products.reduce((s, p) => s + p.variants.length, 0);
-  const inStockCount = products.filter(
-    (p) => (stockByProduct.get(p.id) ?? zeroKg).toNumber() > 0,
+  const rows = products.flatMap((product) =>
+    product.variants.map((variant) => ({
+      product,
+      variant,
+      stock: stockByVariant.get(variant.id)?.toNumber() ?? 0,
+    })),
+  );
+  const variantCount = rows.length;
+  const inStockCount = products.filter((p) =>
+    p.variants.some((v) => (stockByVariant.get(v.id)?.toNumber() ?? 0) > 0),
   ).length;
   const outOfStockCount = products.length - inStockCount;
 
@@ -91,6 +100,9 @@ export default async function AdminB2bCatalogPage({
               <th className="px-3 py-2.5 text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
                 SKU
               </th>
+              <th className="px-3 py-2.5 text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
+                Cins
+              </th>
               <th className="px-3 py-2.5 text-right text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
                 Birim fiyat
               </th>
@@ -101,7 +113,7 @@ export default async function AdminB2bCatalogPage({
                 KDV
               </th>
               <th className="px-3 py-2.5 text-right text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
-                Koli
+                Net kg
               </th>
               <th className="px-3 py-2.5 text-right text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
                 Min.
@@ -112,16 +124,15 @@ export default async function AdminB2bCatalogPage({
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => {
-              const variant = product.variants[0];
-              const stock = (stockByProduct.get(product.id) ?? zeroKg).toNumber();
+            {rows.map(({ product, variant, stock }) => {
               const cover = product.media.find((m) => m.isPrimary)?.url ?? product.imageUrl;
-              const moq = variant?.moq ?? 1;
-              const vatPercent = variant ? variant.vatRateBasisPoints / 100 : null;
+              const moq = variant.moq ?? 1;
+              const vatPercent = variant.vatRateBasisPoints / 100;
+              const extraCins = product.variants.length - 1;
 
               return (
                 <tr
-                  key={product.id}
+                  key={variant.id}
                   className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--surface-2)]"
                 >
                   <td className="px-3 py-2">
@@ -147,36 +158,34 @@ export default async function AdminB2bCatalogPage({
                         </p>
                         <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
                           {product.primaryCategory.name}
+                          {extraCins > 0 ? ` · +${extraCins} cins` : ""}
                         </p>
                       </div>
                     </div>
                   </td>
                   <td className="px-3 py-2 text-[length:var(--text-caption)] font-medium tabular-nums text-[var(--text-secondary)]">
-                    {variant?.sku ?? "-"}
+                    {variant.sku}
+                  </td>
+                  <td className="px-3 py-2 text-[length:var(--text-caption)] text-[var(--text-secondary)]">
+                    {packLabel(variant.packSize, variant.packagingType)}
                   </td>
                   <td className="px-3 py-2 text-right text-[length:var(--text-body)] font-semibold tabular-nums text-[var(--text-primary)]">
-                    {variant ? (
-                      <>
-                        {formatMoney(money(variant.pricePerUnitKurus))}
-                        <span className="ml-1 font-normal text-[var(--text-muted)]">
-                          / {variant.baseUnit.toLowerCase()}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="font-normal text-[var(--text-muted)]">Varyant yok</span>
-                    )}
+                    {formatMoney(money(variant.pricePerUnitKurus))}
+                    <span className="ml-1 font-normal text-[var(--text-muted)]">
+                      / {salesUnitLabel(variant.packagingType)}
+                    </span>
                   </td>
                   <td className="px-3 py-2 text-right text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
                     {Math.round(stock)} kg
                   </td>
                   <td className="px-3 py-2 text-right text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
-                    {vatPercent != null ? `%${vatPercent}` : "-"}
+                    %{vatPercent}
                   </td>
                   <td className="px-3 py-2 text-right text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
-                    {variant ? `×${variant.unitFactor.toString()}` : "-"}
+                    {formatKg(kg(variant.unitFactor.toString()))}
                   </td>
                   <td className="px-3 py-2 text-right text-[length:var(--text-caption)] tabular-nums text-[var(--text-secondary)]">
-                    {variant ? moq : "-"}
+                    {moq}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-end gap-1">

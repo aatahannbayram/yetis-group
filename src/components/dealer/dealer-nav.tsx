@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -55,10 +56,35 @@ export function DealerNav({
   cartCount?: number;
 }) {
   const pathname = usePathname();
+  const [hidden, setHidden] = useState(false);
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    lastY.current = window.scrollY;
+    function onScroll() {
+      const y = window.scrollY;
+      const delta = y - lastY.current;
+      if (y < 80) {
+        setHidden(false);
+      } else if (delta > 4) {
+        setHidden(true);
+      } else if (delta < -4) {
+        setHidden(false);
+      }
+      lastY.current = y;
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-canvas)_88%,white)]/90 shadow-[0_8px_24px_-18px_rgb(33_28_22/0.35)] backdrop-blur-xl">
+      <header
+        className={cn(
+          "sticky top-0 z-30 border-b border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-canvas)_88%,white)]/90 shadow-[0_8px_24px_-18px_rgb(33_28_22/0.35)] backdrop-blur-xl transition-transform duration-300 ease-out",
+          hidden ? "-translate-y-full" : "translate-y-0",
+        )}
+      >
         <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-3 sm:px-4 md:grid-cols-[1fr_auto_1fr]">
           <Link href="/bayi" className="flex min-w-0 items-center gap-2.5">
             <Logo variant="light" size="sm" />

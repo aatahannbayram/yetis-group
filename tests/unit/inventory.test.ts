@@ -11,6 +11,7 @@ import {
   availableKgFromMovements,
   assertCanRecordMovement,
 } from "@/domain/inventory/movements";
+import { allocateOrderLinesFefo } from "@/domain/inventory/reservation";
 import { kg } from "@/domain/weight";
 
 const asOf = new Date("2026-06-15T00:00:00Z");
@@ -187,5 +188,41 @@ describe("suggestFefoShipment", () => {
   it("throws when total available stock is insufficient", () => {
     const lots = [lot("1", "L-001", "2026-07-01", 5)];
     expect(() => suggestFefoShipment(lots, kg(10), asOf)).toThrow(InventoryError);
+  });
+});
+
+describe("allocateOrderLinesFefo", () => {
+  it("consumes a shared variant pool across two lines", () => {
+    const lotsByVariant = new Map([
+      ["v1", [lot("1", "L-001", "2026-07-01", 30)]],
+    ]);
+    const allocations = allocateOrderLinesFefo(
+      lotsByVariant,
+      [
+        { orderLineId: "a", variantId: "v1", requiredKg: kg(20) },
+        { orderLineId: "b", variantId: "v1", requiredKg: kg(10) },
+      ],
+      asOf,
+    );
+    expect(allocations).toEqual([
+      { orderLineId: "a", variantId: "v1", lotId: "1", lotNumber: "L-001", quantityKg: kg(20) },
+      { orderLineId: "b", variantId: "v1", lotId: "1", lotNumber: "L-001", quantityKg: kg(10) },
+    ]);
+  });
+
+  it("throws when a later line would overdraw the same variant", () => {
+    const lotsByVariant = new Map([
+      ["v1", [lot("1", "L-001", "2026-07-01", 25)]],
+    ]);
+    expect(() =>
+      allocateOrderLinesFefo(
+        lotsByVariant,
+        [
+          { orderLineId: "a", variantId: "v1", requiredKg: kg(20) },
+          { orderLineId: "b", variantId: "v1", requiredKg: kg(10) },
+        ],
+        asOf,
+      ),
+    ).toThrow(InventoryError);
   });
 });

@@ -79,3 +79,16 @@ export function isOrderTransitionAllowed(from: OrderStatus, to: OrderStatus): bo
 export function nextOrderStatuses(status: OrderStatus): OrderStatus[] {
   return ORDER_TRANSITIONS.filter(([from]) => from === status).map(([, to]) => to);
 }
+
+export type OrderStockEffect = "reserve" | "release" | "none";
+
+/**
+ * Stock is locked on CONFIRMED (FEFO CIKIS). Cancel from CONFIRMED or
+ * PREPARING returns it (GIRIS). Shipment must not deduct a second time.
+ */
+export function stockEffectOnTransition(from: OrderStatus, to: OrderStatus): OrderStockEffect {
+  if (from === to) return "none";
+  if (to === "CONFIRMED") return "reserve";
+  if (to === "CANCELLED" && (from === "CONFIRMED" || from === "PREPARING")) return "release";
+  return "none";
+}

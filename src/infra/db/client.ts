@@ -38,7 +38,11 @@ function createPrismaClient() {
 function getPrisma(): PrismaClient {
   const existing = globalForPrisma.prisma;
   // After `prisma generate`, HMR can keep a stale client without new delegates.
-  if (existing && typeof (existing as { leadFieldDefinition?: unknown }).leadFieldDefinition !== "undefined") {
+  if (
+    existing &&
+    typeof (existing as { leadFieldDefinition?: unknown }).leadFieldDefinition !== "undefined" &&
+    typeof (existing as { orderLotAllocation?: unknown }).orderLotAllocation !== "undefined"
+  ) {
     return existing;
   }
   const client = createPrismaClient();

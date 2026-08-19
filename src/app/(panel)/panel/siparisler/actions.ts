@@ -70,8 +70,15 @@ export async function createShipmentFromOrderAction(formData: FormData) {
 
   const line = await prisma.orderLine.findUniqueOrThrow({
     where: { id: orderLineId },
-    include: { order: { select: { dealerId: true } }, variant: { select: { unitFactor: true } } },
+    include: {
+      order: { select: { dealerId: true, status: true } },
+      variant: { select: { unitFactor: true } },
+    },
   });
+  if (line.orderId !== orderId) throw new Error("Kalem bu siparişe ait değil");
+  if (line.order.status !== "CONFIRMED" && line.order.status !== "PREPARING") {
+    throw new Error("Sevkiyat yalnızca onaylı siparişlerden oluşturulur.");
+  }
 
   const quantityKg = line.variant.unitFactor.mul(line.quantity).toNumber();
 
@@ -80,6 +87,7 @@ export async function createShipmentFromOrderAction(formData: FormData) {
     variantId: line.variantId,
     quantityKg,
     orderId,
+    orderLineId,
     note: `Sipariş #${orderId.slice(-6)}`,
   });
   revalidatePath("/panel/siparisler");

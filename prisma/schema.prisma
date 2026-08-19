@@ -606,9 +606,10 @@ model Lot {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  movements   StockMovement[]
-  cartLines   CartLine[]
-  allocations ShipmentLotAllocation[]
+  movements        StockMovement[]
+  cartLines        CartLine[]
+  allocations      ShipmentLotAllocation[]
+  orderAllocations OrderLotAllocation[]
 
   @@unique([variantId, lotNumber])
   @@map("lot")
@@ -651,6 +652,8 @@ model Shipment {
   variant     ProductVariant @relation(fields: [variantId], references: [id])
   orderId     String?
   order       Order?         @relation(fields: [orderId], references: [id])
+  orderLineId String?
+  orderLine   OrderLine?     @relation(fields: [orderLineId], references: [id], onDelete: SetNull)
   quantityKg  Decimal        @db.Decimal(10, 3)
   status      ShipmentStatus @default(HAZIRLANIYOR)
   note        String?
@@ -790,10 +793,11 @@ model Order {
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
 
-  lines     OrderLine[]
-  events    OrderEvent[]
-  shipments Shipment[]
-  proformas ProformaInvoice[]
+  lines          OrderLine[]
+  events         OrderEvent[]
+  shipments      Shipment[]
+  proformas      ProformaInvoice[]
+  lotAllocations OrderLotAllocation[]
 
   @@index([dealerId, createdAt])
   @@map("order")
@@ -805,13 +809,36 @@ model OrderLine {
   order              Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   variantId          String
   variant            ProductVariant @relation(fields: [variantId], references: [id])
-  /// Sales-unit count (e.g. tenekes/packs), NOT kg — see ProductVariant.unitFactor for kg conversion.
+  /// Sales-unit count (e.g. tenekes/packs), NOT kg: see ProductVariant.unitFactor for kg conversion.
   quantity           Int
   unitPriceKurus     Int
   vatRateBasisPoints Int
   lineTotalKurus     Int
 
+  lotAllocations OrderLotAllocation[]
+  shipments      Shipment[]
+
   @@map("order_line")
+}
+
+/// FEFO lots locked when the order is CONFIRMED. CIKIS is written at confirm;
+/// shipment copies these rows and must not deduct again. Cancel writes GIRIS and sets releasedAt.
+model OrderLotAllocation {
+  id          String    @id @default(cuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderLineId String
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id], onDelete: Cascade)
+  lotId       String
+  lot         Lot       @relation(fields: [lotId], references: [id])
+  quantityKg  Decimal   @db.Decimal(10, 3)
+  releasedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([orderLineId, lotId])
+  @@index([orderId])
+  @@index([lotId])
+  @@map("order_lot_allocation")
 }
 
 model OrderEvent {

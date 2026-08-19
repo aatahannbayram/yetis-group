@@ -1,11 +1,17 @@
 import { prisma } from "@/infra/db/client";
-import { assertOrderTransition, type OrderStatus } from "@/domain/order/state-machine";
+import {
+  assertOrderTransition,
+  stockEffectOnTransition,
+  type OrderStatus,
+} from "@/domain/order/state-machine";
 import { addLedgerEntry } from "@/infra/db/ledger";
 import { notifyOrderCreated, notifyOrderStatusChanged } from "@/infra/db/notifications";
 import { calculateBalance, canUseOnAccount, shouldPostDeliveryDebt } from "@/domain/ledger";
 import { captureMockPayment } from "@/infra/payments/mock-provider";
 import { getVariantStockSummary } from "@/infra/db/inventory";
+import { releaseOrderStockTx, reserveOrderStockTx } from "@/infra/db/order-stock";
 import { compare, fromCases } from "@/domain/weight";
+import { createShipment } from "@/infra/db/shipments";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 
 const OPEN_ORDER_STATUSES: OrderStatus[] = [
@@ -234,10 +240,56 @@ export async function createOrderFromCart(input: {
     const capture = await captureMockPayment({ orderId: order.id, amountKurus: totalKurus });
     if (capture.ok) {
       await prisma.order.update({ where: { id: order.id }, data: { paidAt: new Date() } });
+      try {
+        await autoFulfillOnlinePaidOrder(order.id);
+      } catch (err) {
+        // Ödeme zaten alındı; otomatik onay/sevkiyat başarısız olsa da sipariş
+        // kaybolmaz, personel elle tamamlar (order-board üzerinden).
+        console.error("[auto-fulfill] failed for order", order.id, err);
+      }
     }
   }
 
   return order;
+}
+
+/**
+ * Online ödeme alınan bir siparişte manuel personel onayını atlar
+ * (SUBMITTED → UNDER_REVIEW → CONFIRMED). Stok CONFIRMED'te FEFO ile
+ * kilitlenir; sevkiyat aynı lotları kopyalar, ikinci kez düşmez.
+ * Satır bazında best-effort: biri başarısız olursa sipariş CONFIRMED'te
+ * kalır, kalan satırları personel order-board'dan tamamlar.
+ */
+async function autoFulfillOnlinePaidOrder(orderId: string) {
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    include: { lines: { include: { variant: { select: { unitFactor: true } } } } },
+  });
+
+  await transitionOrder(orderId, "UNDER_REVIEW", {
+    note: "Online ödeme alındı: otomatik inceleme",
+  });
+  await transitionOrder(orderId, "CONFIRMED", {
+    note: "Online ödeme alındı: otomatik onay, personel onayı gerekmedi",
+  });
+
+  for (const line of order.lines) {
+    try {
+      await createShipment({
+        dealerId: order.dealerId,
+        variantId: line.variantId,
+        quantityKg: Number(line.variant.unitFactor) * line.quantity,
+        orderId: order.id,
+        orderLineId: line.id,
+        note: "Online ödeme: otomatik sevkiyat",
+      });
+    } catch (err) {
+      console.error(
+        `[auto-fulfill] shipment failed for order ${orderId} line ${line.id}`,
+        err,
+      );
+    }
+  }
 }
 
 export async function listOrdersForDealer(dealerId: string) {
@@ -270,6 +322,7 @@ export async function transitionOrder(
     where: { id: orderId },
     include: {
       dealer: { select: { unvan: true, email: true, paymentMethod: true, creditLimitKurus: true } },
+      lines: { include: { variant: { select: { unitFactor: true } } } },
     },
   });
   const result = assertOrderTransition({
@@ -292,16 +345,30 @@ export async function transitionOrder(
     if (!eligibility.ok) throw new Error(eligibility.reason);
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.order.update({ where: { id: orderId }, data: { status: to } });
-    await tx.orderEvent.create({
-      data: {
-        orderId,
-        status: to,
-        note: to === "CANCELLED" ? result.cancelReason : input?.note,
-      },
-    });
-  });
+  const stockEffect = stockEffectOnTransition(order.status, to);
+
+  await prisma.$transaction(
+    async (tx) => {
+      if (stockEffect === "reserve") {
+        await reserveOrderStockTx(tx, order);
+      }
+      if (stockEffect === "release") {
+        await releaseOrderStockTx(tx, orderId);
+      }
+      await tx.order.update({ where: { id: orderId }, data: { status: to } });
+      await tx.orderEvent.create({
+        data: {
+          orderId,
+          status: to,
+          note: to === "CANCELLED" ? result.cancelReason : input?.note,
+        },
+      });
+    },
+    // FEFO kilit + lot sorguları Neon'da bazen bağlantı gecikmesi yaşıyor;
+    // varsayılan 2s/5s sınırı bu yüzden gereksiz yere transitionOrder'ı
+    // başarısız kılabiliyor (özellikle art arda iki geçişte).
+    { maxWait: 10_000, timeout: 15_000 },
+  );
 
   if (
     to === "DELIVERED" &&

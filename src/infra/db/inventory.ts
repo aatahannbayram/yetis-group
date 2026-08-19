@@ -1,4 +1,5 @@
 import { prisma } from "@/infra/db/client";
+import { Prisma } from "@/generated/prisma";
 import { add, kg, zeroKg } from "@/domain/weight";
 import { isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
 import { packLabel } from "@/lib/format/packaging";
@@ -9,6 +10,27 @@ import {
 } from "@/domain/inventory/movements";
 
 export { availableKgFromMovements } from "@/domain/inventory/movements";
+
+export type DbTx = Prisma.TransactionClient;
+
+/** Serializes lot reads before CIKIS/GIRIS so two confirms cannot share the same kg. */
+export async function lockLotRows(
+  tx: DbTx,
+  input: { variantIds?: readonly string[]; lotIds?: readonly string[] },
+) {
+  const variantIds = [...new Set(input.variantIds ?? [])].sort();
+  const lotIds = [...new Set(input.lotIds ?? [])].sort();
+  if (variantIds.length > 0) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT id FROM lot WHERE "variantId" IN (${Prisma.join(variantIds)}) ORDER BY id FOR UPDATE
+    `);
+  }
+  if (lotIds.length > 0) {
+    await tx.$queryRaw(Prisma.sql`
+      SELECT id FROM lot WHERE id IN (${Prisma.join(lotIds)}) ORDER BY id FOR UPDATE
+    `);
+  }
+}
 
 export async function getLotsForVariant(variantId: string) {
   const lots = await prisma.lot.findMany({
@@ -314,27 +336,30 @@ export async function addStockMovement(input: {
   quantityKg: number;
   note?: string;
 }) {
-  const lot = await prisma.lot.findUniqueOrThrow({
-    where: { id: input.lotId },
-    include: { movements: true },
-  });
+  return prisma.$transaction(async (tx) => {
+    await lockLotRows(tx, { lotIds: [input.lotId] });
+    const lot = await tx.lot.findUniqueOrThrow({
+      where: { id: input.lotId },
+      include: { movements: true },
+    });
 
-  const available = availableKgFromMovements(lot.movements);
-  assertCanRecordMovement({
-    type: input.type,
-    quantityKg: input.quantityKg,
-    note: input.note,
-    lotNumber: lot.lotNumber,
-    availableKg: available,
-    expirationDate: lot.expirationDate,
-  });
-
-  return prisma.stockMovement.create({
-    data: {
-      lotId: input.lotId,
+    const available = availableKgFromMovements(lot.movements);
+    assertCanRecordMovement({
       type: input.type,
       quantityKg: input.quantityKg,
-      note: input.note?.trim() || undefined,
-    },
+      note: input.note,
+      lotNumber: lot.lotNumber,
+      availableKg: available,
+      expirationDate: lot.expirationDate,
+    });
+
+    return tx.stockMovement.create({
+      data: {
+        lotId: input.lotId,
+        type: input.type,
+        quantityKg: input.quantityKg,
+        note: input.note?.trim() || undefined,
+      },
+    });
   });
 }

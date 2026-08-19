@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { assertOrderTransition, isOrderTransitionAllowed, nextOrderStatuses } from "@/domain/order/state-machine";
+import { assertOrderTransition, isOrderTransitionAllowed, nextOrderStatuses, stockEffectOnTransition } from "@/domain/order/state-machine";
 
 describe("assertOrderTransition", () => {
   it("allows configured edges", () => {
@@ -35,5 +35,24 @@ describe("assertOrderTransition", () => {
   it("lists next statuses", () => {
     expect(nextOrderStatuses("PREPARING")).toEqual(["SHIPPED", "CANCELLED"]);
     expect(nextOrderStatuses("DELIVERED")).toEqual([]);
+  });
+});
+
+describe("stockEffectOnTransition", () => {
+  it("reserves stock when the order is confirmed", () => {
+    expect(stockEffectOnTransition("UNDER_REVIEW", "CONFIRMED")).toBe("reserve");
+  });
+
+  it("releases stock when a confirmed or preparing order is cancelled", () => {
+    expect(stockEffectOnTransition("CONFIRMED", "CANCELLED")).toBe("release");
+    expect(stockEffectOnTransition("PREPARING", "CANCELLED")).toBe("release");
+  });
+
+  it("does not touch stock on submit, review, reject, or ship", () => {
+    expect(stockEffectOnTransition("SUBMITTED", "UNDER_REVIEW")).toBe("none");
+    expect(stockEffectOnTransition("UNDER_REVIEW", "REJECTED")).toBe("none");
+    expect(stockEffectOnTransition("CONFIRMED", "PREPARING")).toBe("none");
+    expect(stockEffectOnTransition("PREPARING", "SHIPPED")).toBe("none");
+    expect(stockEffectOnTransition("CONFIRMED", "CONFIRMED")).toBe("none");
   });
 });

@@ -1,8 +1,8 @@
 import { prisma } from "@/infra/db/client";
-import { getLotsForVariant } from "@/infra/db/inventory";
+import { lockLotRows, availableKgFromMovements } from "@/infra/db/inventory";
 import { suggestFefoShipment } from "@/domain/inventory/fefo";
 import { canTransitionShipment, type ShipmentStatus } from "@/domain/shipment";
-import { kg } from "@/domain/weight";
+import { kg, sum } from "@/domain/weight";
 import { packLabel } from "@/lib/format/packaging";
 
 export async function listShippableVariants() {
@@ -54,42 +54,104 @@ export async function createShipment(input: {
   quantityKg: number;
   note?: string;
   orderId?: string;
+  orderLineId?: string;
 }) {
   if (input.quantityKg <= 0) throw new Error("Miktar sıfırdan büyük olmalı");
 
-  const lots = await getLotsForVariant(input.variantId);
-  const allocations = suggestFefoShipment(
-    lots.map((l) => ({ id: l.id, lotNumber: l.lotNumber, expirationDate: l.expirationDate, availableKg: l.availableKg })),
-    kg(input.quantityKg),
-  );
+  return prisma.$transaction(
+    async (tx) => {
+      await lockLotRows(tx, { variantIds: [input.variantId] });
 
-  return prisma.$transaction(async (tx) => {
-    const shipment = await tx.shipment.create({
-      data: {
-        dealerId: input.dealerId,
-        variantId: input.variantId,
-        orderId: input.orderId,
-        quantityKg: input.quantityKg,
-        note: input.note,
-      },
-    });
+      let allocationRows: Array<{ lotId: string; quantityKg: string }> | null = null;
+      let writeCikis = true;
 
-    for (const a of allocations) {
-      await tx.shipmentLotAllocation.create({
-        data: { shipmentId: shipment.id, lotId: a.lotId, quantityKg: a.quantityKg.toString() },
-      });
-      await tx.stockMovement.create({
+      if (input.orderId && input.orderLineId) {
+        const existingShip = await tx.shipment.findFirst({
+          where: {
+            orderId: input.orderId,
+            orderLineId: input.orderLineId,
+            status: { not: "IPTAL" },
+          },
+          select: { id: true },
+        });
+        if (existingShip) {
+          throw new Error("Bu kalem için sevkiyat zaten oluşturuldu.");
+        }
+
+        const reserved = await tx.orderLotAllocation.findMany({
+          where: {
+            orderId: input.orderId,
+            orderLineId: input.orderLineId,
+            releasedAt: null,
+          },
+        });
+        if (reserved.length > 0) {
+          allocationRows = reserved.map((row) => ({
+            lotId: row.lotId,
+            quantityKg: row.quantityKg.toString(),
+          }));
+          writeCikis = false;
+        }
+      }
+
+      if (!allocationRows) {
+        const lots = await tx.lot.findMany({
+          where: { variantId: input.variantId },
+          include: { movements: true },
+        });
+        const fefo = suggestFefoShipment(
+          lots.map((lot) => ({
+            id: lot.id,
+            lotNumber: lot.lotNumber,
+            expirationDate: lot.expirationDate,
+            availableKg: availableKgFromMovements(lot.movements),
+          })),
+          kg(input.quantityKg),
+        );
+        allocationRows = fefo.map((row) => ({
+          lotId: row.lotId,
+          quantityKg: row.quantityKg.toString(),
+        }));
+        writeCikis = true;
+      }
+
+      const shipment = await tx.shipment.create({
         data: {
-          lotId: a.lotId,
-          type: "CIKIS",
-          quantityKg: a.quantityKg.toString(),
-          note: `Sevkiyat #${shipment.id.slice(-6)}`,
+          dealerId: input.dealerId,
+          variantId: input.variantId,
+          orderId: input.orderId,
+          orderLineId: input.orderLineId,
+          quantityKg: writeCikis
+            ? input.quantityKg
+            : sum(allocationRows.map((row) => kg(row.quantityKg))).toString(),
+          note: input.note,
         },
       });
-    }
 
-    return shipment;
-  });
+      for (const allocation of allocationRows) {
+        await tx.shipmentLotAllocation.create({
+          data: {
+            shipmentId: shipment.id,
+            lotId: allocation.lotId,
+            quantityKg: allocation.quantityKg,
+          },
+        });
+        if (writeCikis) {
+          await tx.stockMovement.create({
+            data: {
+              lotId: allocation.lotId,
+              type: "CIKIS",
+              quantityKg: allocation.quantityKg,
+              note: `Sevkiyat #${shipment.id.slice(-6)}`,
+            },
+          });
+        }
+      }
+
+      return shipment;
+    },
+    { maxWait: 10_000, timeout: 15_000 },
+  );
 }
 
 export async function updateShipmentStatus(shipmentId: string, status: ShipmentStatus) {

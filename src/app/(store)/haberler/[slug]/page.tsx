@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { Reveal } from "@/components/store/reveal";
+import { SceneImage } from "@/components/store/scene-image";
 import { renderMarkdown } from "@/lib/content/markdown";
 import {
   JsonLdScript,
@@ -112,7 +113,7 @@ export default async function BlogPostPage({
         )}
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/50 to-black/75"
+          className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/75"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />
@@ -240,36 +241,50 @@ export default async function BlogPostPage({
         </Slab>
       ) : null}
 
-      {/* CTA */}
-      <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(48,163,105,0.2),transparent_50%)]"
-        />
-        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[1fr_auto] lg:py-16">
-          <Reveal>
-            <p className="mkt-label text-mkt-accent">Birlikte çalışalım</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
-              Bayilik veya numune için yazın.
-            </h2>
-            <p className="mt-3 max-w-md text-[15px] text-white/65">
-              Talebiniz CRM’e düşer; satış ekibi dönüş yapar.
-            </p>
-          </Reveal>
-          <Reveal delay={60}>
-            <div className="flex w-full flex-col gap-2.5 sm:flex-row lg:w-auto">
-              <PillCta href="/auth?tab=uye" className="w-full justify-center sm:w-auto">
-                Bayi ol
-              </PillCta>
-              <Link
-                href="/iletisim"
-                className="mkt-pill mkt-label inline-flex h-[3.25rem] w-full items-center justify-center gap-2 border border-white/25 px-6 text-[15px] text-white hover:bg-white/10 sm:w-auto"
-              >
-                İletişim
-                <ArrowUpRight className="size-4" aria-hidden />
-              </Link>
-            </div>
-          </Reveal>
+      {/* CTA — copy left, cheese still-life right */}
+      <Slab className="relative overflow-hidden !bg-[#0f1f17] !p-0 text-white">
+        <div className="grid items-stretch lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.42fr)]">
+          <div className="relative flex flex-col justify-center px-5 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14 lg:px-12 lg:py-16">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(48,163,105,0.2),transparent_50%)]"
+            />
+            <Reveal className="relative">
+              <p className="mkt-label text-mkt-accent">Birlikte çalışalım</p>
+              <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
+                Bayilik veya numune için yazın.
+              </h2>
+              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/65">
+                Talebiniz CRM’e düşer; satış ekibi dönüş yapar.
+              </p>
+              <div className="mt-8 flex w-full flex-col gap-2.5 sm:flex-row">
+                <PillCta href="/auth?tab=uye" className="w-full justify-center sm:w-auto">
+                  Bayi ol
+                </PillCta>
+                <Link
+                  href="/iletisim"
+                  className="mkt-pill mkt-label inline-flex h-[3.25rem] w-full items-center justify-center gap-2 border border-white/25 px-6 text-[15px] text-white hover:bg-white/10 sm:w-auto"
+                >
+                  İletişim
+                  <ArrowUpRight className="size-4" aria-hidden />
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+
+          <div className="relative h-[220px] min-h-[220px] sm:h-[280px] lg:h-auto lg:min-h-full">
+            <SceneImage
+              id="news-article-cta"
+              fill
+              quality={75}
+              className="object-center"
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-[#0f1f17] via-[#0f1f17]/25 to-transparent lg:bg-gradient-to-r lg:from-[#0f1f17] lg:via-[#0f1f17]/40 lg:to-transparent"
+            />
+          </div>
         </div>
       </Slab>
 

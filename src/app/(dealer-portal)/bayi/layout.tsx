@@ -68,7 +68,7 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
           unreadNotifications={unreadNotifications}
           cartCount={cartCount}
         />
-        <main className="mx-auto max-w-6xl px-3 py-5 sm:px-4 sm:py-7">{children}</main>
+        <main className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-8">{children}</main>
       </WorkspaceShell>
     </TooltipProvider>
   );

@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -25,6 +24,7 @@ import {
   dealerSetQtyAction,
   dealerSubmitOrderAction,
 } from "@/app/(dealer-portal)/bayi/siparis/actions";
+import { DealerProductSheet } from "@/components/dealer/dealer-product-sheet";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
@@ -70,11 +70,13 @@ function maxOrderableQty(stockKg: number, unitFactor: string) {
 export function DealerOrderWorkspace({
   products,
   initialCart,
+  initialProductSlug,
   payment,
   cari,
 }: {
   products: DealerCatalogProduct[];
   initialCart: DealerCartView | null;
+  initialProductSlug?: string | null;
   payment: PaymentInfo;
   cari: CariInfo;
 }) {
@@ -90,6 +92,10 @@ export function DealerOrderWorkspace({
     return init;
   });
   const [qty, setQty] = useState<Record<string, number>>({});
+  const [detailId, setDetailId] = useState<string | null>(() => {
+    if (!initialProductSlug) return null;
+    return products.find((p) => p.slug === initialProductSlug)?.id ?? null;
+  });
   const [paymentMethod, setPaymentMethod] = useState<"HAVALE" | "CARI" | "ONLINE">(
     payment.bankTransferEnabled ? "HAVALE" : "ONLINE",
   );
@@ -121,6 +127,9 @@ export function DealerOrderWorkspace({
     const id = selected[product.id] ?? product.variants[0]?.id;
     return product.variants.find((v) => v.id === id) ?? product.variants[0]!;
   }
+
+  const detailProduct = products.find((p) => p.id === detailId) ?? null;
+  const detailVariant = detailProduct ? variantOf(detailProduct) : null;
 
   function addProduct(product: DealerCatalogProduct) {
     const v = variantOf(product);
@@ -171,6 +180,7 @@ export function DealerOrderWorkspace({
   }
 
   return (
+    <>
     <div className="grid gap-6 pb-28 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
       <div className="space-y-4">
         <header className="border-b border-[var(--panel-border)] pb-4">
@@ -225,11 +235,10 @@ export function DealerOrderWorkspace({
               const insufficientForMoq = maxQty < v.moq;
               return (
                 <li key={product.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
-                  <Link
-                    href={`/urunler/${product.slug}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="group/img relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] sm:size-20"
+                  <button
+                    type="button"
+                    onClick={() => setDetailId(product.id)}
+                    className="group/img relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] text-left sm:size-20"
                     title={`${product.name} detayını aç`}
                   >
                     {product.imageUrl ? (
@@ -237,7 +246,7 @@ export function DealerOrderWorkspace({
                         src={product.imageUrl}
                         alt={product.name}
                         fill
-                        className="object-cover transition-transform duration-300 group-hover/img:scale-105"
+                        className="object-cover transition-transform duration-300 group-hover/img:scale-105 motion-reduce:transition-none motion-reduce:group-hover/img:scale-100"
                         sizes="80px"
                       />
                     ) : (
@@ -245,23 +254,23 @@ export function DealerOrderWorkspace({
                         <Package className="size-7" aria-hidden />
                       </span>
                     )}
-                  </Link>
+                  </button>
 
                   <div className="min-w-0 flex-1 space-y-2">
                     <div>
                       <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
                         {product.categoryName}
                       </p>
-                      <Link
-                        href={`/urunler/${product.slug}`}
-                        target="_blank"
-                        rel="noopener"
-                        className="block"
+                      <button
+                        type="button"
+                        onClick={() => setDetailId(product.id)}
+                        className="block w-full text-left"
                       >
                         <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)] transition-colors hover:text-[var(--primary-text)]">
                           {product.name}
                         </h2>
-                      </Link>
+                        <p className="mt-0.5 text-[11px] text-[var(--panel-ink-muted)]">Detayı gör</p>
+                      </button>
                     </div>
 
                     {product.variants.length > 1 ? (
@@ -547,6 +556,32 @@ export function DealerOrderWorkspace({
         </div>
       </aside>
     </div>
+
+      <DealerProductSheet
+        product={detailProduct}
+        variant={detailVariant}
+        amount={
+          detailProduct && detailVariant
+            ? (qty[detailProduct.id] ?? detailVariant.moq)
+            : 1
+        }
+        pending={pending}
+        onClose={() => setDetailId(null)}
+        onSelectVariant={(variantId) => {
+          if (!detailProduct) return;
+          setSelected((s) => ({ ...s, [detailProduct.id]: variantId }));
+        }}
+        onQty={(next) => {
+          if (!detailProduct) return;
+          setQty((q) => ({ ...q, [detailProduct.id]: next }));
+        }}
+        onAdd={() => {
+          if (detailProduct) addProduct(detailProduct);
+        }}
+        notice={message}
+        error={error}
+      />
+    </>
   );
 }
 

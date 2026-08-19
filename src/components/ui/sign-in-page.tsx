@@ -13,6 +13,7 @@ import {
 } from "@/app/(auth)/auth/actions";
 import { authClient } from "@/infra/auth/client";
 import { Logo } from "@/components/ui/logo";
+import { CheeseWheelMark } from "@/components/store/cheese-wheel-mark";
 import { cn } from "@/lib/utils";
 
 export type AuthMode = "giris" | "uye";
@@ -41,21 +42,22 @@ export function LoginPage({
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-[var(--mkt-canvas)]">
-      {/* Left - brand visual */}
-      <div className="relative hidden overflow-hidden lg:flex lg:w-[48%] xl:w-1/2">
+    <div className="flex min-h-screen w-full flex-col bg-[var(--mkt-canvas)] lg:flex-row">
+      {/* Left - brand visual, pinned while the form column scrolls */}
+      <div className="relative hidden self-start overflow-hidden lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-[48%] xl:w-1/2">
         <Image
           src={imageSrc}
           alt={imageAlt}
           fill
           priority
-          className="object-cover object-center"
+          className="scale-105 object-cover object-center"
           sizes="50vw"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-[#0a1f14]/88 via-[#0a1f14]/35 to-[#0a1f14]/20"
+          className="absolute inset-0 bg-gradient-to-t from-[#071711]/90 via-[#071711]/10 to-transparent"
         />
+        <CheeseWheelMark className="pointer-events-none absolute -top-10 -right-10 w-72 text-white/20 xl:w-80" />
 
         <div className="absolute top-6 left-6 z-10 flex items-center gap-3">
           <Link
@@ -81,18 +83,42 @@ export function LoginPage({
         </div>
       </div>
 
-      {/* Right - form */}
-      <div className="flex w-full flex-1 flex-col bg-white lg:w-[52%] xl:w-1/2">
-        <div className="flex items-center justify-between px-6 py-5 lg:hidden">
-          <Link href="/" className="flex items-center gap-2">
-            <ArrowLeft className="size-4 text-neutral-500" />
-            <Logo size="md" />
+      {/* Compact banner - same visual language, small screens only */}
+      <div className="relative flex h-40 shrink-0 overflow-hidden sm:h-48 lg:hidden">
+        <Image
+          src={imageSrc}
+          alt={imageAlt}
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-t from-[#071711]/80 via-[#071711]/10 to-[#071711]/30"
+        />
+        <div className="relative z-10 flex w-full items-start justify-between p-5">
+          <Link
+            href="/"
+            className="flex size-9 items-center justify-center rounded-full bg-black/25 backdrop-blur-md transition-colors hover:bg-black/40"
+            aria-label="Ana sayfa"
+          >
+            <ArrowLeft className="size-4.5 text-white" />
           </Link>
-          <Link href="/iletisim" className="text-[13px] font-medium text-neutral-500 hover:text-neutral-900">
+          <Link
+            href="/iletisim"
+            className="rounded-full bg-black/25 px-3 py-1.5 text-[13px] font-medium text-white backdrop-blur-md transition-colors hover:bg-black/40"
+          >
             İletişim
           </Link>
         </div>
+        <div className="absolute bottom-4 left-5 z-10">
+          <Logo variant="dark" size="md" className="brightness-0 invert" />
+        </div>
+      </div>
 
+      {/* Right - form */}
+      <div className="flex w-full flex-1 flex-col bg-white lg:w-[52%] xl:w-1/2">
         <div className="flex flex-1 items-center justify-center px-6 py-8 sm:px-10">
           <div className="w-full max-w-md">
             <div className="mb-8">

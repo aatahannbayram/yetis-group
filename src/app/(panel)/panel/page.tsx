@@ -83,14 +83,14 @@ export default async function PanelDashboardPage() {
     }));
 
   const stockSlices = [
-    { key: "healthy", label: "Sağlıklı", value: inventory.healthyCount, color: "#00693e" },
-    { key: "soon", label: "SKT eşiği", value: inventory.expiringSoonCount, color: "#c47a1a" },
-    { key: "expired", label: "SKT geçmiş", value: inventory.expiredCount, color: "#c02626" },
+    { key: "healthy", label: "Sağlıklı", value: inventory.healthyCount, color: "var(--success-solid)" },
+    { key: "soon", label: "SKT eşiği", value: inventory.expiringSoonCount, color: "var(--warning-solid)" },
+    { key: "expired", label: "SKT geçmiş", value: inventory.expiredCount, color: "var(--danger-solid)" },
   ];
 
   const outcomeSlices = [
-    { key: "won", label: "Kazanıldı", value: analytics.crm.wonLeads, color: "#30a369" },
-    { key: "lost", label: "Kaybedildi", value: analytics.crm.lostLeads, color: "#c9c2b4" },
+    { key: "won", label: "Kazanıldı", value: analytics.crm.wonLeads, color: "var(--brand-500)" },
+    { key: "lost", label: "Kaybedildi", value: analytics.crm.lostLeads, color: "var(--chart-cat-6)" },
   ].filter((s) => s.value > 0);
 
   const actions: {
@@ -204,7 +204,7 @@ export default async function PanelDashboardPage() {
       <PanoHeader
         title="Pano"
         dateLabel={formatDate(new Date())}
-        description="CRM, stok, cari ve sepetler: sadece kritik sinyaller ve net grafikler."
+        description="Peynir stoğu, cari ve adaylar: kritik sinyaller tek bakışta."
         actions={
           <>
             <PanoAction href="/panel/analytics">Analytics</PanoAction>
@@ -264,6 +264,7 @@ export default async function PanelDashboardPage() {
           className="lg:col-span-8"
           title="Aday girişi"
           subtitle="Son 14 gün"
+          accent
         >
           <PanoLeadTrend
             data={analytics.crm.leadsByDay}

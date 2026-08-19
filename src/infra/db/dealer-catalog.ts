@@ -24,6 +24,13 @@ export type DealerCatalogProduct = {
   imageUrl: string | null;
   categoryName: string;
   categorySlug: string;
+  requiresColdChain: boolean;
+  storageCondition: string | null;
+  shelfLifeDays: number | null;
+  usageTips: string;
+  producer: { name: string; region: string | null; story: string };
+  media: { id: string; url: string; kind: "IMAGE" | "VIDEO" }[];
+  certificates: string[];
   variants: DealerCatalogVariant[];
 };
 
@@ -66,6 +73,10 @@ export async function getDealerCatalog(dealerId: string): Promise<DealerCatalogP
           stockKg: stock ? stock.toNumber() : 0,
         };
       });
+      const certificates =
+        product.attributeValues
+          .find((v) => v.attribute.key === "sertifika")
+          ?.selectedOptions.map((s) => s.option.label) ?? [];
       return {
         id: product.id,
         name: product.name,
@@ -74,6 +85,17 @@ export async function getDealerCatalog(dealerId: string): Promise<DealerCatalogP
         imageUrl: product.imageUrl,
         categoryName: product.primaryCategory.name,
         categorySlug: product.primaryCategory.slug,
+        requiresColdChain: product.requiresColdChain,
+        storageCondition: product.storageCondition,
+        shelfLifeDays: product.shelfLifeDays,
+        usageTips: product.usageTips,
+        producer: {
+          name: product.producer.name,
+          region: product.producer.region,
+          story: product.producer.story,
+        },
+        media: product.media.map((m) => ({ id: m.id, url: m.url, kind: m.kind })),
+        certificates,
         variants,
       };
     })

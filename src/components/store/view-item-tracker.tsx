@@ -10,17 +10,17 @@ export function ViewItemTracker({
 }: {
   itemId: string;
   itemName: string;
-  priceKurus: number;
+  priceKurus?: number;
 }) {
   useEffect(() => {
     if (!canTrackAnalytics()) return;
     trackEcommerce("view_item", {
-      value: priceKurus / 100,
+      ...(typeof priceKurus === "number" ? { value: priceKurus / 100 } : {}),
       items: [
         {
           item_id: itemId,
           item_name: itemName,
-          price: priceKurus / 100,
+          ...(typeof priceKurus === "number" ? { price: priceKurus / 100 } : {}),
           quantity: 1,
         },
       ],

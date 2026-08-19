@@ -9,12 +9,14 @@ import {
   BarChart3,
   Bookmark,
   Building2,
+  CalendarDays,
   ChefHat,
   CheckCircle2,
   Clock,
   HeartHandshake,
   RefreshCw,
   RotateCcw,
+  ShoppingCart,
   Sparkles,
   TrendingUp,
   Wallet,
@@ -73,7 +75,7 @@ export function DealerHomeModules({
   const tiles = modules.filter((m) => !FULL_WIDTH.includes(m));
 
   return (
-    <div className="space-y-5 pb-24 sm:pb-6">
+    <div className="space-y-6 pb-24 sm:pb-8">
       <Hero dealerName={dealerName} dealerTypeLabel={dealerTypeLabel} />
 
       <div className="space-y-4">
@@ -285,28 +287,46 @@ function TileModule({
 function Hero({ dealerName, dealerTypeLabel }: { dealerName: string; dealerTypeLabel: string }) {
   return (
     <Reveal>
-      <section className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-md)]">
+      <section className="relative overflow-hidden rounded-[1.35rem] shadow-[0_16px_40px_-20px_rgb(12_40_28/0.55)]">
         <div className="absolute inset-0">
           <Image
             src="/scenes/delivery.jpg"
             alt=""
             fill
             priority
-            className="object-cover scale-105 transition-transform duration-700 ease-out hover:scale-100"
+            className="object-cover object-[center_40%] scale-105"
             sizes="(min-width: 1024px) 1152px, 100vw"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(115deg,color-mix(in_srgb,var(--brand-900)_92%,transparent)_0%,color-mix(in_srgb,var(--brand-700)_78%,transparent)_48%,color-mix(in_srgb,var(--brand-600)_28%,transparent)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,rgb(8_32_22/0.92)_0%,rgb(12_70_45/0.78)_52%,rgb(16_80_50/0.35)_100%)]" />
         </div>
-        <div className="relative px-5 py-8 sm:px-8 sm:py-10">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold tracking-wide text-white uppercase backdrop-blur-sm ring-1 ring-white/20">
-            {dealerTypeLabel}
-          </span>
-          <h1 className="mt-3 max-w-md text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            Hoş geldiniz, {dealerName}
-          </h1>
-          <p className="mt-2 max-w-sm text-[length:var(--panel-font-size)] leading-relaxed text-white/80">
-            Siparişlerinizi, cari hesabınızı ve fırsatlarınızı tek yerden yönetin.
-          </p>
+        <div className="relative flex flex-col gap-6 px-5 py-8 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-10">
+          <div className="min-w-0">
+            <span className="inline-flex items-center rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-white uppercase ring-1 ring-white/20 backdrop-blur-sm">
+              {dealerTypeLabel}
+            </span>
+            <h1 className="mt-4 max-w-lg text-[1.85rem] font-semibold tracking-[-0.03em] text-white sm:text-4xl">
+              Hoş geldiniz, {dealerName}
+            </h1>
+            <p className="mt-2 max-w-md text-[15px] leading-relaxed text-white/78">
+              Sipariş, cari ve fırsatlar tek yerde. Bugünkü işi buradan yürütün.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Link
+              href="/bayi/siparis"
+              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-semibold text-[var(--brand-800)] shadow-sm hover:bg-white/92"
+            >
+              <ShoppingCart className="size-4" aria-hidden />
+              Sipariş ver
+            </Link>
+            <Link
+              href="/bayi/cari"
+              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white/12 px-5 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/18"
+            >
+              <Wallet className="size-4" aria-hidden />
+              Cari
+            </Link>
+          </div>
         </div>
       </section>
     </Reveal>
@@ -413,34 +433,48 @@ function AlertBanner({ delay }: { delay: number }) {
 }
 
 function OnboardingCard({ delay }: { delay: number }) {
+  const steps = [
+    { n: 1, title: "Firma", body: "Unvan ve iletişim bilgilerini kontrol edin", href: "/bayi/firmam" },
+    { n: 2, title: "İlk sipariş", body: "Katalogdan ekleyin veya geçen siparişi tekrarlayın", href: "/bayi/siparis" },
+    { n: 3, title: "Teslimat", body: "Bölge ve gününüzün açık olduğunu doğrulayın", href: "/bayi/teslimat" },
+  ] as const;
+
   return (
     <Reveal delay={delay}>
-      <section className="rounded-2xl border border-[var(--panel-border)] bg-white p-4 shadow-[var(--shadow-sm)] sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface-3)] text-[var(--text-secondary)]">
+      <section className="overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] bg-white shadow-[0_8px_24px_-18px_rgb(33_28_22/0.28)]">
+        <div className="flex items-center gap-3 border-b border-[var(--panel-border)] px-5 py-4">
+          <span className="flex size-9 items-center justify-center rounded-full bg-[var(--brand-50)] text-[var(--brand-700)]">
             <CheckCircle2 className="size-4.5" aria-hidden />
           </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-[var(--panel-ink)]">Hoş geldiniz</h2>
-            <ol className="mt-3 space-y-2.5">
-              {[
-                "Firma bilgilerinizi kontrol edin",
-                "İlk siparişinizi verin veya geçen siparişi tekrarlayın",
-                "Teslimat bölgenizi doğrulayın",
-              ].map((step, i) => (
-                <li
-                  key={step}
-                  className="flex items-center gap-2.5 text-[length:var(--panel-font-size)] text-[var(--panel-ink-muted)]"
-                >
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-solid)] text-[10px] font-bold text-white">
-                    {i + 1}
-                  </span>
-                  {step}
-                </li>
-              ))}
-            </ol>
+          <div>
+            <h2 className="font-semibold text-[var(--panel-ink)]">Kuruluma devam</h2>
+            <p className="text-[13px] text-[var(--panel-ink-muted)]">Üç kısa adım, sonra sipariş akışı açılır.</p>
           </div>
         </div>
+        <ol className="grid sm:grid-cols-3">
+          {steps.map((step, i) => (
+            <li
+              key={step.href}
+              className={cn(
+                "relative p-5",
+                i < steps.length - 1 && "border-b border-[var(--panel-border)] sm:border-r sm:border-b-0",
+              )}
+            >
+              <Link href={step.href} className="group block">
+                <span className="flex size-7 items-center justify-center rounded-full bg-[var(--brand-700)] text-[11px] font-bold text-white">
+                  {step.n}
+                </span>
+                <p className="mt-3 font-semibold text-[var(--panel-ink)] group-hover:text-[var(--brand-700)]">
+                  {step.title}
+                </p>
+                <p className="mt-1 text-[13px] leading-snug text-[var(--panel-ink-muted)]">{step.body}</p>
+                <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--brand-700)]">
+                  Aç <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
       </section>
     </Reveal>
   );
@@ -475,51 +509,62 @@ function StatusStrip({
 
   return (
     <Reveal delay={delay}>
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--panel-border)] bg-white p-4 shadow-[var(--shadow-sm)] sm:p-5">
-        <div className="absolute inset-y-0 right-0 w-1/3 opacity-[0.07]" aria-hidden>
-          <Image src="/scenes/warehouse.jpg" alt="" fill className="object-cover" sizes="200px" />
-        </div>
-        <div className="relative flex items-start gap-3">
-          <span
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-full",
-              over
-                ? "bg-[var(--danger-subtle)] text-[var(--danger-solid)]"
-                : "bg-[var(--surface-3)] text-[var(--text-secondary)]",
-            )}
-          >
-            <Wallet className="size-4.5" aria-hidden />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-end justify-between gap-2">
-              <div>
-                <p className="text-caption text-[var(--panel-ink-muted)]">Kalan kredi limiti</p>
-                <p
-                  className={cn(
-                    "text-2xl font-bold tabular-nums tracking-tight",
-                    over ? "text-[var(--danger-text)]" : "text-[var(--panel-ink)]",
-                  )}
-                >
-                  {remaining != null ? formatMoney(money(remaining)) : "Tanımsız"}
-                </p>
-              </div>
-              <div className="text-right text-[length:var(--panel-font-size)] text-[var(--panel-ink-muted)]">
-                <p>Vade: {paymentTermDays != null ? `${paymentTermDays} gün` : "-"}</p>
-                <p>Açık sepet: {openCartLines} satır</p>
-              </div>
+      <section className="overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] bg-white shadow-[0_8px_24px_-18px_rgb(33_28_22/0.28)]">
+        <div className="grid sm:grid-cols-3">
+          <div className="relative p-5 sm:col-span-1 sm:border-r sm:border-[var(--panel-border)]">
+            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
+              <Wallet className="size-3.5" aria-hidden />
+              Kalan kredi
             </div>
+            <p
+              className={cn(
+                "mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums",
+                over ? "text-[var(--danger-text)]" : "text-[var(--panel-ink)]",
+              )}
+            >
+              {remaining != null ? formatMoney(money(remaining)) : "Tanımsız"}
+            </p>
             {creditLimitKurus != null ? (
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--surface-3)]" aria-hidden>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]" aria-hidden>
                 <div
-                  className={cn(
-                    "h-full rounded-full transition-[width] duration-700 ease-out",
-                    barColor,
-                  )}
+                  className={cn("h-full rounded-full transition-[width] duration-700 ease-out", barColor)}
                   style={{ width: `${pct}%` }}
                 />
               </div>
             ) : null}
+            {over ? (
+              <p className="mt-2 text-[12px] font-medium text-[var(--danger-text)]">Limit doldu</p>
+            ) : null}
           </div>
+
+          <div className="border-t border-[var(--panel-border)] p-5 sm:border-t-0 sm:border-r">
+            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
+              <CalendarDays className="size-3.5" aria-hidden />
+              Vade
+            </div>
+            <p className="mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums text-[var(--panel-ink)]">
+              {paymentTermDays != null ? paymentTermDays : "-"}
+              {paymentTermDays != null ? (
+                <span className="ml-1 text-[15px] font-semibold text-[var(--panel-ink-muted)]">gün</span>
+              ) : null}
+            </p>
+            <p className="mt-2 text-[13px] text-[var(--panel-ink-muted)]">Fatura vadesi cari hesapta.</p>
+          </div>
+
+          <Link href="/bayi/siparis" className="group border-t border-[var(--panel-border)] p-5 sm:border-t-0">
+            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
+              <ShoppingCart className="size-3.5" aria-hidden />
+              Açık sepet
+            </div>
+            <p className="mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums text-[var(--panel-ink)]">
+              {openCartLines}
+              <span className="ml-1 text-[15px] font-semibold text-[var(--panel-ink-muted)]">satır</span>
+            </p>
+            <span className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--brand-700)]">
+              Siparişe git
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          </Link>
         </div>
       </section>
     </Reveal>
@@ -541,7 +586,7 @@ function RepeatLastOrder({
 
   return (
     <Reveal delay={delay}>
-      <section className="group relative overflow-hidden rounded-2xl shadow-[var(--shadow-md)]">
+      <section className="group relative overflow-hidden rounded-[1.35rem] shadow-[0_16px_40px_-20px_rgb(12_40_28/0.5)]">
         <div className="absolute inset-0" aria-hidden>
           <Image
             src={scene}

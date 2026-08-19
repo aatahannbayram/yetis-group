@@ -95,28 +95,35 @@ export default function AboutPage() {
       />
 
       {/* Hero - NURA-style dark full-bleed title */}
-      <Slab className="relative min-h-[44vh] overflow-hidden !p-0 md:min-h-[56vh]">
+      <Slab className="relative min-h-[48vh] overflow-hidden !p-0 md:min-h-[62vh]">
         <SceneImage
           id="about-producer"
           fill
           priority
-          quality={75}
-          className="object-center scale-105"
+          quality={80}
+          className="scale-105 object-[32%_center] md:object-[28%_42%]"
           sizes="100vw"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/45 to-black/65"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.72)_0%,rgba(12,10,8,0.28)_32%,rgba(10,14,10,0.22)_48%,rgba(10,14,10,0.72)_100%)]"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_55%,transparent_20%,rgba(8,12,8,0.35)_100%)]"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />
         </div>
-        <div className="relative z-10 flex min-h-[44vh] flex-col items-center justify-center px-5 pb-8 pt-20 text-center md:min-h-[56vh] md:px-10 md:pt-24">
+        <div className="relative z-10 flex min-h-[48vh] flex-col items-center justify-end px-5 pb-12 pt-24 text-center md:min-h-[62vh] md:px-10 md:pb-16 md:pt-28">
           <Reveal>
-            <p className="mkt-label text-white/65">Yetiş Grup</p>
+            <p className="mkt-label text-white/70">Kırsal üretim · temiz gıda</p>
             <h1 className="mkt-display mt-3 text-balance text-white md:text-[clamp(2.75rem,6vw,4.5rem)]">
               Hakkımızda
             </h1>
+            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/75 md:text-[16px]">
+              Üreticiden tezgağa: mera, lot ve soğuk zincir aynı hikâyede.
+            </p>
           </Reveal>
         </div>
       </Slab>

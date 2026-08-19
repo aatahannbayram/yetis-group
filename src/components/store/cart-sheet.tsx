@@ -41,6 +41,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { OrderCelebrate, OrderCelebrateStamp } from "@/components/store/order-celebrate";
 
 type BankTransferInfo = {
   bankName: string;
@@ -52,7 +53,7 @@ type BankTransferInfo = {
 type PayMethod = "havale" | "kart";
 
 export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | null }) {
-  const { lines, isOpen, close, removeLine, setQuantity } = useCart();
+  const { enabled, lines, isOpen, close, removeLine, setQuantity } = useCart();
   const { data: session } = useSession();
   const router = useRouter();
   const [step, setStep] = useState<"cart" | "pay">("cart");
@@ -125,6 +126,8 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
     setCardModalOpen(false);
   }
 
+  if (!enabled) return null;
+
   return (
     <Sheet
       open={isOpen}
@@ -138,12 +141,14 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
       <SheetContent
         side="right"
         className={cn(
-          "flex w-full flex-col gap-0 border-l border-[color:var(--mkt-border)] bg-white p-0 sm:max-w-md",
+          "relative flex w-full flex-col gap-0 overflow-hidden border-l border-[color:var(--mkt-border)] bg-white p-0 sm:max-w-md",
         )}
       >
+        <OrderCelebrate active={step === "pay" && paid} />
+
         <SheetHeader className="border-b border-[color:var(--mkt-border)] px-5 py-4 pr-12">
           <SheetTitle className="text-[1.25rem] font-semibold tracking-[-0.02em] text-mkt-ink">
-            {step === "pay" ? "Ödeme" : "Sepetim"}
+            {step === "pay" ? (paid ? "Sipariş alındı" : "Ödeme") : "Sepetim"}
           </SheetTitle>
           <SheetDescription className="text-[13px] text-mkt-ink-muted">
             {step === "pay"
@@ -176,25 +181,22 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                 </Link>
               </div>
             ) : (
-              <ul className="flex flex-col gap-3">
+              <ul className="flex flex-col divide-y divide-[color:var(--mkt-border)]">
                 {lines.map((line) => (
-                  <li
-                    key={line.id}
-                    className="rounded-2xl border border-[color:var(--mkt-border)] bg-[var(--mkt-card-muted)]/40 p-3"
-                  >
+                  <li key={line.id} className="py-3 first:pt-0 last:pb-0">
                     <div className="flex gap-3">
-                      <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl bg-white shadow-sm">
+                      <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-mkt-card-muted">
                         {line.imageUrl ? (
                           <Image
                             src={line.imageUrl}
                             alt=""
                             fill
                             className="object-cover"
-                            sizes="80px"
+                            sizes="56px"
                           />
                         ) : (
                           <div className="flex size-full items-center justify-center text-mkt-ink-muted">
-                            <Package className="size-6" aria-hidden />
+                            <Package className="size-5" aria-hidden />
                           </div>
                         )}
                       </div>
@@ -212,19 +214,19 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                           <button
                             type="button"
                             onClick={() => removeLine(line.id)}
-                            className="flex size-8 shrink-0 items-center justify-center rounded-full text-mkt-ink-muted transition-colors hover:bg-white hover:text-[color:var(--danger-fg)]"
+                            className="flex size-8 shrink-0 items-center justify-center rounded-full text-mkt-ink-muted transition-colors hover:bg-mkt-card-muted hover:text-[color:var(--danger-fg)]"
                             aria-label="Kaldır"
                           >
                             <Trash2 className="size-4" aria-hidden />
                           </button>
                         </div>
 
-                        <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className="mt-2.5 flex items-center justify-between gap-2">
                           <div className="inline-flex items-center gap-0.5 rounded-full border border-[color:var(--mkt-border)] bg-white p-0.5">
                             <button
                               type="button"
                               onClick={() => setQuantity(line.id, line.quantity - 1)}
-                              className="flex size-8 items-center justify-center rounded-full text-mkt-ink transition-colors hover:bg-[var(--mkt-card-muted)]"
+                              className="flex size-8 items-center justify-center rounded-full text-mkt-ink transition-colors hover:bg-mkt-card-muted"
                               aria-label="Azalt"
                             >
                               <Minus className="size-3.5" aria-hidden />
@@ -235,7 +237,7 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
                             <button
                               type="button"
                               onClick={() => setQuantity(line.id, line.quantity + 1)}
-                              className="flex size-8 items-center justify-center rounded-full text-mkt-ink transition-colors hover:bg-[var(--mkt-card-muted)]"
+                              className="flex size-8 items-center justify-center rounded-full text-mkt-ink transition-colors hover:bg-mkt-card-muted"
                               aria-label="Artır"
                             >
                               <Plus className="size-3.5" aria-hidden />
@@ -260,8 +262,9 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
             )
           ) : paid ? (
             <div className="space-y-3 py-2">
+              <OrderCelebrateStamp />
               <p className="rounded-2xl bg-info-bg px-4 py-3 text-body-sm text-info-fg">
-                Ödeme tercihiniz alındı. Gerçek tahsilat / sipariş FSM yakında bağlanacak.
+                Gerçek tahsilat ve sipariş akışı yakında bağlanacak.
               </p>
               {payMethod === "kart" && cardLast4 ? (
                 <p className="text-body-sm text-neutral-600">

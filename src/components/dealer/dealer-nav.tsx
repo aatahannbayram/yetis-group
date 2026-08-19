@@ -58,16 +58,22 @@ export function DealerNav({
 
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-[var(--panel-border)] bg-[var(--panel-surface)]/92 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-3 sm:px-4">
+      <header className="sticky top-0 z-30 border-b border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-canvas)_88%,white)]/90 shadow-[0_8px_24px_-18px_rgb(33_28_22/0.35)] backdrop-blur-xl">
+        <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-3 sm:px-4 md:grid-cols-[1fr_auto_1fr]">
           <Link href="/bayi" className="flex min-w-0 items-center gap-2.5">
             <Logo variant="light" size="sm" />
-            <span className="hidden min-w-0 truncate text-sm text-[var(--panel-ink-muted)] sm:block" title={dealerName}>
+            <span
+              className="hidden max-w-[10rem] truncate rounded-full bg-white/80 px-2.5 py-1 text-[12px] font-medium text-[var(--panel-ink)] ring-1 ring-black/8 lg:inline lg:max-w-[14rem]"
+              title={dealerName}
+            >
               {dealerName}
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Bayi menü">
+          <nav
+            className="hidden items-center rounded-full bg-white/70 p-1 ring-1 ring-black/6 md:flex"
+            aria-label="Bayi menü"
+          >
             {nav.slice(0, 5).map((item) => {
               const active = item.exact
                 ? pathname === item.href
@@ -77,30 +83,27 @@ export function DealerNav({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "relative px-3 py-2 text-sm font-medium transition-colors",
+                    "rounded-full px-3.5 py-1.5 text-[13px] font-semibold tracking-[-0.01em] transition-colors",
                     active
-                      ? "text-[var(--panel-ink)]"
-                      : "text-[var(--panel-ink-muted)] hover:text-[var(--panel-ink)]",
+                      ? "bg-[var(--brand-700)] text-white shadow-sm"
+                      : "text-[var(--panel-ink-muted)] hover:bg-black/[0.04] hover:text-[var(--panel-ink)]",
                   )}
                 >
                   {item.label}
-                  {active ? (
-                    <span className="absolute inset-x-3 -bottom-[calc(0.5rem+1px)] h-0.5 rounded-full bg-[var(--primary-solid)]" />
-                  ) : null}
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center justify-end gap-1">
             <Link
               href="/bayi/siparis"
-              className="relative mr-1 inline-flex h-9 items-center gap-1.5 rounded-lg bg-[var(--primary-solid)] px-3 text-sm font-semibold text-white hover:bg-[var(--primary-hover)]"
+              className="relative mr-1 inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--brand-700)] px-3.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgb(0_105_62/0.25)] hover:bg-[var(--brand-600)]"
             >
               <ShoppingCart className="size-3.5" aria-hidden />
               <span className="hidden sm:inline">Sipariş</span>
               {cartCount > 0 ? (
-                <span className="absolute -top-1.5 -right-1.5 flex min-w-4.5 items-center justify-center rounded-full bg-[var(--panel-ink)] px-1 text-[10px] font-bold text-white tabular-nums">
+                <span className="flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-[var(--brand-700)] tabular-nums">
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               ) : null}
@@ -118,15 +121,15 @@ export function DealerNav({
                   }
                   title={item.label}
                   className={cn(
-                    "relative flex size-9 items-center justify-center rounded-lg transition-colors",
+                    "relative flex size-10 items-center justify-center rounded-full transition-colors",
                     active
                       ? "bg-[var(--primary-subtle)] text-[var(--primary-text)]"
-                      : "text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--panel-ink)]",
+                      : "text-[var(--panel-ink-muted)] hover:bg-white hover:text-[var(--panel-ink)]",
                   )}
                 >
                   <item.icon className="size-4.5" aria-hidden />
                   {item.href === "/bayi/bildirimler" && unreadNotifications > 0 ? (
-                    <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-[var(--danger-solid)]" />
+                    <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-[var(--danger-solid)] ring-2 ring-[var(--panel-canvas)]" />
                   ) : null}
                 </Link>
               );
@@ -134,9 +137,8 @@ export function DealerNav({
           </div>
         </div>
 
-        {/* Secondary links: desktop only, quieter row */}
-        <div className="hidden border-t border-[var(--panel-border)]/70 md:block">
-          <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 py-1.5 sm:px-4">
+        <div className="hidden md:block">
+          <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2.5 sm:px-4">
             {nav.slice(5).map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
@@ -144,10 +146,10 @@ export function DealerNav({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium",
+                    "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-colors",
                     active
-                      ? "bg-[var(--surface-3)] text-[var(--panel-ink)]"
-                      : "text-[var(--panel-ink-muted)] hover:text-[var(--panel-ink)]",
+                      ? "bg-white text-[var(--panel-ink)] shadow-sm ring-1 ring-black/8"
+                      : "text-[var(--panel-ink-muted)] hover:bg-white/70 hover:text-[var(--panel-ink)]",
                   )}
                 >
                   <item.icon className="size-3.5" aria-hidden />
@@ -160,10 +162,10 @@ export function DealerNav({
       </header>
 
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[var(--panel-surface)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-canvas)_92%,white)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
         aria-label="Bayi mobil menü"
       >
-        <ul className="grid grid-cols-4 px-1 pt-1 pb-1">
+        <ul className="grid grid-cols-4 px-2 pt-1.5 pb-1">
           {nav
             .filter((item) => item.primary)
             .map((item) => {
@@ -175,8 +177,10 @@ export function DealerNav({
                   <Link
                     href={item.href}
                     className={cn(
-                      "flex min-h-12 flex-col items-center justify-center gap-0.5 text-[10px] font-medium",
-                      active ? "text-[var(--primary-text)]" : "text-[var(--panel-ink-muted)]",
+                      "flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl text-[10px] font-semibold",
+                      active
+                        ? "bg-white text-[var(--brand-700)] shadow-sm"
+                        : "text-[var(--panel-ink-muted)]",
                     )}
                   >
                     <item.icon className="size-5" aria-hidden />

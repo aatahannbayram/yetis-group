@@ -12,9 +12,14 @@ import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
 import type { DealerCartView } from "./actions";
 
-export default async function BayiSiparisPage() {
+export default async function BayiSiparisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ urun?: string }>;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/auth");
+  const { urun } = await searchParams;
 
   const jar = await cookies();
   const impId = parseImpersonationCookie(jar.get(IMPERSONATE_COOKIE)?.value);
@@ -69,6 +74,7 @@ export default async function BayiSiparisPage() {
     <DealerOrderWorkspace
       products={products}
       initialCart={initialCart}
+      initialProductSlug={urun ?? null}
       payment={{
         bankTransferEnabled: payment.bankTransferEnabled,
         bankName: payment.bankName,

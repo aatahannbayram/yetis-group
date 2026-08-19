@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { btnInkClassName } from "@/components/ui/button";
+import { CheeseWheelMark } from "@/components/store/cheese-wheel-mark";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 
@@ -62,21 +63,23 @@ function resolveIcon(name: PanoIconName): LucideIcon {
   return PANO_ICONS[name] ?? Package;
 }
 
-/** Cool stone + brand green — no warm beige fills. */
+/** Chart strokes follow theme tokens so light and dark stay readable. */
 const MUTED = "var(--text-muted)";
 const GRID = "var(--border)";
-const G1 = "#1B5E3A";
-const G2 = "#247A4D";
-const G3 = "#30a369";
-const G4 = "#6fdda0";
-const WARN = "#d97706";
-const DANGER = "#dc2626";
-const FAINT = "#d6d3d1";
+const ACCENT = "var(--primary-solid)";
+const ACCENT_MID = "var(--brand-500)";
+const WARN = "var(--warning-solid)";
+const DANGER = "var(--danger-solid)";
+const CURSOR = "color-mix(in srgb, var(--text-primary) 6%, transparent)";
 
 export function PanoShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950">
-      <div className="mx-auto max-w-[1120px] space-y-8 pb-6">{children}</div>
+    <div className="relative -mx-3 -my-4 overflow-hidden px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(80%_60%_at_0%_0%,color-mix(in_srgb,var(--brand-500)_18%,transparent),transparent_70%)]"
+      />
+      <div className="relative mx-auto max-w-[1120px] space-y-7 pb-6">{children}</div>
     </div>
   );
 }
@@ -93,19 +96,20 @@ export function PanoHeader({
   actions: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-5 border-b border-stone-200 pb-6 sm:flex-row sm:items-end sm:justify-between dark:border-zinc-800">
-      <div className="min-w-0">
-        <p className="text-[12px] font-medium tabular-nums text-stone-500 dark:text-zinc-400">
+    <header className="relative flex flex-col gap-5 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end sm:justify-between">
+      <CheeseWheelMark className="pointer-events-none absolute -right-6 -top-4 hidden w-36 text-[var(--brand-700)] opacity-[0.08] sm:block dark:text-[var(--brand-400)] dark:opacity-[0.14]" />
+      <div className="relative min-w-0">
+        <p className="text-[12px] font-medium tabular-nums text-[var(--text-muted)]">
           {dateLabel}
         </p>
-        <h1 className="mt-1 text-[1.75rem] font-semibold tracking-[-0.04em] text-stone-900 sm:text-[2rem] dark:text-zinc-50">
+        <h1 className="mt-1 text-[1.75rem] font-semibold tracking-[-0.04em] text-[var(--text-primary)] sm:text-[2rem]">
           {title}
         </h1>
-        <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-stone-500 dark:text-zinc-400">
+        <p className="mt-2 max-w-lg text-[14px] leading-relaxed text-[var(--text-secondary)]">
           {description}
         </p>
       </div>
-      <div className="flex flex-wrap gap-2">{actions}</div>
+      <div className="relative flex flex-wrap gap-2">{actions}</div>
     </header>
   );
 }
@@ -126,7 +130,7 @@ export function PanoAction({
         "inline-flex h-9 items-center justify-center rounded-full px-4 text-[13px] font-semibold",
         variant === "primary"
           ? btnInkClassName
-          : "bg-white text-stone-800 ring-1 ring-stone-200 transition-colors hover:bg-stone-50 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-800",
+          : "bg-[var(--surface)] text-[var(--text-primary)] ring-1 ring-[var(--border)] transition-colors hover:bg-[var(--surface-2)]",
       )}
     >
       {children}
@@ -138,7 +142,7 @@ export function PanoKpiRow({ children }: { children: React.ReactNode }) {
   return (
     <section
       aria-label="Özet metrikler"
-      className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-3 xl:grid-cols-6 dark:border-zinc-800 dark:bg-zinc-800"
+      className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6"
     >
       {children}
     </section>
@@ -160,22 +164,34 @@ export function PanoKpi({
 }) {
   const valueColor =
     tone === "warn"
-      ? "text-amber-700 dark:text-amber-400"
+      ? "text-[var(--warning-text)]"
       : tone === "danger"
-        ? "text-red-600 dark:text-red-400"
-        : tone === "ok"
-          ? "text-[#1B5E3A] dark:text-emerald-400"
-          : tone === "info"
-            ? "text-[#1B5E3A] dark:text-emerald-400"
-            : "text-stone-900 dark:text-zinc-50";
+        ? "text-[var(--danger-text)]"
+        : tone === "ok" || tone === "info"
+          ? "text-[var(--primary-text)]"
+          : "text-[var(--text-primary)]";
+
+  const toneWash =
+    tone === "warn"
+      ? "bg-[var(--warning-subtle)]"
+      : tone === "danger"
+        ? "bg-[var(--danger-subtle)]"
+        : tone === "ok" || tone === "info"
+          ? "bg-[var(--primary-subtle)]"
+          : "bg-[var(--surface)]";
 
   const inner = (
-    <div className="group flex h-full min-h-[100px] flex-col justify-between bg-white p-4 transition-colors hover:bg-stone-50 sm:p-5 dark:bg-zinc-900 dark:hover:bg-zinc-900/80">
+    <div
+      className={cn(
+        "group flex h-full min-h-[108px] flex-col justify-between rounded-2xl border border-[var(--border)] p-4 shadow-[var(--shadow-sm)] transition-[box-shadow,transform,border-color] duration-150 hover:-translate-y-px hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] sm:p-5",
+        toneWash,
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-[12px] font-medium text-stone-500 dark:text-zinc-400">{label}</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)]">{label}</p>
         {href ? (
           <ArrowUpRight
-            className="size-3.5 text-stone-300 opacity-0 transition-opacity group-hover:opacity-100 dark:text-zinc-600"
+            className="size-3.5 text-[var(--text-disabled)] opacity-0 transition-opacity group-hover:opacity-100"
             aria-hidden
           />
         ) : null}
@@ -184,7 +200,7 @@ export function PanoKpi({
         <p className={cn("text-[1.75rem] font-semibold tracking-[-0.04em] tabular-nums", valueColor)}>
           {value}
         </p>
-        <p className="mt-1 min-h-[1rem] text-[12px] text-stone-500 dark:text-zinc-400">
+        <p className="mt-1 min-h-[1rem] text-[12px] text-[var(--text-muted)]">
           {hint ?? "\u00a0"}
         </p>
       </div>
@@ -195,7 +211,7 @@ export function PanoKpi({
     return (
       <Link
         href={href}
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1B5E3A]/40"
+        className="block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]/40"
       >
         {inner}
       </Link>
@@ -210,32 +226,40 @@ export function PanoPanel({
   aside,
   children,
   className,
+  accent = false,
 }: {
   title: string;
   subtitle?: string;
   aside?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  accent?: boolean;
 }) {
   return (
     <section
       className={cn(
-        "flex flex-col rounded-xl border border-stone-200 bg-white p-5 sm:p-6 dark:border-zinc-800 dark:bg-zinc-900",
+        "relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6",
         className,
       )}
     >
-      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      {accent ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[radial-gradient(120%_80%_at_0%_0%,color-mix(in_srgb,var(--brand-500)_16%,transparent),transparent_72%)]"
+        />
+      ) : null}
+      <header className="relative mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-stone-900 dark:text-zinc-50">
+          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
             {title}
           </h2>
           {subtitle ? (
-            <p className="mt-0.5 text-[12px] text-stone-500 dark:text-zinc-400">{subtitle}</p>
+            <p className="mt-0.5 text-[12px] text-[var(--text-muted)]">{subtitle}</p>
           ) : null}
         </div>
         {aside}
       </header>
-      <div className="min-h-0 flex-1">{children}</div>
+      <div className="relative min-h-0 flex-1">{children}</div>
     </section>
   );
 }
@@ -251,12 +275,12 @@ function Tip({
 }) {
   if (!active || rows.length === 0) return null;
   return (
-    <div className="rounded-lg bg-stone-900 px-3 py-2 text-white shadow-md dark:bg-zinc-100 dark:text-zinc-900">
-      {label ? <p className="text-[11px] text-white/65 dark:text-zinc-900/65">{label}</p> : null}
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)]/95 px-3 py-2 text-[var(--text-primary)] shadow-[var(--shadow-md)] backdrop-blur-sm">
+      {label ? <p className="text-[11px] text-[var(--text-muted)]">{label}</p> : null}
       <ul className="mt-0.5 space-y-0.5">
         {rows.map((r) => (
           <li key={r.name} className="text-[13px] font-semibold tabular-nums">
-            <span className="font-medium text-white/70 dark:text-zinc-900/70">{r.name} </span>
+            <span className="font-medium text-[var(--text-secondary)]">{r.name} </span>
             {r.value}
           </li>
         ))}
@@ -300,8 +324,8 @@ export function PanoLeadTrend({ data, weekOverWeek }: { data: DayPoint[]; weekOv
           <AreaChart data={data} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
             <defs>
               <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={G3} stopOpacity={0.28} />
-                <stop offset="100%" stopColor={G3} stopOpacity={0} />
+                <stop offset="0%" stopColor={ACCENT_MID} stopOpacity={0.38} />
+                <stop offset="100%" stopColor={ACCENT_MID} stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="2 6" stroke={GRID} vertical={false} />
@@ -338,10 +362,10 @@ export function PanoLeadTrend({ data, weekOverWeek }: { data: DayPoint[]; weekOv
             <Area
               type="monotone"
               dataKey="count"
-              stroke={G2}
-              strokeWidth={2.25}
+              stroke={ACCENT}
+              strokeWidth={2.4}
               fill={`url(#${fillId})`}
-              activeDot={{ r: 4, fill: G2, stroke: G1, strokeWidth: 2 }}
+              activeDot={{ r: 4.5, fill: ACCENT, stroke: "var(--surface)", strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -356,7 +380,6 @@ export function PanoPipeline({ data }: { data: StagePoint[] }) {
   const open = data.filter((d) => d.stage !== "KAZANILDI" && d.stage !== "KAYBEDILDI");
   const total = open.reduce((s, d) => s + d.count, 0);
   const max = Math.max(...open.map((d) => d.count), 1);
-  const shades = [G1, G2, G3, G4, "#4aa876", "#7eb892", FAINT];
 
   if (total === 0) {
     return (
@@ -380,7 +403,7 @@ export function PanoPipeline({ data }: { data: StagePoint[] }) {
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
+            cursor={{ fill: CURSOR }}
             content={({ active, payload }) => (
               <Tip
                 active={active}
@@ -397,9 +420,13 @@ export function PanoPipeline({ data }: { data: StagePoint[] }) {
               />
             )}
           />
-          <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={12}>
+          <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={14}>
             {open.map((row, i) => (
-              <Cell key={row.stage} fill={shades[i % shades.length]} />
+              <Cell
+                key={row.stage}
+                fill={ACCENT}
+                fillOpacity={Math.max(0.4, 1 - i * 0.09)}
+              />
             ))}
           </Bar>
         </BarChart>
@@ -447,7 +474,7 @@ export function PanoReceivables({ data }: { data: ReceivablePoint[] }) {
             tickLine={false}
           />
           <Tooltip
-            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
+            cursor={{ fill: CURSOR }}
             content={({ active, payload }) => {
               const row = payload?.[0]?.payload as ReceivablePoint | undefined;
               return (
@@ -462,7 +489,7 @@ export function PanoReceivables({ data }: { data: ReceivablePoint[] }) {
               );
             }}
           />
-          <Bar dataKey="value" radius={[0, 6, 6, 0]} maxBarSize={12}>
+          <Bar dataKey="value" radius={[0, 8, 8, 0]} maxBarSize={14}>
             {rows.map((row) => (
               <Cell key={row.name} fill={row.overLimit ? DANGER : WARN} />
             ))}
@@ -500,10 +527,12 @@ export function PanoDonut({
               data={data}
               dataKey="value"
               nameKey="label"
-              innerRadius="72%"
+              innerRadius="70%"
               outerRadius="96%"
-              paddingAngle={2}
-              stroke="transparent"
+              paddingAngle={3}
+              cornerRadius={4}
+              stroke="var(--surface)"
+              strokeWidth={3}
             >
               {data.map((d) => (
                 <Cell key={d.key} fill={d.color} />
@@ -539,7 +568,6 @@ export function PanoChannel({
   data: { channel: string; label: string; count: number }[];
 }) {
   const rows = data.filter((d) => d.count > 0);
-  const shades = [G1, G2, G3, G4, FAINT];
   if (rows.length === 0) {
     return (
       <p className="flex h-40 items-center justify-center text-[13px] text-[var(--text-muted)]">
@@ -566,7 +594,7 @@ export function PanoChannel({
             width={24}
           />
           <Tooltip
-            cursor={{ fill: "rgba(28, 25, 23, 0.06)" }}
+            cursor={{ fill: CURSOR }}
             content={({ active, payload }) => (
               <Tip
                 active={active}
@@ -583,9 +611,13 @@ export function PanoChannel({
               />
             )}
           />
-          <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={28}>
+          <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={32}>
             {rows.map((row, i) => (
-              <Cell key={row.channel} fill={shades[i % shades.length]} />
+              <Cell
+                key={row.channel}
+                fill={ACCENT}
+                fillOpacity={Math.max(0.45, 1 - i * 0.14)}
+              />
             ))}
           </Bar>
         </BarChart>
@@ -609,7 +641,7 @@ export function PanoActionList({
 }) {
   if (items.length === 0) {
     return (
-      <p className="py-8 text-center text-[13px] text-stone-500 dark:text-zinc-400">
+      <p className="py-8 text-center text-[13px] text-[var(--text-muted)]">
         Şu an bekleyen öncelik yok.
       </p>
     );
@@ -624,16 +656,16 @@ export function PanoActionList({
             <Link
               href={item.href}
               aria-label={`${item.title}. ${item.cta}`}
-              className="group flex items-center gap-3 rounded-lg px-1 py-3 transition-colors hover:bg-stone-50/80 dark:hover:bg-zinc-800/50"
+              className="group flex items-center gap-3 rounded-xl px-1.5 py-3 transition-colors hover:bg-[var(--surface-2)]"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-2)]">
                 <Icon
                   className={cn(
                     "size-4",
-                    item.tone === "danger" && "text-red-600 dark:text-red-400",
-                    item.tone === "warn" && "text-amber-600 dark:text-amber-400",
+                    item.tone === "danger" && "text-[var(--danger-text)]",
+                    item.tone === "warn" && "text-[var(--warning-text)]",
                     (item.tone === "info" || item.tone === "default") &&
-                      "text-stone-700 dark:text-zinc-300",
+                      "text-[var(--text-secondary)]",
                   )}
                   aria-hidden
                 />
@@ -641,20 +673,20 @@ export function PanoActionList({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-3">
-                  <p className="truncate text-[14px] font-semibold tracking-[-0.01em] text-stone-900 dark:text-zinc-50">
+                  <p className="truncate text-[14px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
                     {item.title}
                   </p>
-                  <span className="hidden shrink-0 text-[12px] font-medium text-stone-500 group-hover:text-[#1B5E3A] sm:inline dark:text-zinc-400">
+                  <span className="hidden shrink-0 text-[12px] font-medium text-[var(--text-muted)] group-hover:text-[var(--primary-text)] sm:inline">
                     {item.cta}
                   </span>
                 </div>
-                <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-stone-500 dark:text-zinc-400">
+                <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--text-muted)]">
                   {item.detail}
                 </p>
               </div>
 
               <ChevronRight
-                className="size-4 shrink-0 text-stone-300 transition-transform group-hover:translate-x-0.5 group-hover:text-stone-500 dark:text-zinc-600"
+                className="size-4 shrink-0 text-[var(--text-disabled)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--text-muted)]"
                 aria-hidden
               />
             </Link>
@@ -678,9 +710,9 @@ export function PanoQuickNav({
           <Link
             key={link.href}
             href={link.href}
-            className="inline-flex h-9 items-center gap-2 rounded-lg border border-stone-200 bg-white px-3.5 text-[13px] font-medium text-stone-800 transition-colors hover:bg-stone-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200"
+            className="inline-flex h-9 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 text-[13px] font-medium text-[var(--text-primary)] shadow-[var(--shadow-sm)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
           >
-            <Icon className="size-3.5 text-stone-500" aria-hidden />
+            <Icon className="size-3.5 text-[var(--primary-text)]" aria-hidden />
             {link.label}
           </Link>
         );

@@ -199,7 +199,7 @@ export default async function ContactPage({
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/50 to-black/70"
+          className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/45 to-black/70"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />
@@ -365,36 +365,50 @@ export default async function ContactPage({
         </div>
       </Slab>
 
-      {/* Closing CTA */}
-      <Slab className="relative overflow-hidden !bg-[#0f1f17] text-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(48,163,105,0.2),transparent_50%)]"
-        />
-        <div className="mkt-pad relative grid items-center gap-8 py-10 md:py-14 lg:grid-cols-[1fr_auto] lg:py-16">
-          <Reveal>
-            <p className="mkt-label text-mkt-accent">Katalog</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
-              Ürünleri incelerken de yazabilirsiniz.
-            </h2>
-            <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/70">
-              Fiyat listesi onaylı bayilere açılır. Önce kataloğa bakın veya üyelik başvurusu yapın.
-            </p>
-          </Reveal>
-          <Reveal delay={60}>
-            <div className="flex w-full flex-col gap-2.5 sm:flex-row lg:w-auto">
-              <PillCta href="/urunler" className="w-full justify-center sm:w-auto">
-                Katalog
-              </PillCta>
-              <Link
-                href="/auth?tab=uye"
-                className="mkt-pill inline-flex h-[3.25rem] w-full items-center justify-center gap-2 bg-white px-6 text-[15px] font-semibold text-[#0a0a0a] hover:bg-white/92 sm:w-auto"
-              >
-                Üye ol
-                <ArrowUpRight className="size-4" aria-hidden />
-              </Link>
-            </div>
-          </Reveal>
+      {/* Closing CTA — copy left, pasture photo right */}
+      <Slab className="relative overflow-hidden !bg-[#0f1f17] !p-0 text-white">
+        <div className="grid items-stretch lg:grid-cols-[minmax(0,1fr)_minmax(240px,0.42fr)]">
+          <div className="relative flex flex-col justify-center px-5 py-10 sm:px-8 sm:py-12 md:px-10 md:py-14 lg:px-12 lg:py-16">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(48,163,105,0.2),transparent_50%)]"
+            />
+            <Reveal className="relative">
+              <p className="mkt-label text-mkt-accent">Katalog</p>
+              <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
+                Ürünleri incelerken de yazabilirsiniz.
+              </h2>
+              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/70">
+                Fiyat listesi onaylı bayilere açılır. Önce kataloğa bakın veya üyelik başvurusu yapın.
+              </p>
+              <div className="mt-8 flex w-full flex-col gap-2.5 sm:flex-row">
+                <PillCta href="/urunler" className="w-full justify-center sm:w-auto">
+                  Katalog
+                </PillCta>
+                <Link
+                  href="/auth?tab=uye"
+                  className="mkt-pill inline-flex h-[3.25rem] w-full items-center justify-center gap-2 bg-white px-6 text-[15px] font-semibold text-[#0a0a0a] hover:bg-white/92 sm:w-auto"
+                >
+                  Üye ol
+                  <ArrowUpRight className="size-4" aria-hidden />
+                </Link>
+              </div>
+            </Reveal>
+          </div>
+
+          <div className="relative h-[220px] min-h-[220px] sm:h-[260px] lg:h-auto lg:min-h-full">
+            <SceneImage
+              id="contact-cta"
+              fill
+              quality={60}
+              className="object-center"
+              sizes="(min-width: 1024px) 42vw, 100vw"
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-[#0f1f17] via-[#0f1f17]/20 to-transparent lg:bg-gradient-to-r lg:from-[#0f1f17] lg:via-[#0f1f17]/35 lg:to-transparent"
+            />
+          </div>
         </div>
       </Slab>
 

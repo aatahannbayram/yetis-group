@@ -7,6 +7,7 @@
 
 export type ImageSlotId =
   | "hero"
+  | "home-hero-portrait"
   | "about-producer"
   | "stat-a"
   | "stat-b"
@@ -14,7 +15,9 @@ export type ImageSlotId =
   | "cap-cold"
   | "cap-delivery"
   | "cap-whatsapp"
+  | "cat-beyaz"
   | "cat-kasar"
+  | "cat-tulum"
   | "cat-yogurt"
   | "cat-tereyagi"
   | "cat-sut"
@@ -28,11 +31,15 @@ export type ImageSlotId =
   | "partner-kitchen"
   | "cta-final"
   | "contact-facility"
+  | "contact-cta"
   | "news-hero"
+  | "news-article-cta"
   | "auth-side"
   | "stat-c"
   | "support-team"
-  | "story-field";
+  | "story-field"
+  | "products-hero"
+  | "products-cta";
 
 export type ImageAsset = {
   id: ImageSlotId;
@@ -52,19 +59,29 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
     src: "/hero-dairy.jpg",
     alt: "Yetiş Grup, yöresel peynir ve kırsal süt ürünleri",
     topic: "Hero: süt ürünleri tezgâh atmosferi",
-    usedAt: "home.hero",
+    usedAt: "home.hero-og",
     aspect: "16/9",
     placeholderLabel: "01 · Hero",
     isPlaceholder: false,
   },
+  "home-hero-portrait": {
+    id: "home-hero-portrait",
+    src: "/scenes/home-hero.jpg",
+    alt: "Altın saat ışığında merada inekler",
+    topic: "Anasayfa hero: tam ekran mera",
+    usedAt: "home.hero-portrait",
+    aspect: "16/9",
+    placeholderLabel: "01b · Hero mera",
+    isPlaceholder: false,
+  },
   "about-producer": {
     id: "about-producer",
-    src: "/scenes/warehouse.jpg",
-    alt: "Yetiş depo ve soğuk alan",
-    topic: "Hakkımızda hero: depo",
+    src: "/scenes/about-pasture.jpg",
+    alt: "Kırsal merada inekler, altın saat ışığında",
+    topic: "Hakkımızda hero: inek ve doğa",
     usedAt: "about.hero",
     aspect: "16/9",
-    placeholderLabel: "02 · Depo",
+    placeholderLabel: "02 · Mera",
     isPlaceholder: false,
   },
   "stat-a": {
@@ -137,14 +154,34 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
     placeholderLabel: "09 · WhatsApp",
     isPlaceholder: false,
   },
+  "cat-beyaz": {
+    id: "cat-beyaz",
+    src: "/products/beyaz-peynir.jpg",
+    alt: "Beyaz peynir, ahşap tahtada",
+    topic: "Katalog vitrini: beyaz peynir",
+    usedAt: "home.catalog-beyaz",
+    aspect: "3/4",
+    placeholderLabel: "10a · Beyaz",
+    isPlaceholder: false,
+  },
   "cat-kasar": {
     id: "cat-kasar",
     src: "/products/kasar.jpg",
     alt: "Kaşar peyniri",
-    topic: "Katalog şeridi: kaşar",
+    topic: "Katalog vitrini: kaşar",
     usedAt: "home.catalog-kasar",
     aspect: "3/4",
     placeholderLabel: "10 · Kaşar",
+    isPlaceholder: false,
+  },
+  "cat-tulum": {
+    id: "cat-tulum",
+    src: "/products/tulum.jpg",
+    alt: "Tulum peyniri, kırsal üretim",
+    topic: "Katalog vitrini: tulum",
+    usedAt: "home.catalog-tulum",
+    aspect: "3/4",
+    placeholderLabel: "10b · Tulum",
     isPlaceholder: false,
   },
   "cat-yogurt": {
@@ -189,8 +226,8 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "process-tedarik": {
     id: "process-tedarik",
-    src: "/products/tulum.jpg",
-    alt: "Tulum peyniri, tedarik",
+    src: "/scenes/warehouse.jpg",
+    alt: "Depo rafları, gelen parti kaydı",
     topic: "Süreç: tedarik",
     usedAt: "home.process-tedarik",
     aspect: "16/10",
@@ -269,22 +306,42 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "contact-facility": {
     id: "contact-facility",
-    src: "/scenes/kitchen.jpg",
-    alt: "Yetiş tesis / mutfak alanı",
+    src: "/products/beyaz-peynir.jpg",
+    alt: "Beyaz peynir, ahşap kesme tahtası üzerinde",
     topic: "İletişim hero",
     usedAt: "contact.hero",
     aspect: "16/9",
     placeholderLabel: "23 · İletişim",
     isPlaceholder: false,
   },
+  "contact-cta": {
+    id: "contact-cta",
+    src: "/scenes/about-pasture.jpg",
+    alt: "Kırsal merada inekler, doğal üretim",
+    topic: "İletişim kapanış CTA: mera ve inek",
+    usedAt: "contact.cta",
+    aspect: "4/5",
+    placeholderLabel: "23b · İletişim CTA",
+    isPlaceholder: false,
+  },
   "news-hero": {
     id: "news-hero",
-    src: "/scenes/warehouse.jpg",
-    alt: "Haberler sayfası kapak: depo ve tedarik",
-    topic: "Haberler hero",
+    src: "/scenes/news-pasture.jpg",
+    alt: "Merada Holstein inekler, kırsal doğa",
+    topic: "Haberler hero: mera ve inek",
     usedAt: "news.hero",
     aspect: "16/9",
     placeholderLabel: "24 · Haberler",
+    isPlaceholder: false,
+  },
+  "news-article-cta": {
+    id: "news-article-cta",
+    src: "/products/kasar.jpg",
+    alt: "Kaşar peyniri, ahşap tahtada",
+    topic: "Haber yazısı kapanış CTA: peynir",
+    usedAt: "news.article-cta",
+    aspect: "3/2",
+    placeholderLabel: "24b · Haber CTA",
     isPlaceholder: false,
   },
   "auth-side": {
@@ -299,22 +356,42 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "support-team": {
     id: "support-team",
-    src: "/scenes/how-sales.jpg",
-    alt: "Satış destek ekibi",
-    topic: "Destek şeridi",
+    src: "/scenes/news-pasture.jpg",
+    alt: "Merada Holstein inekler, kırsal doğa",
+    topic: "Destek şeridi arka planı: mera",
     usedAt: "home.support-team",
-    aspect: "1/1",
+    aspect: "16/9",
     placeholderLabel: "26 · Destek",
     isPlaceholder: false,
   },
   "story-field": {
     id: "story-field",
-    src: "/scenes/delivery.jpg",
-    alt: "Kırsal üretim ve teslimat",
-    topic: "Hikâye / çözüm ortağı vurgu",
+    src: "/products/kasar.jpg",
+    alt: "Kaşar peyniri, ahşap tahtada",
+    topic: "Hikâye bloğu: peynir still life",
     usedAt: "home.story-field",
     aspect: "16/10",
     placeholderLabel: "27 · Hikâye",
+    isPlaceholder: false,
+  },
+  "products-hero": {
+    id: "products-hero",
+    src: "/products/kasar.jpg",
+    alt: "Olgun kaşar peyniri, ahşap tahtada",
+    topic: "Ürünler katalog hero: kaşar",
+    usedAt: "products.hero",
+    aspect: "16/9",
+    placeholderLabel: "28 · Katalog hero",
+    isPlaceholder: false,
+  },
+  "products-cta": {
+    id: "products-cta",
+    src: "/scenes/news-cta-cheese.jpg",
+    alt: "Peynir ve ekmek still life, katalog kapanış",
+    topic: "Ürünler kapanış CTA: peynir tahtası",
+    usedAt: "products.cta",
+    aspect: "16/10",
+    placeholderLabel: "29 · Katalog CTA",
     isPlaceholder: false,
   },
 };

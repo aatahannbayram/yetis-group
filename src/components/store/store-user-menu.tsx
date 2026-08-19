@@ -39,9 +39,9 @@ export function StoreUserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="size-10 rounded-full">
           <Avatar className="size-8">
-            <AvatarFallback className="bg-brand-50 text-brand-700">
+            <AvatarFallback className="bg-brand-50 text-[12px] font-semibold text-brand-700">
               {initials(userName) || <User className="size-4" />}
             </AvatarFallback>
           </Avatar>

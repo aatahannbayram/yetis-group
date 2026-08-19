@@ -31,15 +31,13 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
     <Stagger className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {offers.map((o) => {
         const tone = urgencyTone(o.daysLeft);
-        const detailHref = `/urunler/${o.slug}`;
+        const detailHref = `/bayi/siparis?urun=${encodeURIComponent(o.slug)}`;
         return (
           <StaggerItem key={o.id}>
             <HoverLift className="h-full">
               <article className="flex h-full flex-col overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white shadow-[var(--shadow-sm)]">
                 <Link
                   href={detailHref}
-                  target="_blank"
-                  rel="noopener"
                   className="group/img relative block aspect-[16/10] overflow-hidden bg-[var(--surface-3)]"
                   title={`${o.productName} detayını aç`}
                 >
@@ -71,7 +69,7 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
 
                 <div className="flex flex-1 flex-col gap-2 p-3.5">
                   <div className="min-w-0">
-                    <Link href={detailHref} target="_blank" rel="noopener" className="block">
+                    <Link href={detailHref} className="block">
                       <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)] transition-colors hover:text-[var(--primary-text)]">
                         {o.productName}
                       </h2>
@@ -94,7 +92,7 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
                   </div>
 
                   <Link
-                    href="/bayi/siparis"
+                    href={detailHref}
                     className="mt-auto inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-[var(--primary-solid)] text-xs font-semibold text-white transition-colors hover:bg-[var(--primary-hover)]"
                   >
                     Siparişe git

@@ -6,16 +6,18 @@ import {
   Snowflake,
   Truck,
 } from "lucide-react";
-import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
 import { PillCta } from "@/components/store/pill-cta";
 import { AboutTabs } from "@/components/store/about-tabs";
-import { Reveal } from "@/components/store/reveal";
 import { HomeHero } from "@/components/store/home-hero";
 import { HomeFaq } from "@/components/store/home-faq";
 import { SupportStrip } from "@/components/store/support-strip";
 import { SceneImage } from "@/components/store/scene-image";
+import { ProductTiltCard } from "@/components/store/product-tilt-card";
+import { StatCounter } from "@/components/store/stat-counter";
+import { PlatformShowcase } from "@/components/store/platform-showcase";
+import { ScrollItem, ScrollReveal, ScrollStagger } from "@/components/store/scroll-reveal";
 import {
   JsonLdScript,
   faqPageJsonLd,
@@ -29,11 +31,11 @@ import { getImage } from "@/content/images";
 import type { ImageSlotId } from "@/content/images";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Toptan yöresel gıda | Bayi sipariş platformu",
+  title: "Toptan peynir | Bayi sipariş platformu",
   description:
-    "Market, şarküteri, HORECA ve ara toptancılara toptan yöresel gıda. Onaylı bayi hesabıyla katalog, net fiyat listesi ve sipariş.",
+    "Market, şarküteri ve HORECA için toptan beyaz peynir, kaşar, tulum. Onaylı bayi hesabıyla katalog, net fiyat listesi ve sipariş.",
   path: "/",
-  image: getImage("hero").src,
+  image: getImage("home-hero-portrait").src,
 });
 
 const homeFaqs = [
@@ -79,24 +81,14 @@ const homeFaqs = [
   },
 ];
 
-const aboutTabs = [
+const storyColumns = [
   {
-    id: "hikaye",
-    label: "Hikâye",
-    title: "Çiftlikten tezgâha, arada güven.",
-    body: "Üreticinin hikâyesini ve sizin raftaki ihtiyacınızı aynı yerde buluşturuyoruz. Temiz gıda, net fiyat, düzenli teslimat.",
+    title: "Hikâye",
+    body: "Meradan tezgâha, arada güven. Üreticinin peynirini sizin reyonunuza taşıyoruz: temiz gıda, net fiyat, düzenli teslimat.",
   },
   {
-    id: "nasil",
-    label: "Nasıl çalışır",
-    title: "Başvur, onaylan, sipariş ver.",
-    body: "Hesap açılır, ekip inceler. Onaydan sonra katalog ve fiyat listeniz görünür; sepet ve limit de orada.",
-  },
-  {
-    id: "neden",
-    label: "Neden Yetiş",
-    title: "SKT’si geçen gitmez, fiyatın listende kalır.",
-    body: "Lot takibi, soğuk zincir ve sipariş anındaki fiyat kaydı. Geçmiş siparişiniz sonradan değişmez.",
+    title: "Nasıl çalışır",
+    body: "Başvurunuz incelenir. Onaydan sonra katalog, fiyat listesi ve kredi limiti aynı hesapta açılır; sipariş lot ve SKT ile yürür.",
   },
 ];
 
@@ -104,39 +96,53 @@ const capabilities: Array<{
   icon: typeof ClipboardList;
   title: string;
   description: string;
-  imageSlot: ImageSlotId;
 }> = [
   {
     icon: ClipboardList,
     title: "Sipariş",
     description: "Katalogdan sepete; limit dolunca sistem uyarır.",
-    imageSlot: "cap-order",
   },
   {
     icon: Snowflake,
     title: "Soğuk zincir",
-    description: "SKT ve lot görünür. Süresi geçen ürün yola çıkmaz.",
-    imageSlot: "cap-cold",
+    description: "SKT ve lot görünür. Süresi geçen peynir yola çıkmaz.",
   },
   {
     icon: Truck,
     title: "Teslimat",
     description: "Önce yakını biten lot seçilir; teslimat günü netleşir.",
-    imageSlot: "cap-delivery",
   },
   {
     icon: MessageCircleMore,
     title: "WhatsApp haber",
     description: "Sipariş ve sevkiyat güncellemeleri işletme hattından gelir.",
-    imageSlot: "cap-whatsapp",
   },
 ];
 
-const productsPreview: Array<{ slot: ImageSlotId; name: string; tag: string }> = [
-  { slot: "cat-kasar", name: "Kaşar", tag: "Olgun" },
-  { slot: "cat-yogurt", name: "Yoğurt", tag: "Günlük" },
-  { slot: "cat-tereyagi", name: "Tereyağı", tag: "Kırsal" },
-  { slot: "cat-sut", name: "Süt", tag: "Taze" },
+const productsPreview: Array<{
+  slot: ImageSlotId;
+  name: string;
+  tag: string;
+  note: string;
+}> = [
+  {
+    slot: "cat-beyaz",
+    name: "Beyaz peynir",
+    tag: "Teneke",
+    note: "Tezgâh ve HORECA için klasik teneke.",
+  },
+  {
+    slot: "cat-kasar",
+    name: "Kaşar",
+    tag: "Olgun",
+    note: "Dilim ve teker; raf ömrü net.",
+  },
+  {
+    slot: "cat-tulum",
+    name: "Tulum",
+    tag: "Kırsal",
+    note: "Kırsal üretim, şarküteri rafı.",
+  },
 ];
 
 const processTabs = [
@@ -165,7 +171,7 @@ const processTabs = [
 
 export default function StoreHomePage() {
   return (
-    <Canvas>
+    <>
       <JsonLdScript
         data={[
           websiteJsonLd(),
@@ -175,194 +181,188 @@ export default function StoreHomePage() {
         ]}
       />
 
+      <HomeHero />
+
+      <Canvas>
+      <Slab id="hakkimizda" className="relative overflow-hidden !p-0">
+        <div className="grid lg:grid-cols-2 lg:min-h-[36rem]">
+          <div className="relative min-h-[280px] overflow-hidden sm:min-h-[340px] lg:min-h-full">
+            <ScrollReveal from="scale" className="absolute inset-0">
+              <SceneImage
+                id="story-field"
+                fill
+                quality={60}
+                className="object-center"
+                sizes="(min-width: 1024px) 50vw, 100vw"
+              />
+            </ScrollReveal>
+          </div>
+          <div className="relative z-10 flex flex-col justify-center bg-white mkt-pad">
+            <ScrollReveal from="right">
+              <p className="mkt-section-label">Hakkımızda</p>
+              <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-mkt-ink">
+                Çiftlikten tezgâha, arada güven.
+              </h2>
+              <div className="mt-8 grid gap-6 sm:grid-cols-2 sm:gap-8">
+                {storyColumns.map((col) => (
+                  <div key={col.title}>
+                    <p className="text-[13px] font-semibold tracking-[-0.01em] text-mkt-green-text">
+                      {col.title}
+                    </p>
+                    <p className="mt-2 text-[14px] leading-relaxed text-mkt-ink-muted">{col.body}</p>
+                  </div>
+                ))}
+              </div>
+              <dl className="mt-8 grid grid-cols-2 gap-4 border-t border-[color:var(--mkt-border)] pt-6">
+                <div>
+                  <dt className="mkt-label text-mkt-ink-muted">Yıllık tecrübe</dt>
+                  <dd className="mkt-stat mt-1 text-[1.75rem] text-mkt-ink">
+                    <StatCounter value={20} suffix="+" />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="mkt-label text-mkt-ink-muted">Zamanında sevkiyat</dt>
+                  <dd className="mkt-stat mt-1 text-[1.75rem] text-mkt-ink">
+                    <StatCounter value={98} suffix="%" />
+                  </dd>
+                </div>
+              </dl>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                <PillCta href="/urunler" className="w-full justify-center sm:w-auto">
+                  Kataloğu İncele
+                </PillCta>
+                <PillCta
+                  href="/hakkimizda"
+                  variant="secondary"
+                  className="w-full justify-center sm:w-auto"
+                >
+                  Hakkımızda
+                </PillCta>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </Slab>
+
+      <Slab className="mkt-pad">
+        <PlatformShowcase />
+      </Slab>
+
       <Slab className="relative overflow-hidden !p-0">
-        <div className="absolute inset-x-0 top-0 z-20">
-          <SiteHeader variant="overlay" />
-        </div>
-        <HomeHero />
-      </Slab>
-
-      <Slab id="hakkimizda" className="mkt-pad">
-        <Reveal>
-          <AboutTabs tabs={aboutTabs} />
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <PillCta href="/urunler" variant="secondary" showArrow={false} className="w-full justify-center sm:w-auto">
-              Kataloğu İncele
-            </PillCta>
-            <Link
-              href="/hakkimizda"
-              className="mkt-pill inline-flex h-12 w-full items-center justify-center gap-2 border border-[color:var(--mkt-border)] px-5 text-[14px] font-semibold text-mkt-ink hover:bg-mkt-card-muted sm:w-auto"
-            >
-              Hakkımızda
-              <ArrowUpRight className="size-3.5" aria-hidden />
-            </Link>
+        <div className="grid lg:grid-cols-2 lg:min-h-[36rem]">
+          <div className="flex flex-col justify-center mkt-pad">
+            <ScrollReveal from="left">
+              <span className="mkt-section-label">Ne sunuyoruz</span>
+              <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
+                Beyaz peynirden kaşara,{" "}
+                <span className="rounded-md bg-mkt-accent px-1.5 text-mkt-accent-ink">
+                  tek yerden
+                </span>{" "}
+                sipariş.
+              </h2>
+              <p className="mkt-body mt-4 max-w-md">
+                Teneke, dilim, tulum: fiyat listeniz, sepetiniz ve destek hattınız aynı platformda.
+              </p>
+              <div className="mt-8">
+                <PillCta href="/#cozumler" className="w-full justify-center sm:w-auto">
+                  Neler var?
+                </PillCta>
+              </div>
+            </ScrollReveal>
           </div>
-        </Reveal>
-
-        <div className="mt-10 grid grid-cols-2 gap-2.5 sm:gap-3 md:mt-14 md:grid-cols-4 md:gap-4">
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
-            <SceneImage id="stat-a" fill quality={55} sizes="(min-width: 768px) 22vw, 45vw" />
-          </div>
-          <div className="relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-card-muted p-4 text-mkt-ink md:rounded-[1.25rem] md:p-6">
-            <span className="ml-auto flex size-8 items-center justify-center rounded-full bg-mkt-accent-ink text-white md:size-9">
-              <ArrowUpRight className="size-3.5 md:size-4" aria-hidden />
-            </span>
-            <div>
-              <p className="mkt-stat text-[1.75rem] md:text-[inherit]">20+</p>
-              <p className="mkt-label mt-2 opacity-80 md:mt-3">Yıllık tecrübe</p>
-            </div>
-          </div>
-          <div className="relative aspect-[4/5] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
-            <SceneImage id="stat-b" fill quality={55} sizes="(min-width: 768px) 22vw, 45vw" />
-          </div>
-          <div className="relative flex aspect-[4/5] flex-col justify-between rounded-[1rem] bg-mkt-accent p-4 text-mkt-accent-ink md:rounded-[1.25rem] md:p-6">
-            <span className="ml-auto flex size-8 items-center justify-center rounded-full bg-mkt-accent-ink text-white md:size-9">
-              <ArrowUpRight className="size-3.5 md:size-4" aria-hidden />
-            </span>
-            <div>
-              <p className="mkt-stat text-[1.75rem] md:text-[inherit]">98%</p>
-              <p className="mkt-label mt-2 opacity-80 md:mt-3">Zamanında sevkiyat</p>
-            </div>
-          </div>
-        </div>
-      </Slab>
-
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
-        <Slab className="mkt-pad relative overflow-hidden !py-8 md:!py-10">
-          <Reveal>
-            <span className="mkt-section-label">Ne sunuyoruz</span>
-            <h2 className="mkt-h2 mt-5 text-balance text-mkt-ink">
-              Katalogdan sepete,{" "}
-              <span className="rounded-md bg-mkt-accent px-1.5 text-mkt-accent-ink">tek yerden</span>{" "}
-              sipariş.
-            </h2>
-            <p className="mkt-body mt-4 max-w-md">
-              Fiyat listeniz, sepetiniz ve destek hattınız aynı platformda. Kağıt-fax yok.
-            </p>
-            <div className="mt-8">
-              <PillCta
-                href="/#cozumler"
-                variant="secondary"
-                showArrow={false}
-                className="w-full justify-center sm:w-auto"
-              >
-                Neler var?
-              </PillCta>
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <div className="relative mt-8 aspect-[16/10] overflow-hidden rounded-[1.25rem]">
+          <div className="relative min-h-[280px] overflow-hidden sm:min-h-[340px] lg:min-h-full">
+            <ScrollReveal from="scale" className="absolute inset-0">
               <SceneImage
                 id="offer-board"
                 fill
                 quality={55}
-                sizes="(min-width: 1024px) 40vw, 90vw"
+                className="object-center"
+                sizes="(min-width: 1024px) 50vw, 100vw"
               />
-            </div>
-          </Reveal>
-        </Slab>
-
-        <Slab className="mkt-pad !py-8 md:!py-10">
-          <Reveal>
-            <AboutTabs tabs={processTabs} visual />
-          </Reveal>
-        </Slab>
-      </div>
-
-      <Slab id="cozumler" className="mkt-pad">
-        <Reveal>
-          <div className="max-w-xl">
-            <p className="mkt-section-label">İşinizi kolaylaştıranlar</p>
-            <h2 className="mkt-h2 mt-3 text-balance text-mkt-ink">
-              Sipariş, soğuk zincir, teslimat, haber.
-            </h2>
-            <p className="mkt-body mt-4">Hepsi bayi hesabınızda. Telefonda not tutmaya gerek yok.</p>
+            </ScrollReveal>
           </div>
-        </Reveal>
-        <div className="mt-10 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mt-12 lg:grid-cols-4">
-          {capabilities.map((item, i) => (
-            <Reveal key={item.title} delay={i * 70}>
-              <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] bg-mkt-card-muted transition-transform duration-[var(--mkt-motion-hover)] hover:-translate-y-1">
-                <div className="relative aspect-[5/4] overflow-hidden">
-                  <SceneImage
-                    id={item.imageSlot}
-                    fill
-                    quality={55}
-                    className="transition-transform duration-500 group-hover:scale-[1.04]"
-                    sizes="(min-width: 1024px) 22vw, (min-width: 640px) 45vw, 90vw"
-                  />
-                  <span className="absolute top-3 left-3 flex size-10 items-center justify-center rounded-full bg-white/90 text-mkt-green-text shadow-sm backdrop-blur-sm">
-                    <item.icon className="size-4" aria-hidden />
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-[1.1rem] font-medium tracking-[-0.015em] text-mkt-ink">
+        </div>
+      </Slab>
+
+      <Slab className="relative overflow-hidden !p-0">
+        <ScrollReveal className="h-full">
+          <AboutTabs tabs={processTabs} visual imageSide="start" />
+        </ScrollReveal>
+      </Slab>
+
+      <Slab id="cozumler" className="relative overflow-hidden !p-0">
+        <div className="relative min-h-[440px] overflow-hidden sm:min-h-[500px] lg:min-h-[560px]">
+          <ScrollReveal from="scale" className="absolute inset-0">
+            <SceneImage id="hero" fill quality={65} className="object-center" sizes="100vw" />
+          </ScrollReveal>
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-gradient-to-t from-[#071711]/88 via-[#071711]/35 to-transparent"
+          />
+          <div className="absolute inset-x-0 bottom-0 z-10 px-5 py-10 sm:px-8 sm:py-12 md:px-12 md:py-14 lg:px-14 lg:py-16">
+            <ScrollReveal>
+              <p className="mkt-section-label !text-mkt-accent">İşinizi kolaylaştıranlar</p>
+              <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
+                Peyniriniz yola çıkmadan netleşir.
+              </h2>
+              <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/75">
+                Lot, SKT, teslimat günü ve WhatsApp: hepsi bayi hesabınızda.
+              </p>
+            </ScrollReveal>
+            <ScrollStagger className="mt-8 flex flex-col gap-3 border-t border-white/15 pt-6 text-[13px] text-white/80 sm:flex-row sm:flex-wrap sm:gap-x-7">
+              {capabilities.map((item) => (
+                <ScrollItem key={item.title}>
+                  <span className="inline-flex items-center gap-2">
+                    <item.icon className="size-3.5 shrink-0 text-mkt-accent" aria-hidden />
                     {item.title}
-                  </h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-mkt-ink-muted">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          ))}
+                  </span>
+                </ScrollItem>
+              ))}
+            </ScrollStagger>
+          </div>
         </div>
       </Slab>
 
       <Slab className="relative overflow-hidden">
-        <div className="mkt-pad relative">
-          <p
-            aria-hidden
-            className="pointer-events-none absolute top-4 right-3 text-[clamp(2.5rem,14vw,7rem)] leading-none font-medium tracking-[-0.04em] text-mkt-ink/[0.04] select-none md:top-8 md:right-10"
-          >
-            Ürünlerimiz
-          </p>
-          <Reveal>
-            <p className="mkt-section-label">Katalog</p>
-            <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-mkt-ink">Rafta işinize yarayanlar.</h2>
-            <p className="mkt-body mt-3 max-w-md">Teneke, dilim, günlük… İhtiyaca göre seçin.</p>
-          </Reveal>
-          <div className="mkt-rail relative mt-8 md:mt-12">
-            {productsPreview.map((product, i) => (
-              <Reveal key={product.name} delay={i * 60}>
-                <Link href="/urunler" className="group block">
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-[1rem] md:rounded-[1.25rem]">
-                    <SceneImage
-                      id={product.slot}
-                      fill
-                      quality={55}
-                      className="transition-transform duration-500 group-hover:scale-105"
-                      sizes="(min-width: 768px) 20vw, 42vw"
-                    />
-                  </div>
-                  <span className="mkt-pill mkt-label mt-3 inline-flex bg-mkt-card-muted px-3 py-1 text-mkt-ink-muted">
-                    {product.tag}
-                  </span>
-                  <p className="mt-2 text-[14px] font-medium tracking-[-0.01em] text-mkt-ink md:text-[15px]">
-                    {product.name}
-                  </p>
-                </Link>
-              </Reveal>
+        <div className="relative mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10 md:px-10 md:py-12">
+          <ScrollReveal>
+            <div className="mx-auto max-w-lg text-center">
+              <p className="mkt-section-label">Katalog</p>
+              <h2 className="mkt-h2 mt-2 text-balance text-mkt-ink">Raftaki peynirler.</h2>
+              <p className="mkt-body mx-auto mt-2 max-w-md text-[14px] md:text-[15px]">
+                Teneke beyaz, olgun kaşar, kırsal tulum. İhtiyaca göre seçin.
+              </p>
+            </div>
+          </ScrollReveal>
+          <ScrollStagger className="mt-7 grid gap-5 sm:mt-8 md:grid-cols-3 md:items-start md:gap-6">
+            {productsPreview.map((product) => (
+              <ScrollItem key={product.name}>
+                <ProductTiltCard
+                  href="/urunler"
+                  slot={product.slot}
+                  tag={product.tag}
+                  name={product.name}
+                  note={product.note}
+                />
+              </ScrollItem>
             ))}
-          </div>
-          <div className="mt-8 md:mt-10">
+          </ScrollStagger>
+          <ScrollReveal delay={0.12} className="mt-8 flex justify-center">
             <PillCta href="/urunler" className="w-full justify-center sm:w-auto">
               Tüm Ürünler
             </PillCta>
-          </div>
+          </ScrollReveal>
         </div>
       </Slab>
 
-      <Slab className="!bg-[#0c1612] text-white">
+      <Slab className="overflow-hidden !bg-[#0c1612] text-white">
         <SupportStrip />
       </Slab>
 
-      <Slab className="mkt-pad !py-10 md:!py-14 lg:!py-16">
+      <Slab className="mkt-pad">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)] lg:gap-14 xl:gap-20">
-          <Reveal className="lg:sticky lg:top-28 lg:self-start">
-            <p className="text-[12px] font-medium tracking-[0.14em] text-mkt-green-text uppercase">
-              Sık sorulanlar
-            </p>
+          <ScrollReveal from="left" className="lg:sticky lg:top-28 lg:self-start">
+            <p className="mkt-section-label">Sık sorulanlar</p>
             <h2 className="mkt-h2 mt-3 max-w-[16ch] text-balance text-mkt-ink">
               Hesap açmadan önce bilmen gerekenler.
             </h2>
@@ -376,24 +376,26 @@ export default function StoreHomePage() {
               Başka soru?
               <ArrowUpRight className="size-3.5" aria-hidden />
             </Link>
-          </Reveal>
-          <Reveal delay={60} className="min-w-0">
+          </ScrollReveal>
+          <ScrollReveal from="right" delay={0.08} className="min-w-0">
             <HomeFaq items={homeFaqs} />
-          </Reveal>
+          </ScrollReveal>
         </div>
       </Slab>
 
-      {/* Final bayi CTA — ~55/45 */}
+      {/* Final bayi CTA, ~55/45 */}
       <Slab className="overflow-hidden !p-0">
         <div className="grid lg:grid-cols-[minmax(0,0.55fr)_minmax(0,0.45fr)]">
-          <div className="relative min-h-[240px] sm:min-h-[300px] lg:min-h-[420px]">
-            <SceneImage
-              id="cta-final"
-              fill
-              quality={60}
-              className="object-center"
-              sizes="(min-width: 1024px) 55vw, 100vw"
-            />
+          <div className="relative min-h-[240px] overflow-hidden sm:min-h-[300px] lg:min-h-[420px]">
+            <ScrollReveal from="scale" className="absolute inset-0">
+              <SceneImage
+                id="cta-final"
+                fill
+                quality={60}
+                className="object-center"
+                sizes="(min-width: 1024px) 55vw, 100vw"
+              />
+            </ScrollReveal>
             <div
               aria-hidden
               className="absolute inset-0 bg-gradient-to-t from-[#0c1812]/70 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-[#0c1812]/40"
@@ -401,7 +403,7 @@ export default function StoreHomePage() {
           </div>
 
           <div className="flex flex-col justify-center bg-[#0c1812] px-5 py-10 text-white sm:px-8 sm:py-12 md:px-10 lg:px-12 lg:py-16">
-            <Reveal>
+            <ScrollReveal from="right">
               <p className="mkt-section-label !text-mkt-accent">Bayilik</p>
               <h2 className="mkt-h2 mt-3 max-w-md text-balance text-white">
                 Bayi hesabınla siparişe başla.
@@ -436,12 +438,13 @@ export default function StoreHomePage() {
                   WhatsApp güncelleme
                 </li>
               </ul>
-            </Reveal>
+            </ScrollReveal>
           </div>
         </div>
       </Slab>
 
       <SiteFooter />
-    </Canvas>
+      </Canvas>
+    </>
   );
 }

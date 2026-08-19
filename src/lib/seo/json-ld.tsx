@@ -122,11 +122,14 @@ export function productJsonLd(input: {
   path: string;
   image: string | null;
   sku: string;
-  priceKurus: number;
+  priceKurus?: number;
   brand: string;
   category?: string;
 }) {
   const image = absImage(input.image);
+  const showPrice =
+    typeof input.priceKurus === "number" && Number.isFinite(input.priceKurus);
+  const price = showPrice ? input.priceKurus : null;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -137,14 +140,18 @@ export function productJsonLd(input: {
     category: input.category,
     brand: { "@type": "Brand", name: input.brand },
     ...(image ? { image: [image] } : {}),
-    offers: {
-      "@type": "Offer",
-      url: absoluteUrl(input.path),
-      priceCurrency: "TRY",
-      price: (input.priceKurus / 100).toFixed(2),
-      availability: "https://schema.org/InStock",
-      seller: { "@id": `${getSiteUrl()}/#organization` },
-    },
+    ...(price != null
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: absoluteUrl(input.path),
+            priceCurrency: "TRY",
+            price: (price / 100).toFixed(2),
+            availability: "https://schema.org/InStock",
+            seller: { "@id": `${getSiteUrl()}/#organization` },
+          },
+        }
+      : {}),
   };
 }
 

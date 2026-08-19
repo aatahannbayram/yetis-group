@@ -74,20 +74,20 @@ export default async function BlogIndexPage({
           id="news-hero"
           fill
           priority
-          quality={60}
-          className="object-center"
+          quality={80}
+          className="scale-105 object-[42%_center]"
           sizes="100vw"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/45 to-black/65"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.72)_0%,rgba(12,10,8,0.28)_32%,rgba(10,14,10,0.22)_48%,rgba(10,14,10,0.70)_100%)]"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />
         </div>
-        <div className="relative z-10 flex min-h-[40vh] flex-col items-center justify-center px-5 pb-8 pt-20 text-center md:min-h-[48vh] md:px-10 md:pt-24">
+        <div className="relative z-10 flex min-h-[40vh] flex-col items-center justify-end px-5 pb-10 pt-24 text-center md:min-h-[48vh] md:px-10 md:pb-14 md:pt-28">
           <Reveal>
-            <p className="mkt-label text-white/65">Rehberler & yazılar</p>
+            <p className="mkt-label text-white/70">Rehberler & yazılar</p>
             <h1 className="mkt-display mt-3 text-balance text-white md:text-[clamp(2.75rem,6vw,4.5rem)]">
               Haberler
             </h1>

@@ -282,7 +282,7 @@ export async function getShippableStockByVariant() {
   return new Map(
     variants.map((variant) => {
       const shippable = variant.lots
-        .filter((lot) => lot.expirationDate >= now)
+        .filter((lot) => !isLotExpired(lot.expirationDate, now))
         .flatMap((lot) => lot.movements);
       return [variant.id, availableKgFromMovements(shippable)];
     }),

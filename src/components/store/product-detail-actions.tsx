@@ -111,7 +111,7 @@ export function ProductDetailActions({
         type="button"
         disabled={outOfStock}
         className={cn(
-          "mkt-pill inline-flex h-12 items-center justify-center text-[15px] font-medium disabled:opacity-50",
+          "mkt-pill inline-flex h-12 w-full items-center justify-center text-[15px] font-medium disabled:opacity-50",
           outOfStock
             ? "bg-stone-200 text-stone-600"
             : "bg-mkt-accent text-mkt-accent-ink hover:brightness-105",

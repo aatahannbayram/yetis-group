@@ -20,6 +20,7 @@ import {
 import { canTrackAnalytics, trackEcommerce } from "@/lib/analytics/adapter";
 
 type CartContextValue = {
+  enabled: boolean;
   lines: CartViewLine[];
   itemCount: number;
   totalKurus: number;
@@ -35,19 +36,51 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-export function CartProvider({ children }: { children: ReactNode }) {
+function patchLineQuantity(cart: CartView, lineId: string, quantity: number): CartView {
+  if (quantity < 1) {
+    const lines = cart.lines.filter((l) => l.id !== lineId);
+    return {
+      ...cart,
+      lines,
+      itemCount: lines.reduce((n, l) => n + l.quantity, 0),
+      totalKurus: lines.reduce((n, l) => n + l.lineTotalKurus, 0),
+    };
+  }
+  const lines = cart.lines.map((l) =>
+    l.id === lineId
+      ? { ...l, quantity, lineTotalKurus: l.unitPriceKurus * quantity }
+      : l,
+  );
+  return {
+    ...cart,
+    lines,
+    itemCount: lines.reduce((n, l) => n + l.quantity, 0),
+    totalKurus: lines.reduce((n, l) => n + l.lineTotalKurus, 0),
+  };
+}
+
+export function CartProvider({
+  children,
+  enabled = false,
+}: {
+  children: ReactNode;
+  /** Server-side: only approved dealers get a live cart. */
+  enabled?: boolean;
+}) {
   const [cart, setCart] = useState<CartView | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const refresh = useCallback(() => {
+    if (!enabled) return;
     startTransition(async () => {
       const next = await fetchCartAction();
       setCart(next);
     });
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     const run = () => {
       if (!cancelled) refresh();
@@ -66,15 +99,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       window.clearTimeout(t);
     };
-  }, [refresh]);
+  }, [enabled, refresh]);
 
   const value: CartContextValue = {
+    enabled,
     lines: cart?.lines ?? [],
     itemCount: cart?.itemCount ?? 0,
     totalKurus: cart?.totalKurus ?? 0,
     isOpen,
     isPending,
     open: () => {
+      if (!enabled) return;
       setIsOpen(true);
       if (!cart) refresh();
       if (canTrackAnalytics() && (cart?.itemCount ?? 0) > 0) {
@@ -91,11 +126,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
     close: () => setIsOpen(false),
     addVariant: (variantId, quantity = 1) => {
+      if (!enabled) return;
+      setIsOpen(true);
       startTransition(async () => {
         const next = await addToCartAction(variantId, quantity);
         if (!next) return;
         setCart(next);
-        setIsOpen(true);
         if (canTrackAnalytics()) {
           const line = next.lines.find((l) => l.variantId === variantId);
           trackEcommerce("add_to_cart", {
@@ -113,12 +149,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
     },
     removeLine: (lineId) => {
+      if (!enabled) return;
+      setCart((prev) => (prev ? patchLineQuantity(prev, lineId, 0) : prev));
       startTransition(async () => {
         const next = await removeFromCartAction(lineId);
         setCart(next);
       });
     },
     setQuantity: (lineId, quantity) => {
+      if (!enabled) return;
+      setCart((prev) => (prev ? patchLineQuantity(prev, lineId, quantity) : prev));
       startTransition(async () => {
         const next = await setCartQuantityAction(lineId, quantity);
         setCart(next);

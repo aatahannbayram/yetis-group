@@ -59,13 +59,14 @@ function toView(cart: NonNullable<Awaited<ReturnType<typeof getOrCreateCart>>>):
 
 export async function fetchCartAction(): Promise<CartView | null> {
   const { userId, dealerId } = await sessionContext();
-  // Read-only: do not create guest carts on every page view (Neon write cost).
+  if (!dealerId) return null;
   const cart = await getOrCreateCart({ userId, dealerId, createGuest: false });
   return cart ? toView(cart) : null;
 }
 
 export async function addToCartAction(variantId: string, quantity = 1) {
   const { userId, dealerId } = await sessionContext();
+  if (!dealerId) throw new Error("Bayi girişi gerekli.");
   const cart = await getOrCreateCart({ userId, dealerId, createGuest: true });
   if (!cart) throw new Error("Sepet oluşturulamadı.");
   await addCartLine({
@@ -81,12 +82,16 @@ export async function addToCartAction(variantId: string, quantity = 1) {
 }
 
 export async function setCartQuantityAction(lineId: string, quantity: number) {
+  const { dealerId } = await sessionContext();
+  if (!dealerId) throw new Error("Bayi girişi gerekli.");
   await setCartLineQuantity(lineId, quantity);
   revalidatePath("/");
   return fetchCartAction();
 }
 
 export async function removeFromCartAction(lineId: string) {
+  const { dealerId } = await sessionContext();
+  if (!dealerId) throw new Error("Bayi girişi gerekli.");
   await removeCartLine(lineId);
   revalidatePath("/");
   return fetchCartAction();

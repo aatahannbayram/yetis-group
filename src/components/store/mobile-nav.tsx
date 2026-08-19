@@ -56,7 +56,7 @@ export function MobileNav({
           className={cn(
             "size-11 md:hidden",
             overlay
-              ? "bg-black/35 text-white shadow-sm backdrop-blur-md hover:bg-black/50 hover:text-white"
+              ? "bg-black/35 text-white shadow-sm backdrop-blur-md hover:bg-black/50 hover:text-white group-data-[stuck=true]/hdr:bg-transparent group-data-[stuck=true]/hdr:text-neutral-950 group-data-[stuck=true]/hdr:shadow-none group-data-[stuck=true]/hdr:backdrop-blur-none group-data-[stuck=true]/hdr:hover:bg-neutral-100 group-data-[stuck=true]/hdr:hover:text-neutral-950"
               : "text-neutral-950 hover:bg-neutral-100",
           )}
         >

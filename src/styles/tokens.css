@@ -121,6 +121,7 @@
   --mkt-gutter-lg: 2rem;
   --mkt-slab-gap: 1.5rem;
   --mkt-slab-radius: 1.5rem;
+  --mkt-media-radius: 1rem;
   --mkt-pill: 999px;
 
   /* ---- Typography ---- */
@@ -176,9 +177,9 @@
   --panel-accent-action: var(--primary-solid);
   --panel-ink: var(--text-primary);
   --panel-ink-muted: var(--text-muted);
-  --panel-border: #e7e5e4; /* stone-200 */
+  --panel-border: var(--border);
   --panel-surface: var(--surface);
-  --panel-canvas: #fafaf9; /* stone-50 */
+  --panel-canvas: var(--canvas);
 
   /* Stage / SKT (map to semantic) */
   --stage-new: var(--neutral-solid);

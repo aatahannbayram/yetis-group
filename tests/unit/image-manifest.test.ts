@@ -18,6 +18,6 @@ describe("image manifesto", () => {
   });
 
   it("exposes expected slot count", () => {
-    expect(Object.keys(IMAGE_MANIFEST).length).toBe(27);
+    expect(Object.keys(IMAGE_MANIFEST).length).toBe(34);
   });
 });

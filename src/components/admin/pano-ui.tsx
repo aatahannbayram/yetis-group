@@ -63,8 +63,8 @@ function resolveIcon(name: PanoIconName): LucideIcon {
 }
 
 /** Cool stone + brand green — no warm beige fills. */
-const MUTED = "#78716c";
-const GRID = "#e7e5e4";
+const MUTED = "var(--text-muted)";
+const GRID = "var(--border)";
 const G1 = "#1B5E3A";
 const G2 = "#247A4D";
 const G3 = "#30a369";
@@ -184,9 +184,9 @@ export function PanoKpi({
         <p className={cn("text-[1.75rem] font-semibold tracking-[-0.04em] tabular-nums", valueColor)}>
           {value}
         </p>
-        {hint ? (
-          <p className="mt-1 text-[12px] text-stone-500 dark:text-zinc-400">{hint}</p>
-        ) : null}
+        <p className="mt-1 min-h-[1rem] text-[12px] text-stone-500 dark:text-zinc-400">
+          {hint ?? "\u00a0"}
+        </p>
       </div>
     </div>
   );
@@ -252,11 +252,11 @@ function Tip({
   if (!active || rows.length === 0) return null;
   return (
     <div className="rounded-lg bg-stone-900 px-3 py-2 text-white shadow-md dark:bg-zinc-100 dark:text-zinc-900">
-      {label ? <p className="text-[11px] text-white/65">{label}</p> : null}
+      {label ? <p className="text-[11px] text-white/65 dark:text-zinc-900/65">{label}</p> : null}
       <ul className="mt-0.5 space-y-0.5">
         {rows.map((r) => (
           <li key={r.name} className="text-[13px] font-semibold tabular-nums">
-            <span className="font-medium text-white/70">{r.name} </span>
+            <span className="font-medium text-white/70 dark:text-zinc-900/70">{r.name} </span>
             {r.value}
           </li>
         ))}

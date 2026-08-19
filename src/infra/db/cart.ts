@@ -1,8 +1,18 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/infra/db/client";
 import { getVariantUnitPrice } from "@/infra/db/pricing";
+import { getVariantStockSummary } from "@/infra/db/inventory";
+import { compare, fromCases } from "@/domain/weight";
 
 const GUEST_COOKIE = "yetis_cart_guest";
+
+async function assertStockAvailable(variantId: string, unitFactor: string, quantity: number) {
+  const { shippableKg } = await getVariantStockSummary(variantId);
+  const requestedKg = fromCases(quantity, unitFactor);
+  if (compare(requestedKg, shippableKg) > 0) {
+    throw new Error("Stok yetersiz");
+  }
+}
 
 export async function getOrCreateCart(opts: {
   userId?: string | null;
@@ -83,6 +93,9 @@ export async function addCartLine(input: {
     },
   });
 
+  const nextQuantity = (existing?.quantity ?? 0) + input.quantity;
+  await assertStockAvailable(input.variantId, variant.unitFactor.toString(), nextQuantity);
+
   if (existing) {
     return prisma.cartLine.update({
       where: { id: existing.id },
@@ -111,6 +124,11 @@ export async function setCartLineQuantity(lineId: string, quantity: number) {
   if (quantity <= 0) {
     return prisma.cartLine.delete({ where: { id: lineId } });
   }
+  const line = await prisma.cartLine.findUniqueOrThrow({
+    where: { id: lineId },
+    include: { variant: { select: { unitFactor: true } } },
+  });
+  await assertStockAvailable(line.variantId, line.variant.unitFactor.toString(), quantity);
   return prisma.cartLine.update({ where: { id: lineId }, data: { quantity } });
 }
 

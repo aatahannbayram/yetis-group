@@ -6,6 +6,7 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   CalendarClock,
+  Flame,
   Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,15 @@ import {
 } from "@/components/ui/select";
 import { formatDate } from "@/lib/format/date";
 import { createLotAction, addStockMovementAction } from "@/app/(panel)/panel/urunler/actions";
+import {
+  STOCK_MOVEMENT_LABEL,
+  type RecordableMovementType,
+} from "@/domain/inventory/movements";
+import { cn } from "@/lib/utils";
 
 type Movement = {
   id: string;
-  type: "GIRIS" | "CIKIS";
+  type: RecordableMovementType | "REPACK";
   quantityKg: string;
   note: string | null;
   createdAt: string;
@@ -48,6 +54,16 @@ function sktStatus(expirationDate: string, expired: boolean) {
     return { tone: "warning" as const, icon: CalendarClock, label: `SKT ${days} gün kaldı` };
   }
   return { tone: "success" as const, icon: CalendarClock, label: "SKT uygun" };
+}
+
+function MovementIcon({ type }: { type: string }) {
+  if (type === "GIRIS") {
+    return <ArrowDownCircle className="size-3.5 shrink-0 text-[var(--success-solid)]" aria-hidden />;
+  }
+  if (type === "FIRE") {
+    return <Flame className="size-3.5 shrink-0 text-[var(--danger-solid,#c02626)]" aria-hidden />;
+  }
+  return <ArrowUpCircle className="size-3.5 shrink-0 text-[var(--warning-solid)]" aria-hidden />;
 }
 
 function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
@@ -118,8 +134,12 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
 }
 
 function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
-  const [type, setType] = useState<"GIRIS" | "CIKIS">("GIRIS");
+  const onHand = Number(lot.availableKg);
+  const [type, setType] = useState<RecordableMovementType>(
+    lot.expired && onHand > 0 ? "FIRE" : "GIRIS",
+  );
   const [quantity, setQuantity] = useState("");
+  const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -133,8 +153,10 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
           lotId: lot.id,
           type,
           quantityKg: Number(quantity),
+          note: note.trim() || undefined,
         });
         setQuantity("");
+        setNote("");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Hareket eklenemedi.");
       }
@@ -143,7 +165,10 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
-      <Select value={type} onValueChange={(v) => setType(v as "GIRIS" | "CIKIS")}>
+      <Select
+        value={type}
+        onValueChange={(v) => setType(v as RecordableMovementType)}
+      >
         <SelectTrigger className="h-8 w-28 bg-[var(--surface)]">
           <SelectValue />
         </SelectTrigger>
@@ -152,6 +177,7 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
           <SelectItem value="CIKIS" disabled={lot.expired}>
             Çıkış
           </SelectItem>
+          <SelectItem value="FIRE">Fire</SelectItem>
         </SelectContent>
       </Select>
       <Input
@@ -163,6 +189,14 @@ function LotMovementForm({ lot, slug }: { lot: LotItem; slug: string }) {
         placeholder="kg"
         className="h-8 w-24 bg-[var(--surface)]"
         required
+      />
+      <Input
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder={type === "FIRE" ? "Neden zorunlu" : "Not (opsiyonel)"}
+        className="h-8 min-w-[10rem] flex-1 bg-[var(--surface)]"
+        required={type === "FIRE"}
+        minLength={type === "FIRE" ? 3 : undefined}
       />
       <Button type="submit" size="sm" variant="secondary" disabled={isPending}>
         Kaydet
@@ -199,6 +233,7 @@ export function LotManager({
         ) : (
           lots.map((lot) => {
             const skt = sktStatus(lot.expirationDate, lot.expired);
+            const onHand = Number(lot.availableKg);
             return (
               <div
                 key={lot.id}
@@ -215,9 +250,22 @@ export function LotManager({
                       label={`${formatDate(new Date(lot.expirationDate))} · ${skt.label}`}
                     />
                   </div>
-                  <p className="tabular-nums text-body font-semibold text-[var(--primary-text)]">
+                  <p
+                    className={cn(
+                      "tabular-nums text-body font-semibold",
+                      lot.expired
+                        ? "text-[var(--danger-text,#b42318)]"
+                        : "text-[var(--primary-text)]",
+                    )}
+                  >
                     {lot.availableKg}{" "}
-                    <span className="text-caption font-normal text-[var(--text-muted)]">kg mevcut</span>
+                    <span className="text-caption font-normal text-[var(--text-muted)]">
+                      {lot.expired
+                        ? onHand > 0
+                          ? "kg SKT geçmiş eldeki"
+                          : "kg (düşüldü)"
+                        : "kg sevk edilebilir"}
+                    </span>
                   </p>
                 </div>
 
@@ -229,22 +277,18 @@ export function LotManager({
                   <ul className="mt-3 flex flex-col gap-2 border-t border-[var(--panel-border)] pt-3">
                     {lot.movements.slice(0, 5).map((movement) => (
                       <li key={movement.id} className="flex items-center gap-2 text-caption">
-                        {movement.type === "GIRIS" ? (
-                          <ArrowDownCircle
-                            className="size-3.5 shrink-0 text-[var(--success-solid)]"
-                            aria-hidden
-                          />
-                        ) : (
-                          <ArrowUpCircle
-                            className="size-3.5 shrink-0 text-[var(--warning-solid)]"
-                            aria-hidden
-                          />
-                        )}
+                        <MovementIcon type={movement.type} />
                         <span className="flex-1 tabular-nums text-[var(--text-secondary)]">
                           {movement.type === "GIRIS" ? "+" : "-"}
                           {movement.quantityKg} kg
+                          {" · "}
+                          {STOCK_MOVEMENT_LABEL[movement.type as RecordableMovementType] ??
+                            movement.type}
                           {movement.note ? (
-                            <span className="text-[var(--text-muted)]"> &middot; {movement.note}</span>
+                            <span className="text-[var(--text-muted)]">
+                              {" "}
+                              &middot; {movement.note}
+                            </span>
                           ) : null}
                         </span>
                         <span className="shrink-0 text-[var(--text-muted)]">

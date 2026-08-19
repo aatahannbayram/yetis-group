@@ -59,7 +59,7 @@ export default async function AdminProductsPage() {
         <StatCard label="Toplam ürün" value={products.length} href="#urun-listesi" />
         <StatCard label="Toplam paket" value={variantCount} href="#urun-listesi" />
         <StatCard
-          label="Toplam stok"
+          label="Sevk edilebilir"
           value={Math.round(totalKg.toNumber())}
           unit="kg"
           href="#urun-listesi"

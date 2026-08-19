@@ -618,6 +618,8 @@ enum StockMovementType {
   GIRIS
   CIKIS
   REPACK
+  /// Write-off: imha, SKT geçmiş düşüm, numune. Decrements on-hand; allowed on expired lots.
+  FIRE
 }
 
 model StockMovement {

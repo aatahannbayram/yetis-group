@@ -8,6 +8,7 @@ import { listDealerBalances, listRecentPayments } from "@/infra/db/ledger";
 import { formatMoney } from "@/lib/format/money";
 import { formatDateTime } from "@/lib/format/date";
 import { money } from "@/domain/money";
+import { summarizeAgingPortfolio } from "@/domain/ledger/aging";
 
 export default async function TahsilatPage() {
   const [balances, payments] = await Promise.all([
@@ -32,11 +33,13 @@ export default async function TahsilatPage() {
     )
     .reduce((sum, p) => sum + p.amountKurus, 0);
 
+  const aging = summarizeAgingPortfolio(balances);
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Tahsilat"
-        description="Bayiden gelen ödemeyi cariye ödeme kaydı olarak işleyin."
+        description="Bayiden gelen ödemeyi cariye ödeme kaydı olarak işleyin. Vade: teslim + vade günü."
         count={payments.length}
       />
 
@@ -53,6 +56,29 @@ export default async function TahsilatPage() {
           href="/panel/cari"
         />
         <StatCard label="Borçlu hesap" value={balances.filter((d) => d.balanceKurus > 0).length} href="/panel/cari" />
+      </section>
+
+      <section aria-label="Vade dağılımı" className="grid gap-3 sm:grid-cols-3">
+        <StatCard
+          label="0-30 gün"
+          value={formatMoney(money(aging.okKurus))}
+          hint={`${aging.okCount} hesap`}
+          href="/panel/cari"
+        />
+        <StatCard
+          label="31-45 gün"
+          value={formatMoney(money(aging.warnKurus))}
+          hint={`${aging.warnCount} hesap`}
+          tone={aging.warnKurus > 0 ? "warning" : "neutral"}
+          href="/panel/cari"
+        />
+        <StatCard
+          label="46+ gün"
+          value={formatMoney(money(aging.dangerKurus))}
+          hint={`${aging.dangerCount} hesap`}
+          tone={aging.dangerKurus > 0 ? "danger" : "neutral"}
+          href="/panel/cari"
+        />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

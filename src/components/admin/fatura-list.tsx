@@ -18,6 +18,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { formatMoney } from "@/lib/format/money";
 import { formatDate } from "@/lib/format/date";
 import { money } from "@/domain/money";
+import { proformaSettlementBadge } from "@/domain/ledger";
 import { cn } from "@/lib/utils";
 import type { Density } from "@/components/ui/density-toggle";
 import {
@@ -74,6 +75,9 @@ export type FaturaRow = {
   pdfPath: string | null;
   issuedAt: string;
   sentAt: string | null;
+  paymentMethod: "HAVALE" | "CARI" | "ONLINE" | null;
+  paidAt: string | null;
+  paymentTermDays: number | null;
   lines: FaturaLineRow[];
 };
 
@@ -307,9 +311,21 @@ export function FaturaList({ faturalar }: { faturalar: FaturaRow[] }) {
 
               <div className="flex-1 space-y-5 overflow-y-auto bg-stone-50/50 px-5 py-5 dark:bg-zinc-950">
                 <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge tone="info" label="Proforma" />
                   {(() => {
                     const s = statusBadge(open.status);
                     return <StatusBadge tone={s.tone} label={s.label} />;
+                  })()}
+                  {(() => {
+                    const settlement = proformaSettlementBadge({
+                      paymentMethod: open.paymentMethod,
+                      paidAt: open.paidAt,
+                      sentAt: open.sentAt,
+                      paymentTermDays: open.paymentTermDays,
+                    });
+                    if (!settlement || settlement.kind === "unsent") return null;
+                    const tone = settlement.kind === "paid" ? ("success" as const) : ("warning" as const);
+                    return <StatusBadge tone={tone} label={settlement.label} />;
                   })()}
                   {open.sentAt ? (
                     <StatusBadge tone="success" label={`Gönderildi · ${formatDate(new Date(open.sentAt))}`} />

@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { summarizeAgingPortfolio } from "@/domain/ledger/aging";
 
 export default async function AdminLedgerPage() {
   const summaries = await listDealerBalances();
@@ -30,24 +31,40 @@ export default async function AdminLedgerPage() {
   const totalReceivableKurus = rows
     .filter((r) => r.balanceKurus > 0)
     .reduce((sum, r) => sum + r.balanceKurus, 0);
+  const aging = summarizeAgingPortfolio(rows);
   const overLimitCount = rows.filter(
     (r) => r.creditLimitKurus != null && r.balanceKurus > r.creditLimitKurus,
   ).length;
-  const totalEntries = rows.reduce((sum, r) => sum + r.entryCount, 0);
+  const totalEntries = rows.reduce((sum, r) => r.entryCount + sum, 0);
 
   const metrics = [
-    {
-      id: "dealers",
-      label: "Toplam hesap",
-      value: String(rows.length),
-      href: "#cari-panosu",
-    },
     {
       id: "receivable",
       label: "Toplam alacak",
       value: formatMoney(money(totalReceivableKurus)),
       href: "#cari-panosu",
       tone: totalReceivableKurus > 0 ? ("warn" as const) : ("neutral" as const),
+    },
+    {
+      id: "ok",
+      label: "0-30 gün",
+      value: formatMoney(money(aging.okKurus)),
+      href: "#cari-panosu",
+      tone: "neutral" as const,
+    },
+    {
+      id: "warn",
+      label: "31-45 gün",
+      value: formatMoney(money(aging.warnKurus)),
+      href: "#cari-panosu",
+      tone: aging.warnKurus > 0 ? ("warn" as const) : ("neutral" as const),
+    },
+    {
+      id: "danger",
+      label: "46+ gün",
+      value: formatMoney(money(aging.dangerKurus)),
+      href: "#cari-panosu",
+      tone: aging.dangerKurus > 0 ? ("danger" as const) : ("neutral" as const),
     },
     {
       id: "over",
@@ -64,12 +81,12 @@ export default async function AdminLedgerPage() {
         <PageHeader
           title="Cari"
           count={rows.length}
-          description="Bakiyeler, limit kullanımı ve hareketler."
+          description="Bakiyeler, limit ve vade gecikmesi (0-30 / 31-45 / 46+)."
         />
 
         <section
           aria-label="Özet"
-          className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-800"
+          className="grid grid-cols-1 gap-px overflow-hidden rounded-xl border border-stone-200 bg-stone-200 sm:grid-cols-2 lg:grid-cols-5 dark:border-zinc-800 dark:bg-zinc-800"
         >
           {metrics.map((m) => (
             <Link

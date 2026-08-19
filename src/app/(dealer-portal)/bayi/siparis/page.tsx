@@ -8,7 +8,7 @@ import { getPaymentSettings } from "@/infra/db/payment-settings";
 import { getOrCreateCart } from "@/infra/db/cart";
 import { getDealerById } from "@/infra/db/dealers";
 import { getDealerCreditExposure } from "@/infra/db/orders";
-import { canUseOnAccount } from "@/domain/ledger";
+import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
 import type { DealerCartView } from "./actions";
 
@@ -43,8 +43,7 @@ export default async function BayiSiparisPage() {
   });
   const cari = {
     eligible: cariEligibility.ok,
-    availableKurus:
-      dealer?.creditLimitKurus != null ? Math.max(0, dealer.creditLimitKurus - exposureKurus) : null,
+    availableKurus: availableCreditKurus(dealer?.creditLimitKurus ?? null, exposureKurus),
   };
 
   const initialCart: DealerCartView | null = cart

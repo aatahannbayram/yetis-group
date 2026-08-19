@@ -7,6 +7,10 @@ import {
   suggestFefoShipment,
   type LotSummary,
 } from "@/domain/inventory/fefo";
+import {
+  availableKgFromMovements,
+  assertCanRecordMovement,
+} from "@/domain/inventory/movements";
 import { kg } from "@/domain/weight";
 
 const asOf = new Date("2026-06-15T00:00:00Z");
@@ -52,6 +56,109 @@ describe("sortLotsByFefo", () => {
   it("excludes expired lots entirely", () => {
     const lots = [lot("expired", "L-000", "2026-01-01", 10), lot("fresh", "L-001", "2026-07-01", 10)];
     expect(sortLotsByFefo(lots, asOf).map((l) => l.id)).toEqual(["fresh"]);
+  });
+});
+
+describe("availableKgFromMovements", () => {
+  it("adds GIRIS and subtracts CIKIS", () => {
+    expect(
+      availableKgFromMovements([
+        { type: "GIRIS", quantityKg: 85 },
+        { type: "CIKIS", quantityKg: 10 },
+      ]).toNumber(),
+    ).toBe(75);
+  });
+
+  it("subtracts FIRE the same way as CIKIS", () => {
+    expect(
+      availableKgFromMovements([
+        { type: "GIRIS", quantityKg: 85 },
+        { type: "FIRE", quantityKg: 85 },
+      ]).toNumber(),
+    ).toBe(0);
+  });
+
+  it("ignores REPACK", () => {
+    expect(
+      availableKgFromMovements([
+        { type: "GIRIS", quantityKg: 17 },
+        { type: "REPACK", quantityKg: 17 },
+      ]).toNumber(),
+    ).toBe(17);
+  });
+});
+
+describe("assertCanRecordMovement", () => {
+  const fresh = new Date("2026-12-01");
+  const expired = new Date("2026-01-01");
+  const available = kg(85);
+
+  it("rejects CIKIS on an expired lot", () => {
+    expect(() =>
+      assertCanRecordMovement({
+        type: "CIKIS",
+        quantityKg: 10,
+        lotNumber: "YG-BP17-TNK-B",
+        availableKg: available,
+        expirationDate: expired,
+        asOf,
+      }),
+    ).toThrow(InventoryError);
+  });
+
+  it("allows FIRE on an expired lot when a reason is given", () => {
+    expect(() =>
+      assertCanRecordMovement({
+        type: "FIRE",
+        quantityKg: 85,
+        note: "SKT geçti, imha",
+        lotNumber: "YG-BP17-TNK-B",
+        availableKg: available,
+        expirationDate: expired,
+        asOf,
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects FIRE without a reason", () => {
+    expect(() =>
+      assertCanRecordMovement({
+        type: "FIRE",
+        quantityKg: 85,
+        note: "  ",
+        lotNumber: "YG-BP17-TNK-B",
+        availableKg: available,
+        expirationDate: expired,
+        asOf,
+      }),
+    ).toThrow(/Fire için neden/);
+  });
+
+  it("rejects FIRE above on-hand", () => {
+    expect(() =>
+      assertCanRecordMovement({
+        type: "FIRE",
+        quantityKg: 90,
+        note: "imha",
+        lotNumber: "YG-BP17-TNK-B",
+        availableKg: available,
+        expirationDate: expired,
+        asOf,
+      }),
+    ).toThrow(/yeterli stok yok/);
+  });
+
+  it("allows CIKIS on a fresh lot within on-hand", () => {
+    expect(() =>
+      assertCanRecordMovement({
+        type: "CIKIS",
+        quantityKg: 10,
+        lotNumber: "L-002",
+        availableKg: available,
+        expirationDate: fresh,
+        asOf,
+      }),
+    ).not.toThrow();
   });
 });
 

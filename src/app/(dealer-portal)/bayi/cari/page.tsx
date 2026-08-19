@@ -5,8 +5,8 @@ import { ArrowRight, Clock, Wallet } from "lucide-react";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
-import { calculateBalance } from "@/domain/ledger";
-import { listOrdersForDealer } from "@/infra/db/orders";
+import { availableCreditKurus, calculateBalance } from "@/domain/ledger";
+import { getDealerCreditExposure, listOrdersForDealer } from "@/infra/db/orders";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { formatMoney } from "@/lib/format/money";
 import { formatDate } from "@/lib/format/date";
@@ -32,7 +32,7 @@ export default async function BayiCariPage() {
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const [dealer, orders] = await Promise.all([
+  const [dealer, orders, exposureKurus] = await Promise.all([
     prisma.dealer.findUniqueOrThrow({
       where: { id: dealerId },
       select: {
@@ -43,6 +43,7 @@ export default async function BayiCariPage() {
       },
     }),
     listOrdersForDealer(dealerId),
+    getDealerCreditExposure(dealerId),
   ]);
 
   const pendingOrders = orders.filter((o) => OPEN_STATUSES.has(o.status));
@@ -50,8 +51,7 @@ export default async function BayiCariPage() {
   const balanceKurus = calculateBalance(dealer.ledgerEntries);
   const recent = dealer.ledgerEntries.slice(0, 40);
   const limit = dealer.creditLimitKurus;
-  const available =
-    limit != null ? Math.max(0, limit - Math.max(0, balanceKurus)) : null;
+  const available = availableCreditKurus(limit, exposureKurus);
 
   return (
     <div className="space-y-6 pb-24 sm:pb-6">
@@ -90,6 +90,7 @@ export default async function BayiCariPage() {
           {available != null ? (
             <p className="mt-1 text-xs text-[var(--panel-ink-muted)]">
               Kullanılabilir: {formatMoney(money(available))}
+              <span className="mt-0.5 block">Açık cari siparişler dahil</span>
             </p>
           ) : null}
         </div>

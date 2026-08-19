@@ -224,10 +224,11 @@ export default async function PanelDashboardPage() {
           tone={openLeadsCount > 0 ? "info" : "neutral"}
         />
         <PanoKpi
-          label="Bayatlayan"
-          value={staleLeadRows.length}
-          href="/panel/bayi-adaylari"
-          tone={staleLeadRows.length > 0 ? "warn" : "neutral"}
+          label="SKT geçmiş"
+          value={inventory.expiredCount}
+          hint={formatKg(inventory.expiredOnHandKg)}
+          href="/panel/stok"
+          tone={inventory.expiredCount > 0 ? "danger" : "neutral"}
         />
         <PanoKpi
           label="Açık sepet"

@@ -1,0 +1,2 @@
+-- FIRE enum value cannot be removed safely in PostgreSQL while rows may reference it.
+-- Down: leave the enum value in place.

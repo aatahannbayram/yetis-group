@@ -10,6 +10,7 @@ import {
   ChevronDown,
   ChevronRight,
   ExternalLink,
+  Flame,
   Package,
   Plus,
   Search,
@@ -19,6 +20,10 @@ import {
   addStockMovementFromStockAction,
   createLotFromStockAction,
 } from "@/app/(panel)/panel/stok/actions";
+import {
+  STOCK_MOVEMENT_LABEL,
+  type RecordableMovementType,
+} from "@/domain/inventory/movements";
 import { formatDate } from "@/lib/format/date";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -186,8 +191,13 @@ export function StockBoard({
                     <div className="space-y-3 border-t border-stone-100 bg-stone-50/80 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-950/40">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-xs text-stone-500">
-                          Toplam {kgFmt.format(row.totalKg)} kg · Sevk edilebilir{" "}
-                          {kgFmt.format(row.shippableKg)} kg
+                          Sevk edilebilir {kgFmt.format(row.shippableKg)} kg
+                          {row.expiredOnHandKg > 0 ? (
+                            <span className="text-red-700">
+                              {" "}
+                              · Fire adayı {kgFmt.format(row.expiredOnHandKg)} kg
+                            </span>
+                          ) : null}
                         </p>
                         <Link
                           href={`/panel/urunler/${row.productSlug}`}
@@ -224,7 +234,9 @@ function LotRow({
   lot: StockBoardRow["lots"][number];
 }) {
   const [pending, startTransition] = useTransition();
-  const [type, setType] = useState<"GIRIS" | "CIKIS">("GIRIS");
+  const [type, setType] = useState<RecordableMovementType>(
+    lot.expired && lot.availableKg > 0 ? "FIRE" : "GIRIS",
+  );
   const [qty, setQty] = useState("");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -241,6 +253,10 @@ function LotRow({
     const quantityKg = Number(qty.replace(",", "."));
     if (!Number.isFinite(quantityKg) || quantityKg <= 0) {
       setError("Geçerli kg girin");
+      return;
+    }
+    if (type === "FIRE" && note.trim().length < 3) {
+      setError("Fire için neden yazın (imha, iade üretici veya numune).");
       return;
     }
     startTransition(async () => {
@@ -287,11 +303,22 @@ function LotRow({
         </div>
         <p
           className={cn(
-            "text-sm font-semibold tabular-nums",
-            lot.availableKg <= 0 ? "text-stone-400" : "text-stone-900 dark:text-zinc-100",
+            "text-right text-sm font-semibold tabular-nums",
+            lot.availableKg <= 0
+              ? "text-stone-400"
+              : lot.expired
+                ? "text-red-800"
+                : "text-stone-900 dark:text-zinc-100",
           )}
         >
           {kgFmt.format(lot.availableKg)} kg
+          <span className="mt-0.5 block text-[11px] font-normal text-stone-500">
+            {lot.expired
+              ? lot.availableKg > 0
+                ? "SKT geçmiş eldeki"
+                : "düşüldü"
+              : "sevk edilebilir"}
+          </span>
         </p>
       </div>
 
@@ -320,6 +347,16 @@ function LotRow({
             >
               <ArrowDownCircle className="size-3.5" /> Çıkış
             </button>
+            <button
+              type="button"
+              onClick={() => setType("FIRE")}
+              className={cn(
+                "inline-flex h-8 items-center gap-1 rounded px-2 text-xs font-medium",
+                type === "FIRE" ? "bg-red-800 text-white" : "text-stone-600",
+              )}
+            >
+              <Flame className="size-3.5" /> Fire
+            </button>
           </div>
         </div>
         <div className="space-y-1">
@@ -338,14 +375,16 @@ function LotRow({
         </div>
         <div className="min-w-[10rem] flex-1 space-y-1">
           <Label htmlFor={`note-${lot.id}`} className="text-xs">
-            Not
+            Not{type === "FIRE" ? " (zorunlu)" : ""}
           </Label>
           <Input
             id={`note-${lot.id}`}
             value={note}
             onChange={(e) => setNote(e.target.value)}
             className="h-8"
-            placeholder="Opsiyonel"
+            placeholder={type === "FIRE" ? "İmha, iade üretici veya numune" : "Opsiyonel"}
+            required={type === "FIRE"}
+            minLength={type === "FIRE" ? 3 : undefined}
           />
         </div>
         <Button type="submit" size="sm" className="h-8" disabled={pending}>
@@ -359,7 +398,10 @@ function LotRow({
           {lot.movements.slice(0, 4).map((m) => (
             <li key={m.id} className="flex justify-between gap-2 text-[11px] text-stone-500">
               <span>
-                {m.type === "GIRIS" ? "Giriş" : m.type === "CIKIS" ? "Çıkış" : m.type} ·{" "}
+                {m.type === "FIRE" ? (
+                  <Flame className="mr-1 inline size-3 text-red-700" aria-hidden />
+                ) : null}
+                {STOCK_MOVEMENT_LABEL[m.type as RecordableMovementType] ?? m.type} ·{" "}
                 {kgFmt.format(m.quantityKg)} kg
                 {m.note ? ` · ${m.note}` : ""}
               </span>

@@ -2,8 +2,10 @@ import { prisma } from "@/infra/db/client";
 import { assertOrderTransition, type OrderStatus } from "@/domain/order/state-machine";
 import { addLedgerEntry } from "@/infra/db/ledger";
 import { notifyOrderCreated, notifyOrderStatusChanged } from "@/infra/db/notifications";
-import { calculateBalance, canUseOnAccount } from "@/domain/ledger";
+import { calculateBalance, canUseOnAccount, shouldPostDeliveryDebt } from "@/domain/ledger";
 import { captureMockPayment } from "@/infra/payments/mock-provider";
+import { getVariantStockSummary } from "@/infra/db/inventory";
+import { compare, fromCases } from "@/domain/weight";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 
 const OPEN_ORDER_STATUSES: OrderStatus[] = [
@@ -81,12 +83,16 @@ async function resolveDealerVariantPrice(dealerId: string, variantId: string) {
     prisma.dealer.findUniqueOrThrow({ where: { id: dealerId }, select: { priceListId: true } }),
     prisma.productVariant.findUniqueOrThrow({
       where: { id: variantId },
-      select: { pricePerUnitKurus: true, vatRateBasisPoints: true },
+      select: { pricePerUnitKurus: true, vatRateBasisPoints: true, unitFactor: true },
     }),
   ]);
 
   if (!dealer.priceListId) {
-    return { unitPriceKurus: variant.pricePerUnitKurus, vatRateBasisPoints: variant.vatRateBasisPoints };
+    return {
+      unitPriceKurus: variant.pricePerUnitKurus,
+      vatRateBasisPoints: variant.vatRateBasisPoints,
+      unitFactor: variant.unitFactor,
+    };
   }
 
   const override = await prisma.priceListItem.findUnique({
@@ -97,6 +103,7 @@ async function resolveDealerVariantPrice(dealerId: string, variantId: string) {
   return {
     unitPriceKurus: override?.priceKurus ?? variant.pricePerUnitKurus,
     vatRateBasisPoints: variant.vatRateBasisPoints,
+    unitFactor: variant.unitFactor,
   };
 }
 
@@ -114,10 +121,15 @@ export async function createOrder(input: {
 
   const lineData = await Promise.all(
     input.lines.map(async (line) => {
-      const { unitPriceKurus, vatRateBasisPoints } = await resolveDealerVariantPrice(
+      const { unitPriceKurus, vatRateBasisPoints, unitFactor } = await resolveDealerVariantPrice(
         input.dealerId,
         line.variantId,
       );
+      const { shippableKg } = await getVariantStockSummary(line.variantId);
+      const requestedKg = fromCases(line.quantity, unitFactor.toString());
+      if (compare(requestedKg, shippableKg) > 0) {
+        throw new Error("Stok yetersiz");
+      }
       const lineTotalKurus = unitPriceKurus * line.quantity;
       return {
         variantId: line.variantId,
@@ -256,7 +268,9 @@ export async function transitionOrder(
 ) {
   const order = await prisma.order.findUniqueOrThrow({
     where: { id: orderId },
-    include: { dealer: { select: { unvan: true, email: true } } },
+    include: {
+      dealer: { select: { unvan: true, email: true, paymentMethod: true, creditLimitKurus: true } },
+    },
   });
   const result = assertOrderTransition({
     from: order.status,
@@ -264,6 +278,19 @@ export async function transitionOrder(
     cancelReason: input?.cancelReason,
   });
   if (!result.ok) throw result.error;
+
+  if (to === "CONFIRMED" && order.status !== "CONFIRMED" && order.paymentMethod === "CARI") {
+    const exposureKurus = await getDealerCreditExposure(order.dealerId);
+    // Bu sipariş zaten açık CARI maruziyetinde; tekrar ekleme.
+    const exposureExcludingThis = exposureKurus - order.totalKurus;
+    const eligibility = canUseOnAccount({
+      dealerPaymentMethod: order.dealer.paymentMethod,
+      creditLimitKurus: order.dealer.creditLimitKurus,
+      exposureKurus: exposureExcludingThis,
+      orderTotalKurus: order.totalKurus,
+    });
+    if (!eligibility.ok) throw new Error(eligibility.reason);
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.order.update({ where: { id: orderId }, data: { status: to } });
@@ -276,7 +303,11 @@ export async function transitionOrder(
     });
   });
 
-  if (to === "DELIVERED") {
+  if (
+    to === "DELIVERED" &&
+    order.status !== "DELIVERED" &&
+    shouldPostDeliveryDebt({ paymentMethod: order.paymentMethod, paidAt: order.paidAt })
+  ) {
     await addLedgerEntry({
       dealerId: order.dealerId,
       type: "BORC",

@@ -171,13 +171,14 @@ export async function createLotAction(
 
 export async function addStockMovementAction(
   slug: string,
-  input: { lotId: string; type: "GIRIS" | "CIKIS"; quantityKg: number; note?: string },
+  input: { lotId: string; type: "GIRIS" | "CIKIS" | "FIRE"; quantityKg: number; note?: string },
 ) {
   await addStockMovement(input);
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath("/panel/stok");
   revalidatePath("/panel");
   revalidatePath("/bayi/siparis");
+  revalidatePath("/bayi/firsatlar");
 }
 
 export async function addMediaAction(formData: FormData) {

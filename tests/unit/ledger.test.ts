@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { calculateBalance, canUseOnAccount } from "@/domain/ledger";
+import {
+  availableCreditKurus,
+  calculateBalance,
+  canUseOnAccount,
+  proformaSettlementBadge,
+  shouldPostDeliveryDebt,
+} from "@/domain/ledger";
 
 describe("calculateBalance", () => {
   it("returns 0 for no entries", () => {
@@ -72,5 +78,94 @@ describe("canUseOnAccount", () => {
   it("allows exactly at the limit boundary", () => {
     const result = canUseOnAccount({ ...base, exposureKurus: 900_00, orderTotalKurus: 100_00 });
     expect(result).toEqual({ ok: true });
+  });
+
+  it("on confirm, does not double-count an already-open CARI order in exposure", () => {
+    const orderTotalKurus = 100_00;
+    const otherExposure = 850_00;
+    const exposureIncludingThis = otherExposure + orderTotalKurus;
+    const doubled = canUseOnAccount({
+      ...base,
+      exposureKurus: exposureIncludingThis,
+      orderTotalKurus,
+    });
+    const excludingThis = canUseOnAccount({
+      ...base,
+      exposureKurus: exposureIncludingThis - orderTotalKurus,
+      orderTotalKurus,
+    });
+    expect(doubled.ok).toBe(false);
+    expect(excludingThis).toEqual({ ok: true });
+  });
+});
+
+describe("availableCreditKurus", () => {
+  it("returns null when no limit is defined", () => {
+    expect(availableCreditKurus(null, 50_00)).toBeNull();
+  });
+
+  it("subtracts open CARI exposure, not only ledger balance", () => {
+    expect(availableCreditKurus(1_000_00, 400_00)).toBe(600_00);
+  });
+
+  it("floors at zero when exposure exceeds the limit", () => {
+    expect(availableCreditKurus(1_000_00, 1_200_00)).toBe(0);
+  });
+});
+
+describe("shouldPostDeliveryDebt", () => {
+  const paidAt = new Date("2026-08-01T10:00:00.000Z");
+
+  it("posts BORC for CARI delivery", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "CARI", paidAt: null })).toBe(true);
+  });
+
+  it("posts BORC for unpaid HAVALE delivery", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "HAVALE", paidAt: null })).toBe(true);
+  });
+
+  it("still posts BORC for paid HAVALE (ODEME already written by confirmOrderPayment)", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "HAVALE", paidAt })).toBe(true);
+  });
+
+  it("skips BORC for prepaid ONLINE (paidAt set, no ODEME)", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "ONLINE", paidAt })).toBe(false);
+  });
+
+  it("posts BORC for ONLINE if capture failed (no paidAt)", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "ONLINE", paidAt: null })).toBe(true);
+  });
+});
+
+describe("proformaSettlementBadge", () => {
+  it("marks paid orders as Odendi", () => {
+    expect(
+      proformaSettlementBadge({
+        paymentMethod: "HAVALE",
+        paidAt: new Date("2026-08-01"),
+        sentAt: new Date("2026-08-01"),
+      }),
+    ).toEqual({ kind: "paid", label: "Ödendi" });
+  });
+
+  it("marks CARI as open account, with term days when present", () => {
+    expect(
+      proformaSettlementBadge({
+        paymentMethod: "CARI",
+        paidAt: null,
+        sentAt: new Date("2026-08-01"),
+        paymentTermDays: 30,
+      }),
+    ).toEqual({ kind: "open_account", label: "Cari açık · 30 gün" });
+  });
+
+  it("marks unsent non-cari as Gonderilmedi", () => {
+    expect(
+      proformaSettlementBadge({
+        paymentMethod: "HAVALE",
+        paidAt: null,
+        sentAt: null,
+      }),
+    ).toEqual({ kind: "unsent", label: "Gönderilmedi" });
   });
 });

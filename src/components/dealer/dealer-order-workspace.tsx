@@ -60,6 +60,13 @@ function formatKg(n: number) {
   return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 1 }).format(n);
 }
 
+/** Stoktaki kg'yi paket adedine çevirir (koli/teneke↔kg katsayısı üzerinden). */
+function maxOrderableQty(stockKg: number, unitFactor: string) {
+  const factor = Number(unitFactor);
+  if (!Number.isFinite(factor) || factor <= 0) return 0;
+  return Math.max(0, Math.floor(stockKg / factor));
+}
+
 export function DealerOrderWorkspace({
   products,
   initialCart,
@@ -213,7 +220,9 @@ export function DealerOrderWorkspace({
             {filtered.map((product) => {
               const v = variantOf(product);
               const stock = stockLabel(v.stockKg);
+              const maxQty = maxOrderableQty(v.stockKg, v.unitFactor);
               const amount = qty[product.id] ?? v.moq;
+              const insufficientForMoq = maxQty < v.moq;
               return (
                 <li key={product.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
                   <Link
@@ -301,42 +310,66 @@ export function DealerOrderWorkspace({
                     <p className="text-lg font-semibold tabular-nums text-[var(--panel-ink)]">
                       {formatMoney(v.unitPrice)}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <div className="inline-flex items-center rounded-md border border-[var(--panel-border)]">
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        <div className="inline-flex items-center rounded-md border border-[var(--panel-border)]">
+                          <button
+                            type="button"
+                            className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)]"
+                            onClick={() =>
+                              setQty((q) => ({
+                                ...q,
+                                [product.id]: Math.max(v.moq, amount - 1),
+                              }))
+                            }
+                            aria-label="Azalt"
+                          >
+                            <Minus className="size-3.5" />
+                          </button>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={v.moq}
+                            max={Math.max(v.moq, maxQty)}
+                            value={amount}
+                            onChange={(e) => {
+                              const raw = Math.round(Number(e.target.value));
+                              const upper = Math.max(v.moq, maxQty);
+                              const next = Number.isFinite(raw)
+                                ? Math.min(Math.max(raw, v.moq), upper)
+                                : v.moq;
+                              setQty((q) => ({ ...q, [product.id]: next }));
+                            }}
+                            className="w-14 border-x border-[var(--panel-border)] bg-transparent text-center text-sm tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            aria-label="Adet"
+                          />
+                          <button
+                            type="button"
+                            className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)] disabled:opacity-30"
+                            disabled={amount >= maxQty}
+                            onClick={() =>
+                              setQty((q) => ({ ...q, [product.id]: Math.min(amount + 1, maxQty) }))
+                            }
+                            aria-label="Artır"
+                          >
+                            <Plus className="size-3.5" />
+                          </button>
+                        </div>
                         <button
                           type="button"
-                          className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)]"
-                          onClick={() =>
-                            setQty((q) => ({
-                              ...q,
-                              [product.id]: Math.max(v.moq, amount - 1),
-                            }))
-                          }
-                          aria-label="Azalt"
+                          disabled={pending || insufficientForMoq}
+                          onClick={() => addProduct(product)}
+                          className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary-solid)] px-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-40"
                         >
-                          <Minus className="size-3.5" />
-                        </button>
-                        <span className="w-8 text-center text-sm tabular-nums">{amount}</span>
-                        <button
-                          type="button"
-                          className="flex size-9 items-center justify-center text-[var(--panel-ink-muted)] hover:bg-[var(--surface-3)]"
-                          onClick={() =>
-                            setQty((q) => ({ ...q, [product.id]: amount + 1 }))
-                          }
-                          aria-label="Artır"
-                        >
-                          <Plus className="size-3.5" />
+                          <Plus className="size-3.5" aria-hidden />
+                          {insufficientForMoq ? "Stok yetersiz" : "Ekle"}
                         </button>
                       </div>
-                      <button
-                        type="button"
-                        disabled={pending || v.stockKg <= 0}
-                        onClick={() => addProduct(product)}
-                        className="inline-flex h-9 items-center gap-1.5 rounded-md bg-[var(--primary-solid)] px-3 text-sm font-semibold text-white transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-40"
-                      >
-                        <Plus className="size-3.5" aria-hidden />
-                        {v.stockKg <= 0 ? "Stok yok" : "Ekle"}
-                      </button>
+                      {!insufficientForMoq ? (
+                        <p className="text-[11px] text-[var(--panel-ink-muted)]">
+                          Maks. {maxQty} adet ({formatKg(v.stockKg)} kg)
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </li>

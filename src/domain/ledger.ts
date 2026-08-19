@@ -20,6 +20,50 @@ export type CreditEligibilityInput = {
 
 export type CreditEligibilityResult = { ok: true } | { ok: false; reason: string };
 
+export type OrderPaymentMethodLike = "HAVALE" | "CARI" | "ONLINE" | null;
+
+/** Limit varsa kullanılabilir kuruş: max(0, limit - exposure). Limit yoksa null. */
+export function availableCreditKurus(limitKurus: number | null, exposureKurus: number): number | null {
+  if (limitKurus == null) return null;
+  return Math.max(0, limitKurus - exposureKurus);
+}
+
+/**
+ * Teslimatta BORC yazılsın mı?
+ *
+ * Havale: `confirmOrderPayment` ODEME yazar; teslimatta BORC beklenir
+ * (`paidAt` dolu olsa da). Net: ödendiyse 0, değilse sipariş tutarı.
+ * ONLINE mock `paidAt` set eder ama ODEME yazmaz; BORC çift borç olur, atlanır.
+ */
+export function shouldPostDeliveryDebt(input: {
+  paymentMethod: OrderPaymentMethodLike;
+  paidAt: Date | string | null;
+}): boolean {
+  if (input.paymentMethod === "ONLINE" && input.paidAt != null) return false;
+  return true;
+}
+
+export type ProformaSettlementKind = "paid" | "open_account" | "unsent";
+
+/** Proforma slide-over ödeme rozeti. e-Fatura değil. */
+export function proformaSettlementBadge(input: {
+  paymentMethod: OrderPaymentMethodLike;
+  paidAt: Date | string | null;
+  sentAt: Date | string | null;
+  paymentTermDays?: number | null;
+}): { kind: ProformaSettlementKind; label: string } | null {
+  if (input.paidAt) return { kind: "paid", label: "Ödendi" };
+  if (input.paymentMethod === "CARI") {
+    const days = input.paymentTermDays;
+    return {
+      kind: "open_account",
+      label: days != null ? `Cari açık · ${days} gün` : "Cari açık",
+    };
+  }
+  if (!input.sentAt) return { kind: "unsent", label: "Gönderilmedi" };
+  return null;
+}
+
 /**
  * Cari hesap (vadeli) ile sipariş verilebilir mi? Yalnızca staff'ın
  * VADELI/KARMA olarak işaretlediği ve bir kredi limiti tanımlanmış bayiler

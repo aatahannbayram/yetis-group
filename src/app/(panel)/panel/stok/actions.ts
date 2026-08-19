@@ -66,12 +66,12 @@ export async function createLotFromStockAction(formData: FormData) {
 export async function addStockMovementFromStockAction(formData: FormData) {
   await requireStaff();
   const lotId = String(formData.get("lotId") ?? "").trim();
-  const type = String(formData.get("type") ?? "") as "GIRIS" | "CIKIS";
+  const type = String(formData.get("type") ?? "") as "GIRIS" | "CIKIS" | "FIRE";
   const quantityKg = Number(String(formData.get("quantityKg") ?? "").replace(",", "."));
   const note = String(formData.get("note") ?? "").trim() || undefined;
 
   if (!lotId) throw new Error("Lot gerekli");
-  if (type !== "GIRIS" && type !== "CIKIS") throw new Error("Hareket tipi geçersiz");
+  if (type !== "GIRIS" && type !== "CIKIS" && type !== "FIRE") throw new Error("Hareket tipi geçersiz");
   if (!Number.isFinite(quantityKg) || quantityKg <= 0) throw new Error("Geçerli kg girin");
 
   await addStockMovement({ lotId, type, quantityKg, note });

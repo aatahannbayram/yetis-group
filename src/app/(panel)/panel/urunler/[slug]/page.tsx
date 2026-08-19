@@ -10,7 +10,6 @@ import {
   Images,
   Info,
   Layers3,
-  Package,
   PackageSearch,
   Tags,
   TrendingUp,
@@ -153,13 +152,19 @@ export default async function AdminProductDetailPage({
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Toplam Stok" value={Math.round(stock.totalKg.toNumber())} suffix=" kg" icon={Package} />
         <StatCard
-          label="Sevk Edilebilir"
+          label="Sevk edilebilir"
           value={Math.round(stock.shippableKg.toNumber())}
           suffix=" kg"
           icon={TrendingUp}
           tone="success"
+        />
+        <StatCard
+          label="Fire adayı"
+          value={Math.round(stock.expiredOnHandKg.toNumber())}
+          suffix=" kg"
+          icon={AlertTriangle}
+          tone={stock.expiredOnHandKg.toNumber() > 0 ? "danger" : "neutral"}
         />
         <StatCard label="Lot Sayısı" value={stock.lotCount} icon={Layers3} />
         <StatCard
@@ -428,7 +433,7 @@ export default async function AdminProductDetailPage({
         <TabsContent value="stok">
           <p className="mb-4 text-sm text-stone-500 dark:text-zinc-400">
             Lotlar varyant (<code className="font-mono text-stone-700 dark:text-zinc-300">{variant.sku}</code>)
-            seviyesindedir. Süresi geçmiş lottan çıkış yapılamaz.
+            seviyesindedir. Süresi geçmiş lottan satış/çıkış yapılamaz; eldeki miktar fire (imha) ile düşülür.
           </p>
           <LotManager
             variantId={variant.id}
@@ -441,7 +446,7 @@ export default async function AdminProductDetailPage({
               availableKg: lot.availableKg.toString(),
               movements: lot.movements.map((m) => ({
                 id: m.id,
-                type: m.type as "GIRIS" | "CIKIS",
+                type: m.type as "GIRIS" | "CIKIS" | "FIRE" | "REPACK",
                 quantityKg: m.quantityKg.toString(),
                 note: m.note,
                 createdAt: m.createdAt.toISOString(),

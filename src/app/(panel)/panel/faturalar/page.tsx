@@ -38,6 +38,9 @@ export default async function AdminFaturalarPage() {
     pdfPath: p.pdfPath,
     issuedAt: p.issuedAt.toISOString(),
     sentAt: p.sentAt?.toISOString() ?? null,
+    paymentMethod: p.order.paymentMethod,
+    paidAt: p.order.paidAt?.toISOString() ?? null,
+    paymentTermDays: p.order.dealer.paymentTermDays,
     lines: p.lines.map((l) => ({
       id: l.id,
       description: l.description,

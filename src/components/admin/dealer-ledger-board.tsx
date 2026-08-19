@@ -21,6 +21,11 @@ import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
 import { addLedgerEntryAction, reverseLedgerEntryAction } from "@/app/(panel)/panel/cari/actions";
 import type { Density } from "@/components/ui/density-toggle";
+import {
+  AGING_BUCKET_LABEL,
+  dealerAging,
+  type AgingBucket,
+} from "@/domain/ledger/aging";
 
 const DEALER_TYPE_LABEL: Record<string, string> = {
   BAYI: "Bayi",
@@ -55,6 +60,20 @@ function balanceLabel(balanceKurus: number): string {
   return "Sıfır";
 }
 
+const AGING_TONE: Record<AgingBucket, "success" | "warning" | "danger"> = {
+  ok: "success",
+  warn: "warning",
+  danger: "danger",
+};
+
+function rowAging(row: DealerBalanceRow) {
+  return dealerAging({
+    entries: row.entries,
+    paymentTermDays: row.paymentTermDays,
+    balanceKurus: row.balanceKurus,
+  });
+}
+
 const fieldClass =
   "h-10 rounded-lg border-stone-200 bg-white text-stone-900 focus-visible:border-[#1B5E3A] focus-visible:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100";
 
@@ -79,6 +98,18 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
       );
     }
     if (viewFilter === "zero") return dealers.filter((d) => d.balanceKurus === 0);
+    if (viewFilter === "d45") {
+      return dealers.filter((d) => {
+        const a = rowAging(d);
+        return a.kind === "open" && a.bucket === "warn";
+      });
+    }
+    if (viewFilter === "d46") {
+      return dealers.filter((d) => {
+        const a = rowAging(d);
+        return a.kind === "open" && a.bucket === "danger";
+      });
+    }
     return dealers;
   }, [dealers, viewFilter]);
 
@@ -166,13 +197,25 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
       {
         id: "term",
         header: "Vade",
-        cell: ({ row }) => (
-          <span className="tabular-nums text-stone-600 dark:text-zinc-400">
-            {row.original.paymentTermDays != null
+        cell: ({ row }) => {
+          const aging = rowAging(row.original);
+          const term =
+            row.original.paymentTermDays != null
               ? `${row.original.paymentTermDays} gün`
-              : "-"}
-          </span>
-        ),
+              : "Vade yok";
+          if (aging.kind === "clear") {
+            return <span className="tabular-nums text-stone-600 dark:text-zinc-400">{term}</span>;
+          }
+          return (
+            <div className="space-y-1">
+              <StatusBadge
+                tone={AGING_TONE[aging.bucket]}
+                label={`${AGING_BUCKET_LABEL[aging.bucket]} · ${aging.daysOverdue}g`}
+              />
+              <p className="text-[11px] tabular-nums text-stone-500 dark:text-zinc-400">{term}</p>
+            </div>
+          );
+        },
       },
       {
         id: "entries",
@@ -200,6 +243,8 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
             { id: "debt", label: "Borçlu" },
             { id: "over", label: "Limit aşımı" },
             { id: "zero", label: "Sıfır" },
+            { id: "d45", label: "31-45 gün" },
+            { id: "d46", label: "46+ gün" },
           ]}
           activeViewId={viewFilter}
           onViewSelect={setViewFilter}
@@ -253,6 +298,18 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
                     {" · "}
                     {DEALER_TYPE_LABEL[openDealer.dealerType] ?? openDealer.dealerType}
                   </p>
+                  {(() => {
+                    const aging = rowAging(openDealer);
+                    if (aging.kind !== "open") return null;
+                    return (
+                      <div className="mt-2">
+                        <StatusBadge
+                          tone={AGING_TONE[aging.bucket]}
+                          label={`Gecikme ${aging.daysOverdue} gün · ${AGING_BUCKET_LABEL[aging.bucket]}`}
+                        />
+                      </div>
+                    );
+                  })()}
                   <div className="mt-4">
                     <CreditLimitBar
                       balanceKurus={openDealer.balanceKurus}

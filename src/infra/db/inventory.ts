@@ -1,16 +1,13 @@
 import { prisma } from "@/infra/db/client";
-import { add, compare, kg, subtract, zeroKg, type Kg } from "@/domain/weight";
-import { assertNotExpired, isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
+import { add, kg, zeroKg } from "@/domain/weight";
+import { isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
+import {
+  availableKgFromMovements,
+  assertCanRecordMovement,
+  type RecordableMovementType,
+} from "@/domain/inventory/movements";
 
-export function availableKgFromMovements(movements: { type: string; quantityKg: unknown }[]): Kg {
-  return movements.reduce((total, movement) => {
-    const quantity = kg(String(movement.quantityKg));
-    if (movement.type === "GIRIS") return add(total, quantity);
-    if (movement.type === "CIKIS") return subtract(total, quantity);
-    // REPACK reserved - not applied to balance until M13+ implementation
-    return total;
-  }, zeroKg);
-}
+export { availableKgFromMovements } from "@/domain/inventory/movements";
 
 export async function getLotsForVariant(variantId: string) {
   const lots = await prisma.lot.findMany({
@@ -61,21 +58,31 @@ export async function getProductStockSummary(productId: string) {
       expirationDate: lot.expirationDate,
       availableKg: lot.availableKg,
     }));
+  const expiredOnHandKg = lots
+    .filter((lot) => lot.expired)
+    .reduce((sum, lot) => add(sum, lot.availableKg), zeroKg);
+  const shippableKg = shippable.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg);
 
   return {
-    totalKg: lots.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
-    shippableKg: shippable.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
+    totalKg: add(shippableKg, expiredOnHandKg),
+    shippableKg,
+    expiredOnHandKg,
     lotCount: lots.length,
   };
 }
 
 export async function getVariantStockSummary(variantId: string) {
   const lots = await getLotsForVariant(variantId);
+  const expiredOnHandKg = lots
+    .filter((lot) => lot.expired)
+    .reduce((sum, lot) => add(sum, lot.availableKg), zeroKg);
+  const shippableKg = lots
+    .filter((lot) => !lot.expired)
+    .reduce((sum, lot) => add(sum, lot.availableKg), zeroKg);
   return {
-    totalKg: lots.reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
-    shippableKg: lots
-      .filter((lot) => !lot.expired)
-      .reduce((sum, lot) => add(sum, lot.availableKg), zeroKg),
+    totalKg: add(shippableKg, expiredOnHandKg),
+    shippableKg,
+    expiredOnHandKg,
     lotCount: lots.length,
   };
 }
@@ -85,10 +92,17 @@ export async function getInventoryDashboardSummary() {
   const now = new Date();
   const soon = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
-  const totalKg = lots.reduce(
-    (sum, lot) => add(sum, availableKgFromMovements(lot.movements)),
-    zeroKg,
-  );
+  let shippableKg = zeroKg;
+  let expiredOnHandKg = zeroKg;
+  for (const lot of lots) {
+    const available = availableKgFromMovements(lot.movements);
+    if (isLotExpired(lot.expirationDate, now)) {
+      expiredOnHandKg = add(expiredOnHandKg, available);
+    } else {
+      shippableKg = add(shippableKg, available);
+    }
+  }
+
   const expiringSoonCount = lots.filter(
     (lot) => lot.expirationDate >= now && lot.expirationDate <= soon,
   ).length;
@@ -96,7 +110,10 @@ export async function getInventoryDashboardSummary() {
   const healthyCount = lots.filter((lot) => lot.expirationDate > soon).length;
 
   return {
-    totalKg,
+    /** Sevk edilebilir stok (SKT geçmiş hariç). Eski alan adı uyumluluk için korunur. */
+    totalKg: shippableKg,
+    shippableKg,
+    expiredOnHandKg,
     lotCount: lots.length,
     expiringSoonCount,
     expiredCount,
@@ -113,7 +130,7 @@ export type StockBoardLot = {
   availableKg: number;
   movements: Array<{
     id: string;
-    type: "GIRIS" | "CIKIS" | "REPACK";
+    type: "GIRIS" | "CIKIS" | "REPACK" | "FIRE";
     quantityKg: number;
     note: string | null;
     createdAt: string;
@@ -132,6 +149,7 @@ export type StockBoardRow = {
   productActive: boolean;
   totalKg: number;
   shippableKg: number;
+  expiredOnHandKg: number;
   lotCount: number;
   nearestExpiry: string | null;
   lots: StockBoardLot[];
@@ -173,7 +191,7 @@ export async function getStockBoard(): Promise<StockBoardRow[]> {
           .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
           .map((m) => ({
             id: m.id,
-            type: m.type as "GIRIS" | "CIKIS" | "REPACK",
+            type: m.type as "GIRIS" | "CIKIS" | "REPACK" | "FIRE",
             quantityKg: Number(m.quantityKg),
             note: m.note,
             createdAt: m.createdAt.toISOString(),
@@ -183,6 +201,7 @@ export async function getStockBoard(): Promise<StockBoardRow[]> {
 
     const totalKg = lots.reduce((s, l) => s + l.availableKg, 0);
     const shippableKg = lots.filter((l) => !l.expired).reduce((s, l) => s + l.availableKg, 0);
+    const expiredOnHandKg = lots.filter((l) => l.expired).reduce((s, l) => s + l.availableKg, 0);
     const nearest = lots.find((l) => !l.expired && l.availableKg > 0);
 
     return {
@@ -197,6 +216,7 @@ export async function getStockBoard(): Promise<StockBoardRow[]> {
       productActive: v.product.active,
       totalKg,
       shippableKg,
+      expiredOnHandKg,
       lotCount: lots.length,
       nearestExpiry: nearest?.expirationDate ?? null,
       lots,
@@ -223,6 +243,7 @@ export async function listVariantsForStockPicker() {
   }));
 }
 
+/** Ürün listesi stok sütunu: yalnızca sevk edilebilir kg. */
 export async function getStockSummaryByProduct() {
   const products = await prisma.product.findMany({
     where: { active: true },
@@ -232,10 +253,15 @@ export async function getStockSummaryByProduct() {
     },
   });
 
+  const now = new Date();
   return new Map(
     products.map((product) => {
-      const allMovements = product.variants.flatMap((v) => v.lots.flatMap((lot) => lot.movements));
-      return [product.id, availableKgFromMovements(allMovements)];
+      const shippableMovements = product.variants.flatMap((v) =>
+        v.lots
+          .filter((lot) => !isLotExpired(lot.expirationDate, now))
+          .flatMap((lot) => lot.movements),
+      );
+      return [product.id, availableKgFromMovements(shippableMovements)];
     }),
   );
 }
@@ -283,7 +309,7 @@ export async function createLot(input: {
 
 export async function addStockMovement(input: {
   lotId: string;
-  type: "GIRIS" | "CIKIS";
+  type: RecordableMovementType;
   quantityKg: number;
   note?: string;
 }) {
@@ -292,21 +318,22 @@ export async function addStockMovement(input: {
     include: { movements: true },
   });
 
-  if (input.type === "CIKIS") {
-    assertNotExpired({ lotNumber: lot.lotNumber, expirationDate: lot.expirationDate });
-
-    const available = availableKgFromMovements(lot.movements);
-    if (compare(available, kg(input.quantityKg)) < 0) {
-      throw new Error(`${lot.lotNumber} lotunda yeterli stok yok (mevcut: ${available.toString()} kg).`);
-    }
-  }
+  const available = availableKgFromMovements(lot.movements);
+  assertCanRecordMovement({
+    type: input.type,
+    quantityKg: input.quantityKg,
+    note: input.note,
+    lotNumber: lot.lotNumber,
+    availableKg: available,
+    expirationDate: lot.expirationDate,
+  });
 
   return prisma.stockMovement.create({
     data: {
       lotId: input.lotId,
       type: input.type,
       quantityKg: input.quantityKg,
-      note: input.note,
+      note: input.note?.trim() || undefined,
     },
   });
 }

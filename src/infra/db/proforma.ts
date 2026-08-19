@@ -50,7 +50,12 @@ export async function listProformas() {
     orderBy: { issuedAt: "desc" },
     include: {
       order: {
-        select: { id: true, dealer: { select: { unvan: true, dealerType: true } } },
+        select: {
+          id: true,
+          paymentMethod: true,
+          paidAt: true,
+          dealer: { select: { unvan: true, dealerType: true, paymentTermDays: true } },
+        },
       },
       lines: { orderBy: { sortOrder: "asc" } },
     },

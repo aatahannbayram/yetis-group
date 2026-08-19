@@ -15,6 +15,7 @@ export default async function PanelStokPage() {
     listVariantsForStockPicker(),
   ]);
 
+  const fireKg = summary.expiredOnHandKg.toNumber();
   const emptyVariants = rows.filter((r) => r.shippableKg <= 0).length;
   const lowVariants = rows.filter((r) => r.shippableKg > 0 && r.shippableKg < 50).length;
 
@@ -23,7 +24,7 @@ export default async function PanelStokPage() {
       <PageHeader
         title="Stok & lot"
         count={summary.lotCount}
-        description="Varyant bazlı stok, lot/SKT ve giriş-çıkış. Sevkiyat FEFO ile bu lotlardan önerilir."
+        description="Varyant bazlı stok, lot/SKT ve giriş-çıkış-fire. Sevkiyat FEFO ile yalnızca sevk edilebilir lotlardan önerilir."
         primaryAction={
           <PillButton href="/panel/sevkiyat" variant="secondary">
             Sevkiyat
@@ -33,26 +34,30 @@ export default async function PanelStokPage() {
 
       <section aria-label="Özet" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Toplam stok"
-          value={Math.round(summary.totalKg.toNumber())}
+          label="Sevk edilebilir"
+          value={Math.round(summary.shippableKg.toNumber())}
           unit="kg"
         />
-        <StatCard label="Lot sayısı" value={summary.lotCount} />
+        <StatCard
+          label="Fire adayı"
+          value={Math.round(summary.expiredOnHandKg.toNumber())}
+          unit="kg"
+          tone={summary.expiredOnHandKg.toNumber() > 0 ? "danger" : "neutral"}
+        />
         <StatCard
           label="SKT eşiği (14 gün)"
           value={summary.expiringSoonCount}
           tone={summary.expiringSoonCount > 0 ? "warning" : "neutral"}
         />
-        <StatCard
-          label="SKT geçmiş / stoksuz varyant"
-          value={summary.expiredCount}
-          tone={summary.expiredCount > 0 || emptyVariants > 0 ? "danger" : "neutral"}
-        />
+        <StatCard label="Lot sayısı" value={summary.lotCount} />
       </section>
 
-      {(lowVariants > 0 || emptyVariants > 0) && (
+      {(lowVariants > 0 || emptyVariants > 0 || fireKg > 0) && (
         <p className="text-sm text-stone-600 dark:text-zinc-400">
-          {lowVariants > 0 ? `${lowVariants} varyantta stok 50 kg altında. ` : null}
+          {lowVariants > 0 ? `${lowVariants} varyantta sevk edilebilir stok 50 kg altında. ` : null}
+          {fireKg > 0
+            ? `${Math.round(fireKg)} kg SKT geçmiş stok fire bekliyor. `
+            : null}
           {emptyVariants > 0 ? (
             <>
               {emptyVariants} varyant sevk edilemez.{" "}

@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
+import { useDealerCart } from "@/components/dealer/dealer-cart-context";
 
 const nav: {
   href: string;
@@ -49,13 +50,12 @@ const headerIcons: {
 export function DealerNav({
   dealerName,
   unreadNotifications = 0,
-  cartCount = 0,
 }: {
   dealerName: string;
   unreadNotifications?: number;
-  cartCount?: number;
 }) {
   const pathname = usePathname();
+  const { itemCount, open } = useDealerCart();
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
 
@@ -122,18 +122,20 @@ export function DealerNav({
           </nav>
 
           <div className="flex shrink-0 items-center justify-end gap-1">
-            <Link
-              href="/bayi/siparis"
+            <button
+              type="button"
+              onClick={open}
+              aria-label="Sepeti aç"
               className="relative mr-1 inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--brand-700)] px-3.5 text-[13px] font-semibold text-white shadow-[0_1px_2px_rgb(0_105_62/0.25)] hover:bg-[var(--brand-600)]"
             >
               <ShoppingCart className="size-3.5" aria-hidden />
-              <span className="hidden sm:inline">Sipariş</span>
-              {cartCount > 0 ? (
+              <span className="hidden sm:inline">Sepet</span>
+              {itemCount > 0 ? (
                 <span className="flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-[var(--brand-700)] tabular-nums">
-                  {cartCount > 99 ? "99+" : cartCount}
+                  {itemCount > 99 ? "99+" : itemCount}
                 </span>
               ) : null}
-            </Link>
+            </button>
             {headerIcons.map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (

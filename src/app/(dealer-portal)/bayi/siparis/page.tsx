@@ -4,14 +4,7 @@ import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { getDealerCatalog } from "@/infra/db/dealer-catalog";
-import { getPaymentSettings } from "@/infra/db/payment-settings";
-import { getOrCreateCart } from "@/infra/db/cart";
-import { getDealerById } from "@/infra/db/dealers";
-import { getDealerCreditExposure } from "@/infra/db/orders";
-import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
-import type { DealerCartView } from "./actions";
-import { packLabel } from "@/lib/format/packaging";
 
 export default async function BayiSiparisPage({
   searchParams,
@@ -29,63 +22,13 @@ export default async function BayiSiparisPage({
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const [products, payment, cart, dealer, exposureKurus] = await Promise.all([
-    getDealerCatalog(dealerId),
-    getPaymentSettings(),
-    getOrCreateCart({
-      userId: impId && staff ? null : session.user.id,
-      dealerId,
-      createGuest: Boolean(impId && staff),
-    }),
-    getDealerById(dealerId),
-    getDealerCreditExposure(dealerId),
-  ]);
-
-  const cariEligibility = canUseOnAccount({
-    dealerPaymentMethod: dealer?.paymentMethod ?? null,
-    creditLimitKurus: dealer?.creditLimitKurus ?? null,
-    exposureKurus,
-    orderTotalKurus: 0,
-  });
-  const cari = {
-    eligible: cariEligibility.ok,
-    availableKurus: availableCreditKurus(dealer?.creditLimitKurus ?? null, exposureKurus),
-  };
-
-  const initialCart: DealerCartView | null = cart
-    ? {
-        id: cart.id,
-        lines: cart.lines.map((line) => ({
-          id: line.id,
-          variantId: line.variantId,
-          name: line.variant.product.name,
-          sku: line.variant.sku,
-          unitLabel: packLabel(line.variant.packSize, line.variant.packagingType),
-          packagingType: line.variant.packagingType,
-          imageUrl: line.variant.product.imageUrl,
-          quantity: line.quantity,
-          unitPriceKurus: line.unitPriceKurus,
-          lineTotalKurus: line.unitPriceKurus * line.quantity,
-        })),
-        itemCount: cart.lines.reduce((n, l) => n + l.quantity, 0),
-        totalKurus: cart.lines.reduce((n, l) => n + l.unitPriceKurus * l.quantity, 0),
-      }
-    : null;
+  const products = await getDealerCatalog(dealerId);
 
   return (
     <DealerOrderWorkspace
       products={products}
-      initialCart={initialCart}
       initialProductSlug={urun ?? null}
       initialCinsId={cins ?? null}
-      payment={{
-        bankTransferEnabled: payment.bankTransferEnabled,
-        bankName: payment.bankName,
-        accountHolder: payment.accountHolder,
-        iban: payment.iban,
-        note: payment.note,
-      }}
-      cari={cari}
     />
   );
 }

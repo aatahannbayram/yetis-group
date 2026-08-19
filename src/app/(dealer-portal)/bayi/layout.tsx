@@ -4,11 +4,16 @@ import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
 import { countUnreadDealer } from "@/infra/db/notifications";
-import { getOrCreateCart } from "@/infra/db/cart";
+import { getPaymentSettings } from "@/infra/db/payment-settings";
+import { getDealerCreditExposure } from "@/infra/db/orders";
+import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
 import { ImpersonationBanner } from "@/components/workspace/impersonation-banner";
 import { WorkspaceShell } from "@/components/workspace/workspace-shell";
 import { DealerNav } from "@/components/dealer/dealer-nav";
+import { DealerCartProvider } from "@/components/dealer/dealer-cart-context";
+import { DealerCartSheet } from "@/components/dealer/dealer-cart-sheet";
+import { fetchDealerCartAction } from "@/app/(dealer-portal)/bayi/siparis/actions";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
 
@@ -39,37 +44,52 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
 
   const dealer = await prisma.dealer.findUnique({
     where: { id: dealerId },
-    select: { id: true, unvan: true },
+    select: { id: true, unvan: true, paymentMethod: true, creditLimitKurus: true },
   });
   if (!dealer) redirect(staff ? "/panel" : "/urunler");
 
-  const [unreadNotifications, cart] = await Promise.all([
+  const [unreadNotifications, initialCart, paymentSettings, exposureKurus] = await Promise.all([
     countUnreadDealer(dealer.id),
-    getOrCreateCart({
-      userId: impersonating ? null : session.user.id,
-      dealerId: dealer.id,
-      createGuest: false,
-    }),
+    fetchDealerCartAction(),
+    getPaymentSettings(),
+    getDealerCreditExposure(dealer.id),
   ]);
 
-  const cartCount = cart?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0;
+  const cariEligibility = canUseOnAccount({
+    dealerPaymentMethod: dealer.paymentMethod,
+    creditLimitKurus: dealer.creditLimitKurus,
+    exposureKurus,
+    orderTotalKurus: 0,
+  });
+  const cari = {
+    eligible: cariEligibility.ok,
+    availableKurus: availableCreditKurus(dealer.creditLimitKurus, exposureKurus),
+  };
 
   return (
     <TooltipProvider delayDuration={200}>
-      <WorkspaceShell
-        defaultDensity="comfortable"
-        className="panel-shell dealer-shell min-h-screen bg-[var(--panel-canvas)] text-foreground"
-      >
-        {impersonating ? (
-          <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
-        ) : null}
-        <DealerNav
-          dealerName={dealer.unvan}
-          unreadNotifications={unreadNotifications}
-          cartCount={cartCount}
+      <DealerCartProvider initialCart={initialCart}>
+        <WorkspaceShell
+          defaultDensity="comfortable"
+          className="panel-shell dealer-shell min-h-screen bg-[var(--panel-canvas)] text-foreground"
+        >
+          {impersonating ? (
+            <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
+          ) : null}
+          <DealerNav dealerName={dealer.unvan} unreadNotifications={unreadNotifications} />
+          <main className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-8">{children}</main>
+        </WorkspaceShell>
+        <DealerCartSheet
+          payment={{
+            bankTransferEnabled: paymentSettings.bankTransferEnabled,
+            bankName: paymentSettings.bankName,
+            accountHolder: paymentSettings.accountHolder,
+            iban: paymentSettings.iban,
+            note: paymentSettings.note,
+          }}
+          cari={cari}
         />
-        <main className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-8">{children}</main>
-      </WorkspaceShell>
+      </DealerCartProvider>
     </TooltipProvider>
   );
 }

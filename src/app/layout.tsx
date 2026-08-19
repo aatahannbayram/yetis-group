@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SITE, getSiteUrl, absoluteUrl } from "@/lib/site";
+import { ChunkErrorReload } from "@/components/system/chunk-error-reload";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -84,6 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="tr" className={cn("h-full", "antialiased", "font-sans", inter.variable)}>
       <body className="min-h-full flex flex-col bg-canvas text-neutral-900">
+        <ChunkErrorReload />
         {children}
       </body>
     </html>

@@ -12,6 +12,9 @@ import { formatMoney } from "@/lib/format/money";
 import { formatDate } from "@/lib/format/date";
 import { money } from "@/domain/money";
 import { cn } from "@/lib/utils";
+import { DealerCancelOrderButton } from "@/components/dealer/dealer-cancel-order-button";
+
+const DEALER_CANCELABLE_STATUSES = new Set(["DRAFT", "SUBMITTED", "UNDER_REVIEW"]);
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: "Taslak",
@@ -164,9 +167,14 @@ export default async function BayiSiparislerimPage({
                     ) : null}
                   </div>
                 </div>
-                <p className="shrink-0 text-right text-base font-semibold tabular-nums text-[var(--panel-ink)]">
-                  {formatMoney(money(order.totalKurus))}
-                </p>
+                <div className="flex shrink-0 items-center gap-3">
+                  {DEALER_CANCELABLE_STATUSES.has(order.status) ? (
+                    <DealerCancelOrderButton orderId={order.id} />
+                  ) : null}
+                  <p className="text-right text-base font-semibold tabular-nums text-[var(--panel-ink)]">
+                    {formatMoney(money(order.totalKurus))}
+                  </p>
+                </div>
               </li>
             );
           })}

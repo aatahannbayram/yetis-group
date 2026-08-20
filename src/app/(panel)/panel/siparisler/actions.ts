@@ -7,6 +7,7 @@ import { isStaffUser } from "@/infra/db/users";
 import { confirmOrderPayment, createOrder, transitionOrder } from "@/infra/db/orders";
 import { createShipment } from "@/infra/db/shipments";
 import { prisma } from "@/infra/db/client";
+import type { OrderPaymentMethod } from "@/generated/prisma";
 import type { OrderStatus } from "@/domain/order/state-machine";
 import { trySendProforma, voidAndReissueProforma } from "@/infra/db/proforma";
 
@@ -22,6 +23,12 @@ export async function createOrderAction(formData: FormData) {
   const dealerId = String(formData.get("dealerId") ?? "");
   const note = String(formData.get("note") ?? "").trim() || undefined;
   const linesRaw = String(formData.get("lines") ?? "[]");
+  const paymentMethodRaw = String(formData.get("paymentMethod") ?? "");
+  const paymentMethod = (["HAVALE", "CARI", "ONLINE"] as const).includes(
+    paymentMethodRaw as OrderPaymentMethod,
+  )
+    ? (paymentMethodRaw as OrderPaymentMethod)
+    : undefined;
 
   let lines: { variantId: string; quantity: number }[];
   try {
@@ -33,8 +40,9 @@ export async function createOrderAction(formData: FormData) {
   if (!dealerId) throw new Error("Bayi seçimi gerekli");
   if (!Array.isArray(lines) || lines.length === 0) throw new Error("En az bir ürün satırı gerekli");
 
-  await createOrder({ dealerId, lines, note });
+  await createOrder({ dealerId, lines, note, paymentMethod });
   revalidatePath("/panel/siparisler");
+  revalidatePath("/panel/cari");
 }
 
 export async function transitionOrderAction(formData: FormData) {

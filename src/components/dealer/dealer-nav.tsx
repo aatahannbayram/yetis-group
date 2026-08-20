@@ -2,23 +2,34 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bell,
   Building2,
   ClipboardList,
   FileText,
   Home,
+  LogOut,
   MapPin,
   MessageCircle,
   ShoppingCart,
   Sparkles,
+  Store,
   Truck,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/ui/logo";
 import { useDealerCart } from "@/components/dealer/dealer-cart-context";
+import { authClient } from "@/infra/auth/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const nav: {
   href: string;
@@ -38,6 +49,15 @@ const nav: {
   { href: "/bayi/firmam", label: "Firma", icon: Building2 },
 ];
 
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 const headerIcons: {
   href: string;
   label: string;
@@ -55,9 +75,16 @@ export function DealerNav({
   unreadNotifications?: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { itemCount, open } = useDealerCart();
   const [hidden, setHidden] = useState(false);
   const lastY = useRef(0);
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    router.push("/");
+    router.refresh();
+  }
 
   useEffect(() => {
     lastY.current = window.scrollY;
@@ -162,6 +189,34 @@ export function DealerNav({
                 </Link>
               );
             })}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Hesap menüsü"
+                  className="ml-1 flex size-10 items-center justify-center rounded-full text-[var(--panel-ink-muted)] transition-colors hover:bg-white hover:text-[var(--panel-ink)]"
+                >
+                  <Avatar className="size-7">
+                    <AvatarFallback className="bg-white text-[11px] font-semibold text-[var(--brand-700)] ring-1 ring-black/8">
+                      {initials(dealerName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem asChild>
+                  <Link href="/">
+                    <Store />
+                    Mağazaya dön
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} variant="destructive">
+                  <LogOut />
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

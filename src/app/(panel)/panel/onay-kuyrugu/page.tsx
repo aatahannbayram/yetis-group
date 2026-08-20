@@ -124,7 +124,12 @@ export default async function OnayKuyruguPage() {
         {rows.length > 0 ? (
           <OrderBoard
             orders={rows}
-            dealers={dealers.map((d) => ({ id: d.id, unvan: d.unvan }))}
+            dealers={dealers.map((d) => ({
+              id: d.id,
+              unvan: d.unvan,
+              paymentMethod: d.paymentMethod,
+              creditLimitKurus: d.creditLimitKurus,
+            }))}
             variants={variants}
             priceLists={priceLists}
           />

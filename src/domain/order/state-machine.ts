@@ -15,9 +15,12 @@ export type OrderStatus =
  */
 export const ORDER_TRANSITIONS: ReadonlyArray<readonly [OrderStatus, OrderStatus]> = [
   ["DRAFT", "SUBMITTED"],
+  ["DRAFT", "CANCELLED"],
   ["SUBMITTED", "UNDER_REVIEW"],
+  ["SUBMITTED", "CANCELLED"],
   ["UNDER_REVIEW", "CONFIRMED"],
   ["UNDER_REVIEW", "REJECTED"],
+  ["UNDER_REVIEW", "CANCELLED"],
   ["CONFIRMED", "PREPARING"],
   ["CONFIRMED", "CANCELLED"],
   ["PREPARING", "SHIPPED"],

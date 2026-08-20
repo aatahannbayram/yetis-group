@@ -173,6 +173,24 @@ export async function createOrder(input: {
 
   const totalKurus = lineData.reduce((sum, l) => sum + l.lineTotalKurus, 0);
 
+  if (input.paymentMethod === "CARI") {
+    // İstemciye asla güvenme: yetki her seferinde sunucuda taze verilerle
+    // doğrulanır. Bu kontrol createOrder çağıran HER yol için geçerli
+    // (bayi sepeti + panelden manuel sipariş girişi).
+    const dealer = await prisma.dealer.findUniqueOrThrow({
+      where: { id: input.dealerId },
+      select: { paymentMethod: true, creditLimitKurus: true },
+    });
+    const exposureKurus = await getDealerCreditExposure(input.dealerId);
+    const eligibility = canUseOnAccount({
+      dealerPaymentMethod: dealer.paymentMethod,
+      creditLimitKurus: dealer.creditLimitKurus,
+      exposureKurus,
+      orderTotalKurus: totalKurus,
+    });
+    if (!eligibility.ok) throw new Error(eligibility.reason);
+  }
+
   const order = await prisma.order.create({
     data: {
       dealerId: input.dealerId,
@@ -222,23 +240,9 @@ export async function createOrderFromCart(input: {
   }
   if (cart.lines.length === 0) throw new Error("Sepet boş");
 
+  // CARI kredi limiti kontrolü createOrder() içinde yapılır (tek yer, her
+  // yol için geçerli).
   const totalKurus = cart.lines.reduce((sum, l) => sum + l.unitPriceKurus * l.quantity, 0);
-
-  if (input.paymentMethod === "CARI") {
-    // İstemciye asla güvenme: yetki her seferinde sunucuda taze verilerle doğrulanır.
-    const dealer = await prisma.dealer.findUniqueOrThrow({
-      where: { id: input.dealerId },
-      select: { paymentMethod: true, creditLimitKurus: true },
-    });
-    const exposureKurus = await getDealerCreditExposure(input.dealerId);
-    const eligibility = canUseOnAccount({
-      dealerPaymentMethod: dealer.paymentMethod,
-      creditLimitKurus: dealer.creditLimitKurus,
-      exposureKurus,
-      orderTotalKurus: totalKurus,
-    });
-    if (!eligibility.ok) throw new Error(eligibility.reason);
-  }
 
   const paymentLabel =
     input.paymentMethod === "HAVALE"

@@ -99,6 +99,13 @@ export type ProformaSummaryRow = {
 
 export type OrderPaymentMethodRow = "HAVALE" | "CARI" | "ONLINE" | null;
 
+export type DealerOptionRow = {
+  id: string;
+  unvan: string;
+  paymentMethod: "VADELI" | "PESIN" | "HAVALE" | "KARMA" | null;
+  creditLimitKurus: number | null;
+};
+
 export type OrderRow = {
   id: string;
   dealerId: string;
@@ -655,7 +662,7 @@ function CreateOrderForm({
   priceLists,
   onDone,
 }: {
-  dealers: { id: string; unvan: string }[];
+  dealers: DealerOptionRow[];
   variants: { id: string; label: string }[];
   priceLists: { id: string; name: string }[];
   onDone: () => void;
@@ -667,6 +674,7 @@ function CreateOrderForm({
   const [lines, setLines] = useState<{ variantId: string; quantity: string }[]>([
     { variantId: "", quantity: "" },
   ]);
+  const [paymentMethod, setPaymentMethod] = useState<"HAVALE" | "CARI">("HAVALE");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -675,6 +683,14 @@ function CreateOrderForm({
     if (!q) return dealers;
     return dealers.filter((d) => d.unvan.toLocaleLowerCase("tr-TR").includes(q));
   }, [dealers, dealerQuery]);
+
+  const selectedDealer = dealers.find((d) => d.id === dealerId) ?? null;
+  const cariEligible =
+    !!selectedDealer &&
+    (selectedDealer.paymentMethod === "VADELI" || selectedDealer.paymentMethod === "KARMA") &&
+    selectedDealer.creditLimitKurus != null &&
+    selectedDealer.creditLimitKurus > 0;
+  const effectivePaymentMethod = cariEligible ? paymentMethod : "HAVALE";
 
   function updateLine(index: number, patch: Partial<{ variantId: string; quantity: string }>) {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)));
@@ -689,6 +705,7 @@ function CreateOrderForm({
     }
     const formData = new FormData(event.currentTarget);
     formData.set("dealerId", dealerId);
+    formData.set("paymentMethod", effectivePaymentMethod);
     const validLines = lines
       .filter((l) => l.variantId && Number(l.quantity) > 0)
       .map((l) => ({ variantId: l.variantId, quantity: Math.round(Number(l.quantity)) }));
@@ -802,6 +819,48 @@ function CreateOrderForm({
         </div>
 
         <div className="space-y-2">
+          <label className="text-xs font-medium text-stone-500 dark:text-zinc-400">
+            Ödeme yöntemi
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("HAVALE")}
+              className={cn(
+                "flex h-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-medium transition-colors",
+                effectivePaymentMethod === "HAVALE"
+                  ? "border-[#1B5E3A] bg-[#1B5E3A]/10 text-[#14532d] dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                  : "border-stone-200 text-stone-600 hover:bg-stone-50 dark:border-zinc-800 dark:text-zinc-400",
+              )}
+            >
+              <Landmark className="size-3.5" />
+              Havale / EFT
+            </button>
+            <button
+              type="button"
+              disabled={!cariEligible}
+              onClick={() => setPaymentMethod("CARI")}
+              title={cariEligible ? undefined : "Bu bayi için vadeli/cari hesap veya kredi limiti tanımlı değil"}
+              className={cn(
+                "flex h-10 items-center justify-center gap-1.5 rounded-xl border text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40",
+                effectivePaymentMethod === "CARI"
+                  ? "border-[#1B5E3A] bg-[#1B5E3A]/10 text-[#14532d] dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                  : "border-stone-200 text-stone-600 hover:bg-stone-50 dark:border-zinc-800 dark:text-zinc-400",
+              )}
+            >
+              <Wallet className="size-3.5" />
+              Cari hesap
+            </button>
+          </div>
+          {selectedDealer && !cariEligible ? (
+            <p className="text-xs text-stone-500 dark:text-zinc-500">
+              Cari hesap için bayide vadeli/karma ödeme ve kredi limiti tanımlı olmalı (Bayiler
+              ekranından düzenlenir).
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
           <label className="text-xs font-medium text-stone-500 dark:text-zinc-400">Kalemler</label>
           {lines.map((line, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -882,7 +941,9 @@ function CreateOrderForm({
           setDealers((prev) =>
             prev.some((d) => d.id === dealer.id)
               ? prev
-              : [...prev, dealer].sort((a, b) => a.unvan.localeCompare(b.unvan, "tr")),
+              : [...prev, { ...dealer, paymentMethod: null, creditLimitKurus: null }].sort((a, b) =>
+                  a.unvan.localeCompare(b.unvan, "tr"),
+                ),
           );
           setDealerId(dealer.id);
           setDealerQuery("");
@@ -1060,7 +1121,7 @@ export function OrderBoard({
   priceLists = [],
 }: {
   orders: OrderRow[];
-  dealers: { id: string; unvan: string }[];
+  dealers: DealerOptionRow[];
   variants: { id: string; label: string }[];
   priceLists?: { id: string; name: string }[];
 }) {

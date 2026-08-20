@@ -7,7 +7,8 @@ import {
   removeCartLine,
   setCartLineQuantity,
 } from "@/infra/db/cart";
-import { createOrderFromCart } from "@/infra/db/orders";
+import { createOrderFromCart, transitionOrder } from "@/infra/db/orders";
+import { prisma } from "@/infra/db/client";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 import { resolveDealerContext } from "@/features/dealer/actions";
 import { packLabel } from "@/lib/format/packaging";
@@ -162,4 +163,46 @@ export async function dealerSubmitOrderAction(input: {
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Sipariş oluşturulamadı" };
   }
+}
+
+const DEALER_CANCELABLE_STATUSES = ["DRAFT", "SUBMITTED", "UNDER_REVIEW"];
+
+/**
+ * Bayi, ekip henüz onaylamamış (stok kilitlenmemiş) bir siparişi kendi
+ * iptal edebilir. Onaylandıktan sonra (CONFIRMED+) destek üzerinden gider.
+ */
+export async function dealerCancelOrderAction(input: {
+  orderId: string;
+  reason: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  const ctx = await resolveDealerContext();
+  if (!ctx) return { ok: false, error: "Oturum bulunamadı" };
+
+  const reason = input.reason.trim();
+  if (!reason) return { ok: false, error: "İptal nedeni gerekli" };
+
+  const order = await prisma.order.findUnique({
+    where: { id: input.orderId },
+    select: { dealerId: true, status: true },
+  });
+  if (!order || order.dealerId !== ctx.dealerId) {
+    return { ok: false, error: "Sipariş bulunamadı" };
+  }
+  if (!DEALER_CANCELABLE_STATUSES.includes(order.status)) {
+    return {
+      ok: false,
+      error: "Bu sipariş onaylandığı için kendiniz iptal edemezsiniz, destek ile iletişime geçin.",
+    };
+  }
+
+  try {
+    await transitionOrder(input.orderId, "CANCELLED", { cancelReason: reason });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "İptal edilemedi" };
+  }
+
+  revalidatePath("/bayi/siparislerim");
+  revalidatePath("/bayi");
+  revalidatePath("/panel/siparisler");
+  return { ok: true };
 }

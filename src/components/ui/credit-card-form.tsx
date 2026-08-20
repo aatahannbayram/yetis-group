@@ -130,21 +130,6 @@ export function CreditCardForm({
     return arr;
   }, [displayDigits, maskMiddle]);
 
-  const highlightClass = (() => {
-    switch (focusField) {
-      case "number":
-        return styles.highlightNumber;
-      case "holder":
-        return styles.highlightHolder;
-      case "expire":
-        return styles.highlightExpire;
-      case "cvv":
-        return styles.highlightCvv;
-      default:
-        return styles.highlightHidden;
-    }
-  })();
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit?.({ number, holder, month, year, cvv }, validity);
@@ -159,12 +144,15 @@ export function CreditCardForm({
     <section className={cn(styles.ccp, className)}>
       <div className={styles.wrap}>
         <section className={cn(styles.card, flip && styles.flip)}>
-          <div className={cn(styles.highlight, highlightClass)} />
-
           <section className={styles.cardFront} style={ringStyle}>
             <div className={styles.cardHeader}>
               <div>{brandLabel}</div>
-              <svg xmlns="http://www.w3.org/2000/svg" height="36" width="54" viewBox="-96 -98.908 832 593.448" aria-hidden>
+              <svg
+                className={styles.schemeMark}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="-96 -98.908 832 593.448"
+                aria-hidden
+              >
                 <path fill="#30A369" d="M224.833 42.298h190.416v311.005H224.833z" />
                 <path
                   d="M244.446 197.828a197.448 197.448 0 0175.54-155.475 197.777 197.777 0 100 311.004 197.448 197.448 0 01-75.54-155.53z"
@@ -177,7 +165,10 @@ export function CreditCardForm({
               </svg>
             </div>
 
-            <div className={styles.cardNumber} aria-label="Kart numarası">
+            <div
+              className={cn(styles.cardNumber, focusField === "number" && styles.fieldActive)}
+              aria-label="Kart numarası"
+            >
               {displayedSlots.map((slot, idx) => (
                 <span key={idx} className={styles.slot}>
                   <span className={cn(styles.digit, slot.filed && styles.filed)}>
@@ -189,20 +180,22 @@ export function CreditCardForm({
             </div>
 
             <div className={styles.cardFooter}>
-              <div className={styles.cardHolder}>
+              <div className={cn(styles.cardHolder, focusField === "holder" && styles.fieldActive)}>
                 <div className={styles.sectionTitle}>Kart sahibi</div>
-                <div>{holder || "AD SOYAD"}</div>
+                <div className={styles.cardHolderName}>{holder || "AD SOYAD"}</div>
               </div>
-              <div className={styles.cardExpires}>
+              <div className={cn(styles.cardExpires, focusField === "expire" && styles.fieldActive)}>
                 <div className={styles.sectionTitle}>SKT</div>
-                <span>{month || "AA"}</span>/<span>{year ? year.slice(-2) : "YY"}</span>
+                <div className={styles.cardExpiresValue}>
+                  <span>{month || "AA"}</span>/<span>{year ? year.slice(-2) : "YY"}</span>
+                </div>
               </div>
             </div>
           </section>
 
           <section className={styles.cardBack} style={ringStyle}>
             <div className={styles.hideLine} />
-            <div className={styles.cvvBlock}>
+            <div className={cn(styles.cvvBlock, focusField === "cvv" && styles.fieldActive)}>
               <span>CVV</span>
               <div className={styles.cvvField}>{"*".repeat(cvv.length)}</div>
             </div>

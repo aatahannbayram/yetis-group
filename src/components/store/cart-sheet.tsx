@@ -421,7 +421,7 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
       <Dialog open={cardModalOpen} onOpenChange={setCardModalOpen}>
         <DialogContent
           overlayClassName="z-[80]"
-          className="z-[80] max-h-[min(92dvh,820px)] w-full max-w-[calc(100%-1.25rem)] overflow-y-auto p-0 sm:max-w-lg"
+          className="z-[80] max-h-[min(92dvh,880px)] w-full max-w-[calc(100%-1.25rem)] overflow-y-auto p-0 sm:max-w-3xl"
         >
           <DialogHeader className="border-b border-[color:var(--mkt-border)] px-5 py-4 pr-12">
             <DialogTitle className="text-[1.125rem] font-semibold tracking-[-0.02em] text-mkt-ink">
@@ -432,7 +432,7 @@ export function CartSheet({ bankTransfer }: { bankTransfer: BankTransferInfo | n
             </DialogDescription>
           </DialogHeader>
 
-          <div className="px-5 py-4">
+          <div className="px-6 py-5">
             <CreditCardForm
               maskMiddle
               showSubmit={false}

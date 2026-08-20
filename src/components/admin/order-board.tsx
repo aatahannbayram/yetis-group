@@ -68,6 +68,8 @@ export type OrderLineRow = {
   quantity: number;
   unitPriceKurus: number;
   lineTotalKurus: number;
+  reservedLots: Array<{ lotNumber: string; quantityKg: string }>;
+  activeShipment: { id: string; status: string } | null;
 };
 
 export type OrderEventRow = {
@@ -198,6 +200,12 @@ const ACTIVE_STATUSES: ReadonlySet<OrderStatus> = new Set([
   "SHIPPED",
 ]);
 
+const LINE_SHIPMENT_LABEL: Record<string, string> = {
+  HAZIRLANIYOR: "Sevkiyat hazırlanıyor",
+  YOLDA: "Yolda",
+  TESLIM_EDILDI: "Teslim edildi",
+};
+
 const kgFormatter = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 3 });
 
 function timeAgo(iso: string) {
@@ -301,6 +309,7 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
       formData.set("orderLineId", line.id);
       try {
         await createShipmentFromOrderAction(formData);
+        toast.success("Sevkiyat oluşturuldu");
       } catch (e) {
         setError(e instanceof Error ? e.message : "Sevkiyat oluşturulamadı.");
       }
@@ -365,12 +374,27 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
                       {line.packLabel} · {line.quantity} {salesUnitLabel(line.packagingType)} ·{" "}
                       {formatMoney(money(line.unitPriceKurus))}/{salesUnitLabel(line.packagingType)}
                     </p>
+                    {line.reservedLots.length > 0 ? (
+                      <p className="mt-1 text-[length:var(--text-caption)] text-[var(--text-muted)]">
+                        Stok kilitlendi:{" "}
+                        {line.reservedLots
+                          .map(
+                            (lot) =>
+                              `${lot.lotNumber} · ${kgFormatter.format(Number(lot.quantityKg))} kg`,
+                          )
+                          .join(", ")}
+                      </p>
+                    ) : null}
                   </div>
                   <p className="shrink-0 tabular-nums font-semibold text-[var(--text-primary)]">
                     {formatMoney(money(line.lineTotalKurus))}
                   </p>
                 </div>
-                {order.status === "CONFIRMED" || order.status === "PREPARING" ? (
+                {line.activeShipment ? (
+                  <p className="mt-2 text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
+                    {LINE_SHIPMENT_LABEL[line.activeShipment.status] ?? line.activeShipment.status}
+                  </p>
+                ) : order.status === "CONFIRMED" || order.status === "PREPARING" ? (
                   <Button
                     size="sm"
                     variant="outline"

@@ -37,6 +37,13 @@ export default async function AdminOrdersPage() {
       quantity: l.quantity,
       unitPriceKurus: l.unitPriceKurus,
       lineTotalKurus: l.lineTotalKurus,
+      reservedLots: l.lotAllocations.map((a) => ({
+        lotNumber: a.lot.lotNumber,
+        quantityKg: a.quantityKg.toString(),
+      })),
+      activeShipment: l.shipments[0]
+        ? { id: l.shipments[0].id, status: l.shipments[0].status }
+        : null,
     })),
     events: o.events.map((e) => ({
       id: e.id,

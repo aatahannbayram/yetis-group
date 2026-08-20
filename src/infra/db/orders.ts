@@ -47,7 +47,19 @@ export async function listOrders(filter?: { statusIn?: OrderStatus[] }) {
     include: {
       dealer: { select: { id: true, unvan: true, dealerType: true, email: true } },
       lines: {
-        include: { variant: { include: { product: { select: { name: true, imageUrl: true } } } } },
+        include: {
+          variant: { include: { product: { select: { name: true, imageUrl: true } } } },
+          lotAllocations: {
+            where: { releasedAt: null },
+            include: { lot: { select: { lotNumber: true } } },
+          },
+          shipments: {
+            where: { status: { not: "IPTAL" } },
+            select: { id: true, status: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
       },
       events: { orderBy: { createdAt: "asc" } },
       shipments: { include: { allocations: { include: { lot: { select: { lotNumber: true } } } } } },
@@ -76,7 +88,19 @@ export async function getOrderById(id: string) {
     include: {
       dealer: { select: { id: true, unvan: true, dealerType: true } },
       lines: {
-        include: { variant: { include: { product: { select: { name: true, imageUrl: true } } } } },
+        include: {
+          variant: { include: { product: { select: { name: true, imageUrl: true } } } },
+          lotAllocations: {
+            where: { releasedAt: null },
+            include: { lot: { select: { lotNumber: true } } },
+          },
+          shipments: {
+            where: { status: { not: "IPTAL" } },
+            select: { id: true, status: true },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
       },
       events: { orderBy: { createdAt: "asc" } },
       shipments: { include: { allocations: { include: { lot: { select: { lotNumber: true } } } } } },

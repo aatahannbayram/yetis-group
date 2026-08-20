@@ -212,6 +212,9 @@ export function DealerProductSheet({
                   ariaLabel={salesUnitLabel(variant.packagingType)}
                   onCommit={onQty}
                 />
+                <span className="text-xs font-medium text-[var(--panel-ink-muted)]">
+                  {salesUnitLabel(variant.packagingType)}
+                </span>
                 <button
                   type="button"
                   disabled={pending || insufficientForMoq || outOfStock}

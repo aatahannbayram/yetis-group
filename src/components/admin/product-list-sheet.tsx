@@ -155,12 +155,14 @@ export function ProductListSheet({
     const q = search.trim().toLocaleLowerCase("tr-TR");
     if (!q) return rows;
     return rows.filter((row) => {
-      const variant = row.variants[0];
-      return (
-        row.name.toLocaleLowerCase("tr-TR").includes(q) ||
-        row.categoryName.toLocaleLowerCase("tr-TR").includes(q) ||
-        (variant?.sku.toLocaleLowerCase("tr-TR").includes(q) ?? false)
-      );
+      if (row.name.toLocaleLowerCase("tr-TR").includes(q)) return true;
+      if (row.categoryName.toLocaleLowerCase("tr-TR").includes(q)) return true;
+      return row.variants.some((v) => {
+        const sku = v.sku.toLocaleLowerCase("tr-TR");
+        const pack = (v.packSize ?? "").toLocaleLowerCase("tr-TR");
+        const type = v.packagingType.toLocaleLowerCase("tr-TR");
+        return sku.includes(q) || pack.includes(q) || type.includes(q);
+      });
     });
   }, [products, search, categoryFilter]);
 

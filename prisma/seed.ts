@@ -92,95 +92,193 @@ const leads = [
   },
 ];
 
+type ExtraCins = {
+  sku: string;
+  packSize: string;
+  unitFactor: string;
+  pricePerUnitKurus: number;
+  horeca?: number;
+  market?: number;
+};
+
+function packagingOf(unitLabel: string): PackagingType {
+  const u = unitLabel.toLocaleLowerCase("tr-TR");
+  if (u.includes("teneke")) return "TENEKE";
+  if (u.includes("vakum")) return "VAKUM";
+  if (u.includes("kutu")) return "KUTU";
+  if (u.includes("dökme") || u.includes("dokme")) return "DOKME";
+  return "KOLI";
+}
+
 const products = [
   {
     sku: "YG-BP17-TNK",
-    name: "Beyaz Peynir 17 kg Teneke",
+    name: "Beyaz Peynir",
     slug: "beyaz-peynir-17kg-teneke",
     category: "Beyaz Peynir",
     description:
-      "Geleneksel tam yağlı inek sütü beyaz peynir, 17 kg'lık teneke ambalajda. Şarküteri ve toptan satış için standart Yetiş Grup ambalajı.",
+      "Geleneksel tam yağlı inek sütü beyaz peynir. Şarküteri ve toptan için teneke; tezgâh için vakum cinsleri.",
     unitLabel: "17 kg teneke",
     kgPerUnit: "17.000",
     pricePerUnitKurus: 340000,
     imageUrl: "/products/beyaz-peynir.jpg",
+    extraCins: [
+      {
+        sku: "YG-BP01-VAK",
+        packSize: "1 kg vakum",
+        unitFactor: "1.000",
+        pricePerUnitKurus: 22000,
+        horeca: 21400,
+        market: 20800,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-KS01-VAK",
-    name: "Kaşar Peyniri 1 kg Vakum",
+    name: "Kaşar Peyniri",
     slug: "kasar-peyniri-1kg-vakum",
     category: "Kaşar",
-    description: "Olgunlaştırılmış tam yağlı kaşar peyniri, 1 kg vakumlu paket.",
+    description: "Olgunlaştırılmış tam yağlı kaşar. Vakum teker ve koli cinsleri.",
     unitLabel: "1 kg vakum",
     kgPerUnit: "1.000",
     pricePerUnitKurus: 38000,
     imageUrl: "/products/kasar.jpg",
+    extraCins: [
+      {
+        sku: "YG-KS03-KOL",
+        packSize: "3 kg koli",
+        unitFactor: "3.000",
+        pricePerUnitKurus: 108000,
+        horeca: 105000,
+        market: 102000,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-KS025-DLM",
-    name: "Dilimli Kaşar 250 g Paket",
+    name: "Dilimli Kaşar",
     slug: "dilimli-kasar-250g",
     category: "Kaşar",
-    description: "Hazır dilimli kaşar peyniri, 250 g'lık raf ve HORECA paketi.",
+    description: "Hazır dilimli kaşar peyniri, raf ve HORECA paketi.",
     unitLabel: "250 g paket",
     kgPerUnit: "0.250",
     pricePerUnitKurus: 11000,
     imageUrl: "/products/kasar.jpg",
+    extraCins: [
+      {
+        sku: "YG-KS1-DLM",
+        packSize: "1 kg kutu",
+        unitFactor: "1.000",
+        pricePerUnitKurus: 40000,
+        horeca: 38800,
+        market: 37600,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-TL08-VAK",
-    name: "Tulum Peyniri 800 g Vakum",
+    name: "Tulum Peyniri",
     slug: "tulum-peyniri-800g",
     category: "Tulum",
-    description: "Geleneksel tulum peyniri, 800 g vakumlu paket.",
+    description: "Geleneksel tulum peyniri, vakum cinsleri.",
     unitLabel: "800 g vakum",
     kgPerUnit: "0.800",
     pricePerUnitKurus: 32000,
     imageUrl: "/products/tulum.jpg",
+    extraCins: [
+      {
+        sku: "YG-TL04-VAK",
+        packSize: "400 g vakum",
+        unitFactor: "0.400",
+        pricePerUnitKurus: 17500,
+        horeca: 17000,
+        market: 16500,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-LR01-STD",
-    name: "Lor Peyniri 1 kg",
+    name: "Lor Peyniri",
     slug: "lor-peyniri-1kg",
     category: "Lor",
-    description: "Taze lor peyniri, 1 kg'lık ambalaj.",
-    unitLabel: "1 kg",
+    description: "Taze lor peyniri. 1 kg paket ve 5 kg kova cinsleri.",
+    unitLabel: "1 kg vakum",
     kgPerUnit: "1.000",
     pricePerUnitKurus: 18000,
     imageUrl: "/products/lor.jpg",
+    extraCins: [
+      {
+        sku: "YG-LR05-KOV",
+        packSize: "5 kg kova",
+        unitFactor: "5.000",
+        pricePerUnitKurus: 82000,
+        horeca: 80000,
+        market: 78000,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-TY01-KOV",
-    name: "Tereyağı 1 kg Kova",
+    name: "Tereyağı",
     slug: "tereyagi-1kg-kova",
     category: "Tereyağı",
-    description: "Sade tereyağı, 1 kg'lık kova ambalaj.",
+    description: "Sade tereyağı. Kova ve kutu cinsleri.",
     unitLabel: "1 kg kova",
     kgPerUnit: "1.000",
     pricePerUnitKurus: 45000,
     imageUrl: "/products/tereyagi.jpg",
+    extraCins: [
+      {
+        sku: "YG-TY02-KUT",
+        packSize: "200 g kutu",
+        unitFactor: "0.200",
+        pricePerUnitKurus: 10500,
+        horeca: 10200,
+        market: 9900,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-YG05-KOV",
-    name: "Yoğurt 5 kg Kova",
+    name: "Yoğurt",
     slug: "yogurt-5kg-kova",
     category: "Yoğurt",
-    description: "Tam yağlı süzme yoğurt, 5 kg'lık toptan kova.",
+    description: "Tam yağlı süzme yoğurt. Toptan kova cinsleri.",
     unitLabel: "5 kg kova",
     kgPerUnit: "5.000",
     pricePerUnitKurus: 25000,
     imageUrl: "/products/yogurt.jpg",
+    extraCins: [
+      {
+        sku: "YG-YG01-KOV",
+        packSize: "1 kg kova",
+        unitFactor: "1.000",
+        pricePerUnitKurus: 6200,
+        horeca: 6000,
+        market: 5800,
+      },
+    ] satisfies ExtraCins[],
   },
   {
     sku: "YG-ST01-LTR",
-    name: "Süt 1 L",
+    name: "Süt",
     slug: "sut-1l",
     category: "Süt",
-    description: "Pastörize tam yağlı süt, 1 litrelik ambalaj.",
+    description: "Pastörize tam yağlı süt. Litre ve bidon cinsleri.",
     unitLabel: "1 L",
     kgPerUnit: "1.000",
     pricePerUnitKurus: 3500,
     imageUrl: "/products/sut.jpg",
+    extraCins: [
+      {
+        sku: "YG-ST05-BID",
+        packSize: "5 L bidon",
+        unitFactor: "5.000",
+        pricePerUnitKurus: 16500,
+        horeca: 16000,
+        market: 15500,
+      },
+    ] satisfies ExtraCins[],
   },
 ];
 
@@ -243,19 +341,20 @@ async function seedCatalog() {
     categoryByName.set(name, cat.id);
   }
 
-  function packagingOf(unitLabel: string): PackagingType {
-    const u = unitLabel.toLocaleLowerCase("tr-TR");
-    if (u.includes("teneke")) return "TENEKE";
-    if (u.includes("vakum")) return "VAKUM";
-    if (u.includes("kutu")) return "KUTU";
-    return "KOLI";
-  }
-
-  const createdVariants: { slug: string; variantId: string; price: number }[] = [];
+  type CreatedVariant = {
+    slug: string;
+    sku: string;
+    variantId: string;
+    price: number;
+    horeca?: number;
+    market?: number;
+  };
+  const createdVariants: CreatedVariant[] = [];
 
   for (const p of products) {
     const categoryId = categoryByName.get(p.category);
     if (!categoryId) throw new Error(`Missing category ${p.category}`);
+    const extras = "extraCins" in p ? p.extraCins : [];
     const product = await prisma.product.create({
       data: {
         name: p.name,
@@ -266,22 +365,50 @@ async function seedCatalog() {
         primaryCategoryId: categoryId,
         categories: { create: { categoryId } },
         variants: {
-          create: {
-            sku: p.sku,
-            packagingType: packagingOf(p.unitLabel),
-            packSize: p.unitLabel,
-            unitFactor: p.kgPerUnit,
-            pricePerUnitKurus: p.pricePerUnitKurus,
-          },
+          create: [
+            {
+              sku: p.sku,
+              packagingType: packagingOf(p.unitLabel),
+              packSize: p.unitLabel,
+              unitFactor: p.kgPerUnit,
+              pricePerUnitKurus: p.pricePerUnitKurus,
+              sortOrder: 0,
+            },
+            ...extras.map((c, i) => ({
+              sku: c.sku,
+              packagingType: packagingOf(c.packSize),
+              packSize: c.packSize,
+              unitFactor: c.unitFactor,
+              pricePerUnitKurus: c.pricePerUnitKurus,
+              sortOrder: i + 1,
+            })),
+          ],
         },
       },
       include: { variants: true },
     });
+    const primary = product.variants.find((v) => v.sku === p.sku) ?? product.variants[0]!;
+    const override = priceListOverrides[p.slug];
     createdVariants.push({
       slug: p.slug,
-      variantId: product.variants[0]!.id,
+      sku: primary.sku,
+      variantId: primary.id,
       price: p.pricePerUnitKurus,
+      horeca: override?.horeca,
+      market: override?.market,
     });
+    for (const extra of extras) {
+      const variant = product.variants.find((v) => v.sku === extra.sku);
+      if (!variant) continue;
+      createdVariants.push({
+        slug: p.slug,
+        sku: extra.sku,
+        variantId: variant.id,
+        price: extra.pricePerUnitKurus,
+        horeca: extra.horeca,
+        market: extra.market,
+      });
+    }
   }
 
   const standart = await prisma.priceList.create({
@@ -295,16 +422,17 @@ async function seedCatalog() {
   });
 
   for (const row of createdVariants) {
-    const overrides = priceListOverrides[row.slug];
     await prisma.priceListItem.create({
       data: { priceListId: standart.id, variantId: row.variantId, priceKurus: row.price },
     });
-    if (overrides) {
+    if (row.horeca != null) {
       await prisma.priceListItem.create({
-        data: { priceListId: horeca.id, variantId: row.variantId, priceKurus: overrides.horeca },
+        data: { priceListId: horeca.id, variantId: row.variantId, priceKurus: row.horeca },
       });
+    }
+    if (row.market != null) {
       await prisma.priceListItem.create({
-        data: { priceListId: market.id, variantId: row.variantId, priceKurus: overrides.market },
+        data: { priceListId: market.id, variantId: row.variantId, priceKurus: row.market },
       });
     }
   }
@@ -1146,12 +1274,93 @@ async function seedLedgerDemoData() {
   console.log("Seeded demo cari (ledger) hareketleri.");
 }
 
+/** Mevcut katalogda tek cins kalan ürünlere ikinci cinsi ekler; isimleri sadeleştirir. */
+async function seedExtraCins() {
+  const lists = await prisma.priceList.findMany({
+    where: { slug: { in: ["standart", "horeca", "zincir-market"] } },
+    select: { id: true, slug: true },
+  });
+  const standartId = lists.find((l) => l.slug === "standart")?.id;
+  const horecaId = lists.find((l) => l.slug === "horeca")?.id;
+  const marketId = lists.find((l) => l.slug === "zincir-market")?.id;
+
+  let added = 0;
+  for (const p of products) {
+    const product = await prisma.product.findUnique({
+      where: { slug: p.slug },
+      include: { variants: { select: { id: true, sku: true, sortOrder: true } } },
+    });
+    if (!product) continue;
+
+    if (product.name !== p.name || product.description !== p.description) {
+      await prisma.product.update({
+        where: { id: product.id },
+        data: { name: p.name, description: p.description },
+      });
+    }
+
+    const extras = "extraCins" in p ? p.extraCins : [];
+    const maxOrder = product.variants.reduce((m, v) => Math.max(m, v.sortOrder), 0);
+    for (const [i, extra] of extras.entries()) {
+      const existing = await prisma.productVariant.findUnique({ where: { sku: extra.sku } });
+      if (existing) continue;
+      const variant = await prisma.productVariant.create({
+        data: {
+          productId: product.id,
+          sku: extra.sku,
+          packagingType: packagingOf(extra.packSize),
+          packSize: extra.packSize,
+          unitFactor: extra.unitFactor,
+          pricePerUnitKurus: extra.pricePerUnitKurus,
+          sortOrder: maxOrder + i + 1,
+        },
+      });
+      if (standartId) {
+        await prisma.priceListItem.create({
+          data: { priceListId: standartId, variantId: variant.id, priceKurus: extra.pricePerUnitKurus },
+        });
+      }
+      if (horecaId && extra.horeca != null) {
+        await prisma.priceListItem.create({
+          data: { priceListId: horecaId, variantId: variant.id, priceKurus: extra.horeca },
+        });
+      }
+      if (marketId && extra.market != null) {
+        await prisma.priceListItem.create({
+          data: { priceListId: marketId, variantId: variant.id, priceKurus: extra.market },
+        });
+      }
+      const lotA = `${extra.sku}-A`;
+      const lotExists = await prisma.lot.findFirst({ where: { lotNumber: lotA } });
+      if (!lotExists) {
+        await prisma.lot.create({
+          data: {
+            variantId: variant.id,
+            lotNumber: lotA,
+            expirationDate: daysFromNow(90),
+            movements: {
+              create: {
+                type: "GIRIS",
+                quantityKg: Number(extra.unitFactor) * 20,
+                note: "Üretimden ilk giriş",
+              },
+            },
+          },
+        });
+      }
+      added += 1;
+    }
+  }
+  console.log(added > 0 ? `Seeded ${added} extra cins variant(s).` : "Extra cins variants already present.");
+}
+
 async function main() {
   await seedLeads();
   await seedCatalog();
   await seedAccountTypes();
   await seedLeadActivities();
   await seedInventory();
+  await seedExtraCins();
   await seedM13CatalogDepth();
   await seedM14Content();
   await seedDealerDemoData();

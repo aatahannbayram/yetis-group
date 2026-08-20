@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ZoomIn } from "lucide-react";
+import { Minimize2, X, ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PdpOriginHint } from "@/components/store/pdp-origin-hint";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -38,6 +39,7 @@ export function ProductGallery({
 
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
   const current = gallery[active] ?? gallery[0];
 
   if (!current) {
@@ -56,7 +58,7 @@ export function ProductGallery({
       <div
         className={cn(
           "group/stage relative w-full overflow-hidden rounded-[1.5rem] bg-[#FAF8F3]",
-          "aspect-[4/5] max-h-[70vh] sm:aspect-square sm:max-h-none",
+          "aspect-[4/5] max-h-[26rem] sm:aspect-square sm:max-h-[28rem]",
         )}
       >
         {region ? <PdpOriginHint region={region} /> : null}
@@ -68,18 +70,14 @@ export function ProductGallery({
             className="relative z-10 size-full object-contain p-5 md:p-10"
           />
         ) : (
-          <div className="absolute inset-0 z-10 p-6 md:p-10">
-            <div className="relative size-full">
-              <Image
-                src={current.url}
-                alt={alt}
-                fill
-                className="object-contain drop-shadow-[0_18px_36px_rgba(33,28,22,0.12)] motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
-                sizes="(min-width: 1024px) 55vw, 92vw"
-                priority
-              />
-            </div>
-          </div>
+          <Image
+            src={current.url}
+            alt={alt}
+            fill
+            className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
+            sizes="(min-width: 1024px) 40vw, 92vw"
+            priority
+          />
         )}
 
         {region ? (
@@ -131,24 +129,52 @@ export function ProductGallery({
         </div>
       ) : null}
 
-      <Dialog open={lightbox} onOpenChange={setLightbox}>
+      <Dialog
+        open={lightbox}
+        onOpenChange={(next) => {
+          setLightbox(next);
+          if (!next) setFullscreen(false);
+        }}
+      >
         <DialogContent
-          className="max-h-[92vh] w-[min(96vw,56rem)] max-w-[min(96vw,56rem)] overflow-hidden bg-[#FAF8F3] p-3 sm:max-w-[min(96vw,56rem)]"
+          showCloseButton={false}
+          className={cn(
+            "overflow-hidden bg-[#FAF8F3] p-0",
+            fullscreen
+              ? "h-[100dvh] max-h-[100dvh] w-screen max-w-[100vw] rounded-none sm:max-w-[100vw]"
+              : "h-[min(88vh,52rem)] max-h-[92vh] w-[min(96vw,56rem)] max-w-[min(96vw,56rem)] sm:max-w-[min(96vw,56rem)]",
+          )}
           overlayClassName="bg-black/45"
         >
           <DialogTitle className="sr-only">{alt}</DialogTitle>
-          <div className="relative mx-auto h-[min(82vh,48rem)] w-full">
+          <DialogClose className="absolute top-4 right-4 z-30 flex size-10 items-center justify-center rounded-full bg-white/92 text-mkt-ink shadow-[0_8px_24px_rgba(33,28,22,0.12)] ring-1 ring-black/5 transition-colors hover:bg-white">
+            <X className="size-4" aria-hidden />
+            <span className="sr-only">Kapat</span>
+          </DialogClose>
+          <div className="relative size-full">
             {current.kind === "VIDEO" ? (
               <video src={current.url} controls autoPlay className="size-full object-contain" />
             ) : (
-              <Image
-                src={current.url}
-                alt={alt}
-                fill
-                className="object-contain"
-                sizes="90vw"
-              />
+              <button
+                type="button"
+                aria-label={fullscreen ? "Tam ekrandan çık" : "Tam ekran aç"}
+                onClick={() => setFullscreen((v) => !v)}
+                className="absolute inset-0 size-full cursor-zoom-in"
+              >
+                <Image
+                  src={current.url}
+                  alt={alt}
+                  fill
+                  className={fullscreen ? "object-contain" : "object-cover"}
+                  sizes="100vw"
+                />
+              </button>
             )}
+            {fullscreen ? (
+              <span className="pointer-events-none absolute top-4 left-4 z-30 flex size-10 items-center justify-center rounded-full bg-black/40 text-white">
+                <Minimize2 className="size-4" aria-hidden />
+              </span>
+            ) : null}
           </div>
         </DialogContent>
       </Dialog>

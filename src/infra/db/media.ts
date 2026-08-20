@@ -56,6 +56,11 @@ export async function deleteProductMedia(id: string) {
         where: { id: media.productId },
         data: { imageUrl: next.url },
       });
+    } else {
+      await prisma.product.update({
+        where: { id: media.productId },
+        data: { imageUrl: null },
+      });
     }
   }
 }

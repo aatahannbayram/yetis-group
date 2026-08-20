@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { Minimize2, X, ZoomIn } from "lucide-react";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { cn } from "@/lib/utils";
 import { PdpOriginHint } from "@/components/store/pdp-origin-hint";
 import {
@@ -70,10 +70,10 @@ export function ProductGallery({
             className="relative z-10 size-full object-contain p-5 md:p-10"
           />
         ) : (
-          <Image
+          <CatalogImage
             src={current.url}
+            fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
             alt={alt}
-            fill
             className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
             sizes="(min-width: 1024px) 40vw, 92vw"
             priority
@@ -123,7 +123,13 @@ export function ProductGallery({
                 i === active ? "border-mkt-accent" : "border-transparent",
               )}
             >
-              <Image src={item.url} alt="" fill className="object-cover" sizes="64px" />
+              <CatalogImage
+                src={item.url}
+                fallbackSrc={fallbackUrl === item.url ? null : fallbackUrl}
+                alt=""
+                className="object-cover"
+                sizes="64px"
+              />
             </button>
           ))}
         </div>
@@ -161,10 +167,10 @@ export function ProductGallery({
                 onClick={() => setFullscreen((v) => !v)}
                 className="absolute inset-0 size-full cursor-zoom-in"
               >
-                <Image
+                <CatalogImage
                   src={current.url}
+                  fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
                   alt={alt}
-                  fill
                   className={fullscreen ? "object-contain" : "object-cover"}
                   sizes="100vw"
                 />

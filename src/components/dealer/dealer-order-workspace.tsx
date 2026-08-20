@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
-import { Package, Plus, Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
+import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { QtyInput } from "@/components/ui/qty-input";
 import type { DealerCatalogProduct } from "@/infra/db/dealer-catalog";
 import { useDealerCart } from "@/components/dealer/dealer-cart-context";
@@ -162,19 +163,13 @@ export function DealerOrderWorkspace({
                     className="group/img relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] text-left sm:size-20"
                     title={`${product.name} detayını aç`}
                   >
-                    {product.imageUrl ? (
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover transition-transform duration-300 group-hover/img:scale-105 motion-reduce:transition-none motion-reduce:group-hover/img:scale-100"
-                        sizes="80px"
-                      />
-                    ) : (
-                      <span className="flex size-full items-center justify-center text-[var(--panel-ink-muted)]">
-                        <Package className="size-7" aria-hidden />
-                      </span>
-                    )}
+                    <CatalogImage
+                      src={catalogFallbackImage(product.categoryName, product.imageUrl)}
+                      fallbackSrc={catalogFallbackImage(product.categoryName, null)}
+                      alt={product.name}
+                      className="object-cover transition-transform duration-300 group-hover/img:scale-105 motion-reduce:transition-none motion-reduce:group-hover/img:scale-100"
+                      sizes="80px"
+                    />
                   </button>
 
                   <div className="min-w-0 flex-1 space-y-2">

@@ -20,6 +20,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/brand") ||
+    pathname.startsWith("/uploads") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();

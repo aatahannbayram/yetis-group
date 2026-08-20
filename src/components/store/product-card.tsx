@@ -1,8 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Package } from "lucide-react";
 import type { Money } from "@/domain/money";
 import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { cinsLine, uniquePackagingTypeLabels } from "@/lib/format/packaging";
 
 export type ProductListItem = {
@@ -33,6 +32,7 @@ export type ProductListItem = {
 
 export function ProductCard({ product }: { product: ProductListItem }) {
   const imageSrc = catalogFallbackImage(product.category, product.imageUrl);
+  const categorySrc = catalogFallbackImage(product.category, null);
   const cinsOptions =
     product.cins && product.cins.length > 0
       ? product.cins
@@ -65,19 +65,13 @@ export function ProductCard({ product }: { product: ProductListItem }) {
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-[1.25rem] border border-[color:var(--mkt-border)] bg-mkt-slab shadow-[0_1px_2px_rgb(33_28_22/0.04)] transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-1 hover:border-[color:var(--mkt-border-strong,var(--mkt-border))] hover:shadow-[0_18px_36px_-14px_rgb(33_28_22/0.18)]">
       <Link href={`/urunler/${product.slug}`} className="relative block aspect-[4/5] overflow-hidden bg-mkt-card-muted">
-        {imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={product.name}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-            sizes="(min-width: 1280px) 360px, (min-width: 640px) 45vw, 90vw"
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center text-mkt-ink-muted">
-            <Package className="size-10" aria-hidden />
-          </div>
-        )}
+        <CatalogImage
+          src={imageSrc}
+          fallbackSrc={categorySrc === imageSrc ? null : categorySrc}
+          alt={product.name}
+          className="object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          sizes="(min-width: 1280px) 360px, (min-width: 640px) 45vw, 90vw"
+        />
         {badge ? (
           <span className="absolute top-3 left-3 rounded-full bg-white/92 px-2.5 py-1 text-[11px] font-semibold tracking-[-0.01em] text-mkt-ink shadow-sm">
             {badge}

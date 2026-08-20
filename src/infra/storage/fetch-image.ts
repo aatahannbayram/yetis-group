@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { getUploadRoot } from "@/infra/storage/upload-root";
 
-const UPLOAD_ROOT = path.join(process.cwd(), "public", "uploads");
 const MAX_BYTES = 8 * 1024 * 1024;
 
 const EXT_BY_TYPE: Record<string, string> = {
@@ -22,7 +22,7 @@ function extFromUrl(url: string): string | null {
 
 /**
  * Downloads a remote image (or accepts an already-public /uploads path) and
- * stores it under public/uploads. Returns the public URL.
+ * stores it under the persistent upload root. Returns the public URL.
  */
 export async function saveImageFromUrl(sourceUrl: string, scope: string): Promise<string> {
   const trimmed = sourceUrl.trim();
@@ -51,7 +51,7 @@ export async function saveImageFromUrl(sourceUrl: string, scope: string): Promis
   if (buf.byteLength > MAX_BYTES) throw new Error("Görsel 8 MB sınırını aşıyor");
 
   const safeScope = scope.replace(/[^a-zA-Z0-9_-]/g, "") || "import";
-  const dir = path.join(UPLOAD_ROOT, safeScope);
+  const dir = path.join(getUploadRoot(), safeScope);
   await mkdir(dir, { recursive: true });
   const filename = `${randomUUID()}.${ext}`;
   await writeFile(path.join(dir, filename), buf);

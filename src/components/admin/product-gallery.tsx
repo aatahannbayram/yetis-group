@@ -214,6 +214,7 @@ export function ProductGallery({
                     src={m.url}
                     alt={m.alt ?? ""}
                     fill
+                    unoptimized={m.url.startsWith("/uploads/")}
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="180px"
                   />
@@ -373,6 +374,7 @@ export function ProductGallery({
                 src={active.url}
                 alt={active.alt ?? ""}
                 fill
+                unoptimized={active.url.startsWith("/uploads/")}
                 className="object-contain"
                 sizes="90vw"
               />

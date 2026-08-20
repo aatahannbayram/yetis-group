@@ -22,6 +22,13 @@ const envSchema = z
 
     APP_TIMEZONE: z.string().default("Europe/Istanbul"),
 
+    /**
+     * Absolute directory for uploaded product images. Production default is a
+     * sibling of the app folder (`../persistent-uploads`) so Git deploys do
+     * not wipe files. Local default: `public/uploads`.
+     */
+    UPLOAD_DIR: z.string().min(1).optional(),
+
     /** Public site origin for sitemap/canonical (defaults to BETTER_AUTH_URL). */
     NEXT_PUBLIC_SITE_URL: z.url().optional(),
     NEXT_PUBLIC_GTM_ID: z.string().optional(),

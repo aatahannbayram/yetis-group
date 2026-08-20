@@ -1,4 +1,5 @@
-import Image from "next/image";
+import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { ProductPlaceholder } from "@/components/store/product-placeholder";
 
 export function ProductImage({
@@ -14,13 +15,22 @@ export function ProductImage({
   className?: string;
   sizes?: string;
 }) {
-  if (!imageUrl) {
+  const src = catalogFallbackImage(category, imageUrl);
+  const categorySrc = catalogFallbackImage(category, null);
+
+  if (!src) {
     return <ProductPlaceholder category={category} className={className} />;
   }
 
   return (
     <div className={`relative aspect-square overflow-hidden ${className ?? ""}`}>
-      <Image src={imageUrl} alt={alt} fill className="object-cover" sizes={sizes ?? "300px"} />
+      <CatalogImage
+        src={src}
+        fallbackSrc={categorySrc === src ? null : categorySrc}
+        alt={alt}
+        className="object-cover"
+        sizes={sizes ?? "300px"}
+      />
     </div>
   );
 }

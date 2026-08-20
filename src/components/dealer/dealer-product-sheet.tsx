@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Image from "next/image";
-import { CalendarClock, MapPin, Package, Snowflake } from "lucide-react";
+import { CalendarClock, MapPin, Snowflake } from "lucide-react";
+import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import type { DealerCatalogProduct, DealerCatalogVariant } from "@/infra/db/dealer-catalog";
 import {
   Sheet,
@@ -79,19 +80,13 @@ export function DealerProductSheet({
         {product && variant ? (
           <>
             <div className="relative h-56 bg-[#FAF8F3] sm:h-64">
-              {hero ? (
-                <Image
-                  src={hero}
-                  alt={product.name}
-                  fill
-                  className="object-contain p-6"
-                  sizes="(min-width: 640px) 32rem, 100vw"
-                />
-              ) : (
-                <span className="flex size-full items-center justify-center text-[var(--panel-ink-muted)]">
-                  <Package className="size-10" aria-hidden />
-                </span>
-              )}
+              <CatalogImage
+                src={catalogFallbackImage(product.categoryName, hero)}
+                fallbackSrc={catalogFallbackImage(product.categoryName, null)}
+                alt={product.name}
+                className="object-contain p-6"
+                sizes="(min-width: 640px) 32rem, 100vw"
+              />
             </div>
 
             <SheetHeader className="border-b border-[var(--panel-border)] px-5 py-4">

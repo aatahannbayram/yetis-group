@@ -13,10 +13,16 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function AuthPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; reason?: string }>;
 }) {
-  const { tab } = await searchParams;
+  const { tab, reason } = await searchParams;
   const initialMode = tab === "uye" || tab === "uyelik" ? "uye" : "giris";
 
-  return <LoginPage initialMode={initialMode} imageSrc={getImage("auth-side").src} />;
+  return (
+    <LoginPage
+      initialMode={initialMode}
+      imageSrc={getImage("auth-side").src}
+      staffHint={reason === "staff"}
+    />
+  );
 }

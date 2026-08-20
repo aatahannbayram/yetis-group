@@ -1,7 +1,7 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
-import { isStaffUser } from "@/infra/db/users";
+import { isStaffUser, getUserDealerId } from "@/infra/db/users";
 import { getOpenLeadsCount } from "@/infra/db/leads";
 import { listDealerOptions } from "@/infra/db/dealers";
 import { listStaffNotifications, countUnreadStaff } from "@/infra/db/notifications";
@@ -30,7 +30,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   }
 
   if (!(await isStaffUser(session.user.id))) {
-    redirect("/");
+    const dealerId = await getUserDealerId(session.user.id);
+    redirect(dealerId ? "/bayi" : "/auth?reason=staff");
   }
 
   const [openLeadsCount, dealers, notifications, unreadCount] = await Promise.all([

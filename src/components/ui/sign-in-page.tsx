@@ -22,6 +22,7 @@ type Props = {
   initialMode?: AuthMode;
   imageSrc?: string;
   imageAlt?: string;
+  staffHint?: boolean;
 };
 
 /**
@@ -32,6 +33,7 @@ export function LoginPage({
   initialMode = "giris",
   imageSrc = "/hero-dairy.jpg",
   imageAlt = "Yetiş Grup, temiz gıda",
+  staffHint = false,
 }: Props) {
   const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -152,6 +154,13 @@ export function LoginPage({
               </p>
             </div>
 
+            {staffHint ? (
+              <p className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[14px] text-amber-950">
+                Yönetim paneli yalnızca Yetiş personel hesabıyla açılır. Bayi e-postasıyla giriş
+                yaptıysanız sipariş için bayi panelini kullanın.
+              </p>
+            ) : null}
+
             <div className="mb-6 grid grid-cols-2 gap-1 rounded-full bg-neutral-100 p-1">
               <button
                 type="button"
@@ -236,10 +245,17 @@ function SignInForm({ onNeedSignup }: { onNeedSignup: () => void }) {
       return;
     }
 
-    const me = await fetch("/api/me").then((res) => (res.ok ? res.json() : null));
+    async function readMe() {
+      const res = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+      return res.ok ? res.json() : null;
+    }
+
+    let me = await readMe();
+    if (!me) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      me = await readMe();
+    }
     setPending(false);
-    // Staff -> panel; everyone else -> dealer portal. /bayi self-guards and
-    // bounces non-dealers to /urunler, so this avoids any session-cookie race.
     const destination = me?.isStaff ? "/panel" : "/bayi";
     router.push(destination);
     router.refresh();

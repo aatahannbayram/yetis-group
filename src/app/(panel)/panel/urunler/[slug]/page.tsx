@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
-import { listAttributeDefinitions } from "@/infra/db/attributes";
+import { listAttributeDefinitions, listPackagingOptions, isProductFacingAttribute } from "@/infra/db/attributes";
 import { getGroupPricesForVariants } from "@/infra/db/pricing";
 import { LotManager } from "@/components/admin/lot-manager";
 import { ProductGallery } from "@/components/admin/product-gallery";
@@ -66,12 +66,14 @@ export default async function AdminProductDetailPage({
   const variant = defaultVariant(product);
   if (!variant) notFound();
 
-  const [lots, stock, attributes, groupPricing] = await Promise.all([
+  const [lots, stock, attributesRaw, groupPricing, packagingOptions] = await Promise.all([
     getLotsForVariant(variant.id),
     getProductStockSummary(product.id),
     listAttributeDefinitions(),
     getGroupPricesForVariants(product.variants.map((v) => v.id)),
+    listPackagingOptions(),
   ]);
+  const attributes = attributesRaw.filter((a) => isProductFacingAttribute(a.key));
 
   const groupPriceMap: Record<string, number | null> = {};
   for (const list of groupPricing.lists) {
@@ -407,6 +409,7 @@ export default async function AdminProductDetailPage({
           <ProductVariantPricing
             productId={product.id}
             slug={slug}
+            packagingOptions={packagingOptions}
             variants={product.variants.map((v) => ({
               id: v.id,
               sku: v.sku,

@@ -110,7 +110,9 @@ export async function dealerSetQtyAction(
     return { ok: false, error: "Geçerli adet girin" };
   }
   try {
-    await setCartLineQuantity(lineId, quantity);
+    const pair = await dealerCart(false);
+    if (!pair?.cart) return { ok: false, error: "Sepet bulunamadı" };
+    await setCartLineQuantity(lineId, quantity, pair.cart.id);
     const cart = await fetchDealerCartAction();
     revalidatePath("/bayi/siparis");
     return { ok: true, cart };
@@ -123,7 +125,9 @@ export async function dealerRemoveLineAction(
   lineId: string,
 ): Promise<{ ok: true; cart: DealerCartView | null } | { ok: false; error: string }> {
   try {
-    await removeCartLine(lineId);
+    const pair = await dealerCart(false);
+    if (!pair?.cart) return { ok: false, error: "Sepet bulunamadı" };
+    await removeCartLine(lineId, pair.cart.id);
     const cart = await fetchDealerCartAction();
     revalidatePath("/bayi/siparis");
     return { ok: true, cart };

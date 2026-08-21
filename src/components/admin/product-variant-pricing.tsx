@@ -22,7 +22,7 @@ import {
   updateVariantPriceAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import { cn } from "@/lib/utils";
-import { PACKAGING_OPTIONS, packLabel, salesUnitLabel } from "@/lib/format/packaging";
+import { packLabel, salesUnitLabel, type PackagingOption } from "@/lib/format/packaging";
 
 const fieldClass =
   "h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-sm outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
@@ -55,15 +55,19 @@ export function ProductVariantPricing({
   variants,
   priceLists,
   groupPrices,
+  packagingOptions,
 }: {
   productId: string;
   slug: string;
   variants: PricingVariant[];
   priceLists: PricingList[];
   groupPrices: GroupPriceMap;
+  packagingOptions: PackagingOption[];
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [newPackagingType, setNewPackagingType] = useState("KOLI");
+  const [newPackagingType, setNewPackagingType] = useState(
+    packagingOptions.find((o) => o.value === "KOLI")?.value ?? packagingOptions[0]?.value ?? "KOLI",
+  );
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -120,7 +124,11 @@ export function ProductVariantPricing({
               startTransition(async () => {
                 await createVariantAction(fd);
                 formRef.current?.reset();
-                setNewPackagingType("KOLI");
+                setNewPackagingType(
+                  packagingOptions.find((o) => o.value === "KOLI")?.value ??
+                    packagingOptions[0]?.value ??
+                    "KOLI",
+                );
                 setShowForm(false);
               });
             }}
@@ -141,7 +149,7 @@ export function ProductVariantPricing({
                   value={newPackagingType}
                   onChange={(e) => setNewPackagingType(e.target.value)}
                 >
-                  {PACKAGING_OPTIONS.map((t) => (
+                  {packagingOptions.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
@@ -225,6 +233,7 @@ export function ProductVariantPricing({
                     packSize={v.packSize}
                     packagingType={v.packagingType}
                     unitFactor={v.unitFactor}
+                    packagingOptions={packagingOptions}
                     onSave={(input) => updateVariantPackagingAction(v.id, input, slug)}
                   />
                 </TableCell>

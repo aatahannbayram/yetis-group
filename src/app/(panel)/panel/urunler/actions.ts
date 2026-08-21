@@ -13,7 +13,7 @@ import {
   setPrimaryMedia,
 } from "@/infra/db/media";
 import { saveUploadedImage } from "@/infra/storage/local";
-import { upsertProductAttributeValue, listAttributeDefinitions } from "@/infra/db/attributes";
+import { upsertProductAttributeValue, listAttributeDefinitions, isProductFacingAttribute, ensurePackagingAttribute } from "@/infra/db/attributes";
 import {
   createProduct,
   createVariant,
@@ -22,7 +22,6 @@ import {
   updateVariantPackaging,
 } from "@/infra/db/products";
 import { prisma } from "@/infra/db/client";
-import type { PackagingType } from "@/generated/prisma";
 import { upsertPriceListItem } from "@/infra/db/pricing";
 import {
   buildProductsExcel,
@@ -56,7 +55,7 @@ export async function createProductAction(formData: FormData) {
   const priceTl = Number(String(formData.get("priceTl") ?? "").replace(",", "."));
   const unitFactor = Number(String(formData.get("unitFactor") ?? "1").replace(",", "."));
   const vatPercent = Number(String(formData.get("vatPercent") ?? "1").replace(",", "."));
-  const packagingType = String(formData.get("packagingType") ?? "KOLI") as PackagingType;
+  const packagingType = String(formData.get("packagingType") ?? "KOLI");
   const moq = Number(String(formData.get("moq") ?? "1").replace(",", "."));
   const shelfLifeDays = Number(String(formData.get("shelfLifeDays") ?? "").replace(",", "."));
 
@@ -105,7 +104,7 @@ export async function createVariantAction(formData: FormData) {
   const unitFactor = Number(String(formData.get("unitFactor") ?? "1").replace(",", "."));
   const vatPercent = Number(String(formData.get("vatPercent") ?? "1").replace(",", "."));
   const moq = Number(String(formData.get("moq") ?? "1").replace(",", "."));
-  const packagingType = String(formData.get("packagingType") ?? "KOLI") as PackagingType;
+  const packagingType = String(formData.get("packagingType") ?? "KOLI");
 
   if (!productId) throw new Error("Ürün gerekli");
   if (!Number.isFinite(priceTl) || priceTl < 0) throw new Error("Geçerli bir fiyat girin");
@@ -132,7 +131,7 @@ export async function createVariantAction(formData: FormData) {
 
 export async function updateVariantPackagingAction(
   variantId: string,
-  input: { packagingType: PackagingType; packSize: string; unitFactor: number },
+  input: { packagingType: string; packSize: string; unitFactor: number },
   slug?: string,
 ) {
   await requireStaff();
@@ -195,6 +194,7 @@ export async function createLotAction(
   slug: string,
   input: { lotNumber: string; expirationDate: string; initialKg: number },
 ) {
+  await requireStaff();
   await createLot({
     variantId,
     lotNumber: input.lotNumber,
@@ -240,8 +240,10 @@ export async function uploadProductImageAction(formData: FormData) {
 
   const url = await saveUploadedImage(file, productId);
   await addProductMedia({ productId, url });
+
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath(`/urunler/${slug}`);
+  revalidatePath("/panel/urunler");
 }
 
 export async function deleteMediaAction(formData: FormData) {
@@ -381,8 +383,14 @@ export async function exportProductsExcelAction(): Promise<ExcelFileResult> {
 
     const names =
       attributeNames.length > 0
-        ? attributeNames
-        : attrs.map((a) => a.name).sort((a, b) => a.localeCompare(b, "tr"));
+        ? attributeNames.filter((n) => {
+            const def = attrs.find((a) => a.name === n);
+            return !def || isProductFacingAttribute(def.key);
+          })
+        : attrs
+            .filter((a) => isProductFacingAttribute(a.key))
+            .map((a) => a.name)
+            .sort((a, b) => a.localeCompare(b, "tr"));
 
     const buffer = await buildProductsExcel(rows, names);
     const stamp = new Date().toISOString().slice(0, 10);
@@ -402,7 +410,10 @@ export async function downloadProductsExcelTemplateAction(): Promise<ExcelFileRe
   try {
     const attrs = await listAttributeDefinitions();
     const buffer = await buildProductsExcelTemplate(
-      attrs.map((a) => a.name).sort((a, b) => a.localeCompare(b, "tr")),
+      attrs
+        .filter((a) => isProductFacingAttribute(a.key))
+        .map((a) => a.name)
+        .sort((a, b) => a.localeCompare(b, "tr")),
     );
     return {
       ok: true,
@@ -447,6 +458,7 @@ export async function importProductsExcelAction(
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    await ensurePackagingAttribute();
     const attrs = await listAttributeDefinitions();
     const attrDefs = attrs.map((a) => ({
       id: a.id,

@@ -426,14 +426,6 @@ model ProductCategory {
 
 // ---- Catalog: Product + Variant ----
 
-enum PackagingType {
-  TENEKE
-  VAKUM
-  KOLI
-  KUTU
-  DOKME
-}
-
 enum BaseUnit {
   KG
 }
@@ -473,7 +465,8 @@ model ProductVariant {
   product            Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
   sku                String        @unique
   barcode            String?
-  packagingType      PackagingType @default(KOLI)
+  /** Option value from AttributeDefinition key `ambalaj` (e.g. TENEKE, bidon). */
+  packagingType      String        @default("KOLI")
   packSize           String?
   baseUnit           BaseUnit      @default(KG)
   unitFactor         Decimal       @db.Decimal(10, 3)

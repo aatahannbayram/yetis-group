@@ -134,10 +134,24 @@ export const PACKAGING_LABEL_TO_ENUM: Record<string, string> = {
   dökme: "DOKME",
 };
 
-export function parsePackagingType(raw: string | null | undefined): string {
+export function parsePackagingType(
+  raw: string | null | undefined,
+  options?: { value: string; label: string }[],
+): string {
   if (!raw?.trim()) return "KOLI";
-  const n = normalizeHeader(raw);
-  const upper = raw.trim().toUpperCase();
+  const trimmed = raw.trim();
+  const n = normalizeHeader(trimmed);
+  const upper = trimmed.toUpperCase();
+
+  if (options?.length) {
+    const byValue = options.find(
+      (o) => o.value === trimmed || o.value.toUpperCase() === upper,
+    );
+    if (byValue) return byValue.value;
+    const byLabel = options.find((o) => normalizeHeader(o.label) === n);
+    if (byLabel) return byLabel.value;
+  }
+
   if (["TENEKE", "VAKUM", "KOLI", "KUTU", "DOKME"].includes(upper)) return upper;
   return PACKAGING_LABEL_TO_ENUM[n] ?? "KOLI";
 }

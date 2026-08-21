@@ -6,11 +6,29 @@ import { getUploadRoot } from "@/infra/storage/upload-root";
 const MAX_BYTES = 8 * 1024 * 1024;
 const ALLOWED_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/pjpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/avif": "avif",
   "image/gif": "gif",
 };
+
+const EXT_FROM_NAME: Record<string, string> = {
+  jpg: "jpg",
+  jpeg: "jpg",
+  png: "png",
+  webp: "webp",
+  avif: "avif",
+  gif: "gif",
+};
+
+function extensionFor(file: File): string | null {
+  const fromType = ALLOWED_TYPES[file.type.toLowerCase()];
+  if (fromType) return fromType;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return EXT_FROM_NAME[ext] ?? null;
+}
 
 /**
  * Persists an uploaded image and returns its public URL (`/uploads/...`).
@@ -20,7 +38,11 @@ const ALLOWED_TYPES: Record<string, string> = {
 export async function saveUploadedImage(file: File, scope: string): Promise<string> {
   if (!file || file.size === 0) throw new Error("Dosya boş");
   if (file.size > MAX_BYTES) throw new Error("Dosya 8 MB sınırını aşıyor");
-  const ext = ALLOWED_TYPES[file.type];
+  const mime = file.type.toLowerCase();
+  if (mime.includes("heic") || mime.includes("heif") || /\.hei[cf]$/i.test(file.name)) {
+    throw new Error("iPhone HEIC desteklenmiyor. Fotoğrafı JPG olarak kaydedip tekrar yükleyin");
+  }
+  const ext = extensionFor(file);
   if (!ext) throw new Error("Desteklenmeyen dosya türü. JPG, PNG, WEBP, AVIF veya GIF kullanın");
 
   const safeScope = scope.replace(/[^a-zA-Z0-9_-]/g, "");

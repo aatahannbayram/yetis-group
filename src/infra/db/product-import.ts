@@ -1,12 +1,16 @@
 import { prisma } from "@/infra/db/client";
 import { slugifyTr } from "@/domain/catalog/slug";
-import type { PackagingType } from "@/generated/prisma";
 import type { ParsedProductRow } from "@/domain/catalog/product-excel";
-import { normalizeHeader, parseBool, parseNumber } from "@/domain/catalog/product-excel";
+import { normalizeHeader, parseBool, parseNumber, parsePackagingType } from "@/domain/catalog/product-excel";
 import { addProductMedia } from "@/infra/db/media";
-import { upsertProductAttributeValue } from "@/infra/db/attributes";
+import {
+  assertValidPackagingType,
+  listPackagingOptions,
+  upsertProductAttributeValue,
+} from "@/infra/db/attributes";
 import { saveImageFromUrl } from "@/infra/storage/fetch-image";
 import type { AttributeDefForImport } from "@/infra/export/products-excel";
+import { PACKAGING_ATTRIBUTE_KEY } from "@/lib/format/packaging";
 
 export type ProductImportResult = {
   created: number;
@@ -172,6 +176,11 @@ export async function importProductRows(
     return result;
   }
 
+  const packagingOptions = await listPackagingOptions();
+  const productAttributes = options.attributes.filter(
+    (a) => a.key !== PACKAGING_ATTRIBUTE_KEY,
+  );
+
   for (const row of rows) {
     try {
       const category =
@@ -200,7 +209,9 @@ export async function importProductRows(
       const producerId = producer?.id ?? fallbackProducerId;
       const priceKurus = Math.round(row.priceTl * 100);
       const vatBp = Math.round(row.vatPercent * 100);
-      const packagingType = row.packagingType as PackagingType;
+      const packagingType = await assertValidPackagingType(
+        parsePackagingType(row.packagingType, packagingOptions),
+      );
 
       const existingVariant = await prisma.productVariant.findUnique({
         where: { sku: row.sku },
@@ -325,7 +336,7 @@ export async function importProductRows(
       result.attributesSet += await applyAttributes(
         productId,
         row.attributes,
-        options.attributes,
+        productAttributes,
         result.warnings,
         row.rowNumber,
       );

@@ -120,18 +120,28 @@ export async function addCartLine(input: {
   });
 }
 
-export async function setCartLineQuantity(lineId: string, quantity: number) {
-  if (quantity <= 0) {
-    return prisma.cartLine.delete({ where: { id: lineId } });
-  }
+export async function setCartLineQuantity(lineId: string, quantity: number, cartId: string) {
   const line = await prisma.cartLine.findUniqueOrThrow({
     where: { id: lineId },
     include: { variant: { select: { unitFactor: true } } },
   });
+  if (line.cartId !== cartId) {
+    throw new Error("Satır bulunamadı");
+  }
+  if (quantity <= 0) {
+    return prisma.cartLine.delete({ where: { id: lineId } });
+  }
   await assertStockAvailable(line.variantId, line.variant.unitFactor.toString(), quantity);
   return prisma.cartLine.update({ where: { id: lineId }, data: { quantity } });
 }
 
-export async function removeCartLine(lineId: string) {
+export async function removeCartLine(lineId: string, cartId: string) {
+  const line = await prisma.cartLine.findUnique({
+    where: { id: lineId },
+    select: { cartId: true },
+  });
+  if (!line || line.cartId !== cartId) {
+    throw new Error("Satır bulunamadı");
+  }
   return prisma.cartLine.delete({ where: { id: lineId } });
 }

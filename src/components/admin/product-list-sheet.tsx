@@ -10,10 +10,10 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import {
   ArrowUpRight,
   ChevronDown,
@@ -32,7 +32,9 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PACKAGING_OPTIONS, cinsLine, packLabel } from "@/lib/format/packaging";
+import { cinsLine, packLabel, type PackagingOption } from "@/lib/format/packaging";
+import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { DataTable } from "@/components/ui/data-table";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EditablePrice } from "@/components/admin/editable-price";
@@ -41,6 +43,7 @@ import {
   createProductAction,
   updateVariantPriceAction,
   updateProductDescriptionAction,
+  uploadProductImageAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import type { Density } from "@/components/ui/density-toggle";
 import type { ViewMode } from "@/components/ui/view-switcher";
@@ -57,7 +60,20 @@ function formatStockKg(kg: number) {
   return `${kgFormatter.format(kg)} kg`;
 }
 
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+];
+
+function isAcceptedImageFile(file: File): boolean {
+  if (ACCEPTED_IMAGE_TYPES.includes(file.type.toLowerCase())) return true;
+  return /\.(jpe?g|png|webp|avif|gif)$/i.test(file.name);
+}
 
 const selectClass =
   "h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text-primary)] outline-none transition-shadow placeholder:text-[var(--text-muted)] focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
@@ -97,10 +113,12 @@ export function ProductListSheet({
   products,
   categories,
   producers,
+  packagingOptions,
 }: {
   products: ProductRow[];
   categories: { id: string; name: string }[];
   producers: { id: string; name: string }[];
+  packagingOptions: PackagingOption[];
 }) {
   const [mode, setMode] = useState<"closed" | "create" | "detail">("closed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -488,7 +506,7 @@ export function ProductListSheet({
                           <div className="space-y-1.5">
                             <label className={fieldLabelClass}>Ambalaj</label>
                             <select name="packagingType" className={selectClass} defaultValue="KOLI">
-                              {PACKAGING_OPTIONS.map((t) => (
+                              {packagingOptions.map((t) => (
                                 <option key={t.value} value={t.value}>
                                   {t.label}
                                 </option>
@@ -678,18 +696,14 @@ export function ProductListSheet({
                           key={m.id}
                           className="relative size-16 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800"
                         >
-                          <Image
-                            src={m.url}
-                            alt={m.alt ?? ""}
-                            fill
-                            className="object-cover"
-                            sizes="64px"
-                          />
+                          <CatalogImage src={m.url} alt={m.alt ?? ""} className="object-cover" sizes="64px" />
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : null}
+
+                <SheetImageUpload productId={selected.id} slug={selected.slug} />
 
                 <Button asChild className="h-10 w-full gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]">
                   <Link href={`/panel/urunler/${selected.slug}`}>
@@ -747,6 +761,12 @@ function StockBadge({ kg }: { kg: number }) {
   );
 }
 
+function productCoverSrc(product: ProductRow): string | null {
+  const uploaded =
+    product.imageUrl ?? product.media.find((m) => m.isPrimary)?.url ?? product.media[0]?.url ?? null;
+  return catalogFallbackImage(product.categoryName, uploaded);
+}
+
 function ProductThumb({
   product,
   size,
@@ -756,34 +776,21 @@ function ProductThumb({
   size: number;
   className?: string;
 }) {
-  const src = product.imageUrl ?? product.media.find((m) => m.isPrimary)?.url ?? product.media[0]?.url;
-  if (src) {
-    return (
-      <div
-        style={{ width: size, height: size }}
-        className={cn("relative shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800", className)}
-      >
-        <Image src={src} alt="" fill className="object-cover" sizes={`${size}px`} />
-      </div>
-    );
-  }
+  const src = productCoverSrc(product);
   return (
     <div
       style={{ width: size, height: size }}
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-xl bg-stone-100 text-stone-400 dark:bg-zinc-800",
-        className,
-      )}
+      className={cn("relative shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800", className)}
     >
-      <PackageSearch className="size-5" aria-hidden />
+      <CatalogImage src={src} alt="" className="object-cover" sizes={`${size}px`} />
     </div>
   );
 }
 
 function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => void }) {
   const variant = product.variants[0];
-  const cover =
-    product.imageUrl ?? product.media.find((m) => m.isPrimary)?.url ?? product.media[0]?.url ?? null;
+  const cover = productCoverSrc(product);
+  const categorySrc = catalogFallbackImage(product.categoryName, null);
 
   return (
     <article
@@ -807,19 +814,13 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         className="block w-full cursor-pointer text-left"
       >
         <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-zinc-800">
-          {cover ? (
-            <Image
-              src={cover}
-              alt=""
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center text-stone-300">
-              <PackageSearch className="size-10" aria-hidden />
-            </div>
-          )}
+          <CatalogImage
+            src={cover}
+            fallbackSrc={categorySrc === cover ? null : categorySrc}
+            alt={product.name}
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
+          />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
             <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-stone-700 shadow-sm backdrop-blur-sm dark:bg-zinc-900/90 dark:text-zinc-200">
               {product.categoryName}
@@ -952,6 +953,60 @@ function CollapsibleSection({
   );
 }
 
+function SheetImageUpload({ productId, slug }: { productId: string; slug: string }) {
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function onPick(files: FileList | null) {
+    const file = files?.[0];
+    if (!file) return;
+    if (!isAcceptedImageFile(file)) {
+      toast.error("Desteklenmeyen dosya türü. JPG, PNG, WEBP, AVIF veya GIF kullanın");
+      return;
+    }
+    const fd = new FormData();
+    fd.set("productId", productId);
+    fd.set("slug", slug);
+    fd.set("file", file);
+    startTransition(async () => {
+      try {
+        await uploadProductImageAction(fd);
+        toast.success("Görsel kaydedildi");
+        router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Görsel yüklenemedi");
+      }
+    });
+  }
+
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium text-stone-500">Kapak görseli</p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPTED_IMAGE_TYPES.join(",")}
+        className="sr-only"
+        onChange={(e) => onPick(e.target.files)}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        disabled={isPending}
+        className="h-10 w-full gap-1.5 rounded-xl"
+        onClick={() => inputRef.current?.click()}
+      >
+        {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <ImagePlus className="size-4" aria-hidden />}
+        {isPending ? "Yükleniyor…" : "JPG / PNG yükle"}
+      </Button>
+      <p className="mt-1.5 text-[11px] text-stone-400">
+        Kayıtlı kapak yoksa kartta kategori görseli görünür. Bu yükleme ürüne bağlanır.
+      </p>
+    </div>
+  );
+}
+
 function CreateImageDropzone() {
   const [preview, setPreview] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -972,7 +1027,7 @@ function CreateImageDropzone() {
   function applyFiles(files: FileList | null) {
     const file = files?.[0];
     if (!file) return;
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+    if (!isAcceptedImageFile(file)) {
       setError("Desteklenmeyen dosya türü. JPG, PNG, WEBP, AVIF veya GIF kullanın");
       return;
     }

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import {
   createPriceList,
+  fillAllPriceListsFromCatalog,
   fillPriceListFromCatalog,
   upsertPriceListItem,
 } from "@/infra/db/pricing";
@@ -44,6 +45,16 @@ export async function fillPriceListAction(formData: FormData) {
   const result = await fillPriceListFromCatalog(priceListId);
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
+  return result;
+}
+
+export async function fillAllPriceListsAction() {
+  await requireStaff();
+  const result = await fillAllPriceListsFromCatalog();
+  revalidatePath("/panel/fiyat-listeleri");
+  revalidatePath("/panel/urunler");
+  revalidatePath("/urunler");
+  revalidatePath("/bayi/siparis");
   return result;
 }
 

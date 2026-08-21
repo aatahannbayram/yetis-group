@@ -17,6 +17,12 @@ describe("packaging labels", () => {
     expect(salesUnitLabel("VAKUM")).toBe("adet");
   });
 
+  it("humanizes unknown packaging codes and defaults sales unit to adet", () => {
+    expect(packagingTypeLabel("bidon")).toBe("Bidon");
+    expect(salesUnitLabel("bidon")).toBe("adet");
+    expect(packagingTypeLabel("bidon", { bidon: "Bidon 5L" })).toBe("Bidon 5L");
+  });
+
   it("prefers packSize over enum", () => {
     expect(packLabel("17 kg teneke", "TENEKE")).toBe("17 kg teneke");
     expect(packLabel(null, "TENEKE")).toBe("Teneke");

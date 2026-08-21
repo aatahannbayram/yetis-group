@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient, type PackagingType } from "../src/generated/prisma";
+import { PrismaClient } from "../src/generated/prisma";
+import { PACKAGING_OPTIONS } from "../src/lib/format/packaging";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 pool.on("connect", (client) => {
@@ -101,7 +102,7 @@ type ExtraCins = {
   market?: number;
 };
 
-function packagingOf(unitLabel: string): PackagingType {
+function packagingOf(unitLabel: string): string {
   const u = unitLabel.toLocaleLowerCase("tr-TR");
   if (u.includes("teneke")) return "TENEKE";
   if (u.includes("vakum")) return "VAKUM";
@@ -576,6 +577,12 @@ async function seedInventory() {
 async function seedM13CatalogDepth() {
   const attrs = [
     {
+      key: "ambalaj",
+      name: "Ambalaj",
+      type: "SELECT" as const,
+      options: PACKAGING_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    },
+    {
       key: "sut-tipi",
       name: "Süt tipi",
       type: "SELECT" as const,
@@ -637,14 +644,32 @@ async function seedM13CatalogDepth() {
 
   for (const [i, a] of attrs.entries()) {
     const existing = await prisma.attributeDefinition.findUnique({ where: { key: a.key } });
-    if (existing) continue;
+    if (existing) {
+      if (a.key === "ambalaj") {
+        for (const [oi, o] of a.options.entries()) {
+          await prisma.attributeOption.upsert({
+            where: {
+              attributeId_value: { attributeId: existing.id, value: o.value },
+            },
+            create: {
+              attributeId: existing.id,
+              value: o.value,
+              label: o.label,
+              sortOrder: oi,
+            },
+            update: { label: o.label, sortOrder: oi },
+          });
+        }
+      }
+      continue;
+    }
     await prisma.attributeDefinition.create({
       data: {
         key: a.key,
         name: a.name,
         type: a.type,
-        filterable: a.type !== "TEXT",
-        sortOrder: i,
+        filterable: a.key === "ambalaj" ? false : a.type !== "TEXT",
+        sortOrder: a.key === "ambalaj" ? -10 : i,
         options: a.options.length
           ? { create: a.options.map((o, oi) => ({ ...o, sortOrder: oi })) }
           : undefined,

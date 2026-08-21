@@ -30,6 +30,12 @@ function parseOptions(raw: string) {
   });
 }
 
+function revalidateCatalog() {
+  revalidatePath("/panel/nitelikler");
+  revalidatePath("/panel/urunler");
+  revalidatePath("/urunler");
+}
+
 export async function createAttributeAction(formData: FormData) {
   await requireStaff();
   const name = String(formData.get("name") ?? "").trim();
@@ -41,8 +47,7 @@ export async function createAttributeAction(formData: FormData) {
     type,
     options: parseOptions(optionsRaw),
   });
-  revalidatePath("/panel/nitelikler");
-  revalidatePath("/panel/urunler");
+  revalidateCatalog();
 }
 
 export async function updateAttributeAction(formData: FormData) {
@@ -59,8 +64,7 @@ export async function updateAttributeAction(formData: FormData) {
     type,
     options: parseOptions(optionsRaw),
   });
-  revalidatePath("/panel/nitelikler");
-  revalidatePath("/panel/urunler");
+  revalidateCatalog();
 }
 
 export async function deleteAttributeAction(formData: FormData) {
@@ -68,6 +72,5 @@ export async function deleteAttributeAction(formData: FormData) {
   const id = String(formData.get("id") ?? "").trim();
   if (!id) throw new Error("Nitelik gerekli");
   await deleteAttributeDefinition(id);
-  revalidatePath("/panel/nitelikler");
-  revalidatePath("/panel/urunler");
+  revalidateCatalog();
 }

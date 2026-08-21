@@ -10,6 +10,7 @@ import {
   deleteAttributeAction,
   updateAttributeAction,
 } from "@/app/(panel)/panel/nitelikler/actions";
+import { PACKAGING_ATTRIBUTE_KEY } from "@/lib/format/packaging";
 
 export type AttributeListItem = {
   id: string;
@@ -109,7 +110,7 @@ export function AttributesManager({ attributes }: { attributes: AttributeListIte
           </label>
           <Input
             name="options"
-            placeholder="Örn. İnek, Koyun, Keçi — virgülle yazın"
+            placeholder="Örn. İnek, Koyun, Keçi, virgülle yazın"
             disabled={isPending || !needsOptions(createType)}
           />
         </div>
@@ -152,6 +153,11 @@ export function AttributesManager({ attributes }: { attributes: AttributeListIte
                         {TYPE_LABEL[attr.type] ?? attr.type}
                       </p>
                     </div>
+                    {attr.key === PACKAGING_ATTRIBUTE_KEY ? (
+                      <p className="mt-1 text-caption text-muted-foreground">
+                        Cins ambalaj listesini besler. Ürün niteliği olarak atanmaz.
+                      </p>
+                    ) : null}
                     {attr.options.length > 0 ? (
                       <p className="mt-1 text-caption text-muted-foreground">
                         Seçenekler: {attr.options.map((o) => o.label).join(", ")}
@@ -169,6 +175,7 @@ export function AttributesManager({ attributes }: { attributes: AttributeListIte
                     >
                       <Pencil className="size-3.5" />
                     </Button>
+                    {attr.key === PACKAGING_ATTRIBUTE_KEY ? null : (
                     <Button
                       type="button"
                       size="icon-sm"
@@ -191,6 +198,7 @@ export function AttributesManager({ attributes }: { attributes: AttributeListIte
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -220,6 +228,7 @@ function EditAttributeForm({
   onCancel: () => void;
   onSave: (fd: FormData) => void;
 }) {
+  const isPackaging = attr.key === PACKAGING_ATTRIBUTE_KEY;
   const [type, setType] = useState(attr.type);
 
   return (
@@ -231,6 +240,7 @@ function EditAttributeForm({
       }}
     >
       <input type="hidden" name="id" value={attr.id} />
+      {isPackaging ? <input type="hidden" name="type" value="SELECT" /> : null}
       <div className="space-y-1.5 sm:col-span-2">
         <label className="text-caption font-medium text-muted-foreground">
           Özellik adı
@@ -242,11 +252,11 @@ function EditAttributeForm({
           Nasıl doldurulsun?
         </label>
         <select
-          name="type"
+          name={isPackaging ? undefined : "type"}
           className={selectClass}
           value={type}
           onChange={(e) => setType(e.target.value)}
-          disabled={disabled}
+          disabled={disabled || isPackaging}
         >
           {TYPE_OPTIONS.map((t) => (
             <option key={t.value} value={t.value}>
@@ -262,9 +272,14 @@ function EditAttributeForm({
         <Input
           name="options"
           defaultValue={attr.options.map((o) => o.label).join(", ")}
-          placeholder="Örn. İnek, Koyun, Keçi — virgülle yazın"
+          placeholder="Örn. İnek, Koyun, Keçi, virgülle yazın"
           disabled={disabled || !needsOptions(type)}
         />
+        {isPackaging ? (
+          <p className="text-[11px] text-muted-foreground">
+            Yeni tür ekleyin (ör. Bidon). Mevcut cinslerdeki kodlar korunur.
+          </p>
+        ) : null}
       </div>
       <div className="flex flex-wrap gap-2 sm:col-span-2">
         <Button type="submit" disabled={disabled}>

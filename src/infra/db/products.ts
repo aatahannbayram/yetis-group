@@ -1,6 +1,6 @@
 import { prisma } from "@/infra/db/client";
 import { slugifyTr } from "@/domain/catalog/slug";
-import type { PackagingType } from "@/generated/prisma";
+import { assertValidPackagingType } from "@/infra/db/attributes";
 
 export async function getProducts(filters?: { categorySlug?: string }) {
   return prisma.product.findMany({
@@ -64,7 +64,7 @@ export type CreateProductInput = {
   sku?: string;
   barcode?: string | null;
   packSize?: string | null;
-  packagingType?: PackagingType;
+  packagingType?: string;
   unitFactor: number;
   moq?: number;
   pricePerUnitKurus: number;
@@ -116,8 +116,10 @@ export async function createProduct(input: CreateProductInput) {
     input.sku?.trim() ||
     `YG-${slugifyTr(name).slice(0, 12).toUpperCase() || "SKU"}`;
   const sku = await uniqueSku(skuBase);
+  const priceKurus = Math.round(input.pricePerUnitKurus);
+  const packagingType = await assertValidPackagingType(input.packagingType ?? "KOLI");
 
-  return prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       name,
       slug,
@@ -134,23 +136,42 @@ export async function createProduct(input: CreateProductInput) {
         create: {
           sku,
           barcode: input.barcode?.trim() || null,
-          packagingType: input.packagingType ?? "KOLI",
+          packagingType,
           packSize: input.packSize?.trim() || null,
           unitFactor: input.unitFactor,
           moq: input.moq && input.moq > 0 ? Math.round(input.moq) : 1,
-          pricePerUnitKurus: Math.round(input.pricePerUnitKurus),
+          pricePerUnitKurus: priceKurus,
           vatRateBasisPoints: input.vatRateBasisPoints ?? 100,
         },
       },
     },
     include: { variants: true },
   });
+
+  const variant = product.variants[0];
+  if (variant) {
+    await seedVariantIntoPriceLists(variant.id, variant.pricePerUnitKurus);
+  }
+  return product;
+}
+
+async function seedVariantIntoPriceLists(variantId: string, priceKurus: number) {
+  const lists = await prisma.priceList.findMany({ select: { id: true } });
+  if (lists.length === 0) return;
+  await prisma.priceListItem.createMany({
+    data: lists.map((list) => ({
+      priceListId: list.id,
+      variantId,
+      priceKurus,
+    })),
+    skipDuplicates: true,
+  });
 }
 
 export type CreateVariantInput = {
   productId: string;
   sku?: string;
-  packagingType?: PackagingType;
+  packagingType?: string;
   packSize?: string | null;
   unitFactor: number;
   pricePerUnitKurus: number;
@@ -187,12 +208,13 @@ export async function createVariant(input: CreateVariantInput) {
     `YG-${slugifyTr(product.name).slice(0, 10).toUpperCase() || "SKU"}-${nextOrder + 1}`;
   const sku = await uniqueSku(skuBase);
   const priceKurus = Math.round(input.pricePerUnitKurus);
+  const packagingType = await assertValidPackagingType(input.packagingType ?? "KOLI");
 
   const variant = await prisma.productVariant.create({
     data: {
       productId: product.id,
       sku,
-      packagingType: input.packagingType ?? "KOLI",
+      packagingType,
       packSize: input.packSize?.trim() || null,
       unitFactor: input.unitFactor,
       pricePerUnitKurus: priceKurus,
@@ -203,24 +225,14 @@ export async function createVariant(input: CreateVariantInput) {
   });
 
   if (input.seedPriceLists !== false) {
-    const lists = await prisma.priceList.findMany({ select: { id: true } });
-    if (lists.length > 0) {
-      await prisma.priceListItem.createMany({
-        data: lists.map((list) => ({
-          priceListId: list.id,
-          variantId: variant.id,
-          priceKurus,
-        })),
-        skipDuplicates: true,
-      });
-    }
+    await seedVariantIntoPriceLists(variant.id, priceKurus);
   }
 
   return variant;
 }
 
 export type UpdateVariantPackagingInput = {
-  packagingType: PackagingType;
+  packagingType: string;
   packSize: string | null;
   unitFactor: number;
 };
@@ -233,10 +245,11 @@ export async function updateVariantPackaging(
   if (!Number.isFinite(input.unitFactor) || input.unitFactor <= 0) {
     throw new Error("Birim katsayısı 0'dan büyük olmalı");
   }
+  const packagingType = await assertValidPackagingType(input.packagingType);
   return prisma.productVariant.update({
     where: { id: variantId },
     data: {
-      packagingType: input.packagingType,
+      packagingType,
       packSize: input.packSize?.trim() || null,
       unitFactor: input.unitFactor,
     },

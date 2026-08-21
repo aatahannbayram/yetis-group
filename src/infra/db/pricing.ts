@@ -252,6 +252,16 @@ export async function fillPriceListFromCatalog(priceListId: string) {
   return { added: missing.length };
 }
 
+export async function fillAllPriceListsFromCatalog() {
+  const lists = await prisma.priceList.findMany({ select: { id: true } });
+  let added = 0;
+  for (const list of lists) {
+    const result = await fillPriceListFromCatalog(list.id);
+    added += result.added;
+  }
+  return { lists: lists.length, added };
+}
+
 export async function listActiveVariantsForPicker() {
   return prisma.productVariant.findMany({
     where: { isActive: true, product: { active: true } },

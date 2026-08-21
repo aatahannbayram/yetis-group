@@ -20,7 +20,20 @@ import { cn } from "@/lib/utils";
 
 type MediaItem = { id: string; url: string; alt: string | null; isPrimary: boolean };
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif"];
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+];
+
+function isAcceptedGalleryFile(file: File): boolean {
+  if (ACCEPTED_TYPES.includes(file.type.toLowerCase())) return true;
+  return /\.(jpe?g|png|webp|avif|gif)$/i.test(file.name);
+}
 
 export function ProductGallery({
   productId,
@@ -140,7 +153,7 @@ export function ProductGallery({
 
   function uploadFiles(files: FileList | File[]) {
     const all = Array.from(files);
-    const list = all.filter((f) => ACCEPTED_TYPES.includes(f.type));
+    const list = all.filter((f) => isAcceptedGalleryFile(f));
     setUploadError(
       list.length < all.length ? "Bazı dosyalar desteklenmiyor (JPG, PNG, WEBP, AVIF, GIF)" : null,
     );

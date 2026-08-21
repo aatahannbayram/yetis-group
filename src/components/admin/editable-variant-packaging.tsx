@@ -5,8 +5,12 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PACKAGING_OPTIONS, packLabel, salesUnitLabel } from "@/lib/format/packaging";
-import type { PackagingType } from "@/generated/prisma";
+import {
+  PACKAGING_OPTIONS,
+  packLabel,
+  salesUnitLabel,
+  type PackagingOption,
+} from "@/lib/format/packaging";
 
 const fieldClass =
   "h-8 rounded-lg border border-stone-200 bg-white px-2 text-xs outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
@@ -15,18 +19,28 @@ export function EditableVariantPackaging({
   packSize,
   packagingType,
   unitFactor,
+  packagingOptions = PACKAGING_OPTIONS,
   onSave,
 }: {
   packSize: string | null;
   packagingType: string;
   unitFactor: string;
-  onSave: (input: { packagingType: PackagingType; packSize: string; unitFactor: number }) => Promise<void>;
+  packagingOptions?: PackagingOption[];
+  onSave: (input: { packagingType: string; packSize: string; unitFactor: number }) => Promise<void>;
 }) {
   const [editing, setEditing] = useState(false);
   const [size, setSize] = useState(packSize ?? "");
   const [type, setType] = useState(packagingType);
   const [factor, setFactor] = useState(unitFactor);
   const [isPending, startTransition] = useTransition();
+  const options =
+    packagingOptions.length > 0
+      ? packagingOptions
+      : PACKAGING_OPTIONS;
+  const selectOptions =
+    options.some((o) => o.value === packagingType) || !packagingType
+      ? options
+      : [{ value: packagingType, label: packagingType }, ...options];
 
   if (!editing) {
     return (
@@ -61,7 +75,7 @@ export function EditableVariantPackaging({
           onChange={(event) => setType(event.target.value)}
           className={`${fieldClass} w-24`}
         >
-          {PACKAGING_OPTIONS.map((t) => (
+          {selectOptions.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
             </option>
@@ -91,22 +105,27 @@ export function EditableVariantPackaging({
             }
             try {
               await onSave({
-                packagingType: type as PackagingType,
+                packagingType: type,
                 packSize: size,
                 unitFactor: unitFactorNum,
               });
               setEditing(false);
               toast.success("Paket güncellendi");
             } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Paket güncellenemedi");
+              toast.error(err instanceof Error ? err.message : "Kayıt başarısız");
             }
           })
         }
       >
-        <Check />
+        <Check className="size-3.5" />
       </Button>
-      <Button size="icon-sm" variant="ghost" disabled={isPending} onClick={() => setEditing(false)}>
-        <X />
+      <Button
+        size="icon-sm"
+        variant="ghost"
+        disabled={isPending}
+        onClick={() => setEditing(false)}
+      >
+        <X className="size-3.5" />
       </Button>
     </div>
   );

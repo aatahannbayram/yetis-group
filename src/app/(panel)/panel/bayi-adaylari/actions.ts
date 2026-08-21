@@ -14,6 +14,10 @@ export async function addLeadActivityAction(
   type: (typeof LEAD_ACTIVITY_TYPES)[number],
   note: string,
 ) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session || !(await isStaffUser(session.user.id))) {
+    throw new Error("Yetkisiz.");
+  }
   if (!note.trim()) return;
   await addLeadActivity(leadId, type, note.trim());
   revalidatePath("/panel/bayi-adaylari");

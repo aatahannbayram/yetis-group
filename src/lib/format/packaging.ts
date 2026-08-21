@@ -1,19 +1,39 @@
 import { kg } from "@/domain/weight";
 import { formatKg } from "@/lib/format/weight";
 
-export const PACKAGING_OPTIONS = [
+/** System AttributeDefinition key that feeds variant packaging dropdowns. */
+export const PACKAGING_ATTRIBUTE_KEY = "ambalaj";
+
+/** Product-level attribute form excludes system packaging registry. */
+export function isProductFacingAttribute(key: string): boolean {
+  return key !== PACKAGING_ATTRIBUTE_KEY;
+}
+
+export type PackagingOption = { value: string; label: string };
+
+/** Fallback when DB attribute is missing (seed / first boot). */
+export const PACKAGING_OPTIONS: PackagingOption[] = [
   { value: "TENEKE", label: "Teneke" },
   { value: "VAKUM", label: "Vakum" },
   { value: "KOLI", label: "Koli" },
   { value: "KUTU", label: "Kutu" },
   { value: "DOKME", label: "Dökme" },
-] as const;
+];
 
 export const PACKAGING_LABEL: Record<string, string> = Object.fromEntries(
   PACKAGING_OPTIONS.map((o) => [o.value, o.label]),
 );
 
-/** Sipariş miktarının birimi: teneke, koli, adet, kg. */
+function humanizePackagingValue(value: string): string {
+  const cleaned = value.replace(/[-_]+/g, " ").trim();
+  if (!cleaned) return value;
+  return cleaned
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toLocaleUpperCase("tr-TR") + w.slice(1))
+    .join(" ");
+}
+
+/** Sipariş miktarının birimi: teneke, koli, adet, kg. Yeni türler → adet. */
 export function salesUnitLabel(packagingType: string): string {
   switch (packagingType) {
     case "TENEKE":
@@ -31,13 +51,24 @@ export function salesUnitLabel(packagingType: string): string {
   }
 }
 
-export function packagingTypeLabel(packagingType: string): string {
-  return PACKAGING_LABEL[packagingType] ?? packagingType;
+export function packagingTypeLabel(
+  packagingType: string,
+  labelMap?: Record<string, string> | null,
+): string {
+  return (
+    labelMap?.[packagingType] ??
+    PACKAGING_LABEL[packagingType] ??
+    humanizePackagingValue(packagingType)
+  );
 }
 
-export function packLabel(packSize: string | null | undefined, packagingType: string): string {
+export function packLabel(
+  packSize: string | null | undefined,
+  packagingType: string,
+  labelMap?: Record<string, string> | null,
+): string {
   const size = packSize?.trim();
-  const type = packagingTypeLabel(packagingType);
+  const type = packagingTypeLabel(packagingType, labelMap);
   if (!size) return type;
   const lower = size.toLocaleLowerCase("tr-TR");
   const typeLower = type.toLocaleLowerCase("tr-TR");
@@ -101,4 +132,8 @@ export function cinsLine(options: CinsInput[], max = 3): string {
   const labels = [...new Set(options.map((o) => packLabel(o.packSize, o.packagingType)))];
   if (labels.length <= max) return labels.join(" · ");
   return `${labels.slice(0, max).join(" · ")} · +${labels.length - max} cins`;
+}
+
+export function packagingLabelMap(options: PackagingOption[]): Record<string, string> {
+  return Object.fromEntries(options.map((o) => [o.value, o.label]));
 }

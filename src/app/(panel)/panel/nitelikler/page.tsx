@@ -1,15 +1,16 @@
-import { listAttributeDefinitions } from "@/infra/db/attributes";
+import { listAttributeDefinitions, ensurePackagingAttribute } from "@/infra/db/attributes";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { AttributesManager } from "@/components/admin/attributes-manager";
 
 export default async function AdminAttributesPage() {
+  await ensurePackagingAttribute();
   const attrs = await listAttributeDefinitions();
 
   return (
     <div className="mx-auto max-w-4xl">
       <AdminPageHeader
         title="Ürün özellikleri"
-        description="Ürünün nasıl anlatılacağı: süt hangisinden, hangi yöreden, sertifikası var mı, nasıl saklanır…"
+        description="Ürünün nasıl anlatılacağı: süt hangisinden, hangi yöreden, sertifikası var mı, nasıl saklanır. Ambalaj seçenekleri cins formunu besler."
       />
 
       <div className="mt-6">

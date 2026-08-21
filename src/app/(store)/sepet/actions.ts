@@ -85,17 +85,21 @@ export async function addToCartAction(variantId: string, quantity = 1) {
 }
 
 export async function setCartQuantityAction(lineId: string, quantity: number) {
-  const { dealerId } = await sessionContext();
+  const { userId, dealerId } = await sessionContext();
   if (!dealerId) throw new Error("Bayi girişi gerekli.");
-  await setCartLineQuantity(lineId, quantity);
+  const cart = await getOrCreateCart({ userId, dealerId, createGuest: false });
+  if (!cart) throw new Error("Sepet bulunamadı.");
+  await setCartLineQuantity(lineId, quantity, cart.id);
   revalidatePath("/");
   return fetchCartAction();
 }
 
 export async function removeFromCartAction(lineId: string) {
-  const { dealerId } = await sessionContext();
+  const { userId, dealerId } = await sessionContext();
   if (!dealerId) throw new Error("Bayi girişi gerekli.");
-  await removeCartLine(lineId);
+  const cart = await getOrCreateCart({ userId, dealerId, createGuest: false });
+  if (!cart) throw new Error("Sepet bulunamadı.");
+  await removeCartLine(lineId, cart.id);
   revalidatePath("/");
   return fetchCartAction();
 }

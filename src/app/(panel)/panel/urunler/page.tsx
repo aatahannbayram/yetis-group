@@ -2,19 +2,22 @@ import { getProducts } from "@/infra/db/products";
 import { getInventoryDashboardSummary, getStockSummaryByProduct } from "@/infra/db/inventory";
 import { listCategories } from "@/infra/db/categories";
 import { listProducers } from "@/infra/db/producers";
+import { listPackagingOptions } from "@/infra/db/attributes";
 import { zeroKg } from "@/domain/weight";
 import { PageHeader } from "@/components/ui/page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
 import { ProductListSheet, type ProductRow } from "@/components/admin/product-list-sheet";
 
 export default async function AdminProductsPage() {
-  const [products, stockByProduct, inventory, categories, producers] = await Promise.all([
-    getProducts(),
-    getStockSummaryByProduct(),
-    getInventoryDashboardSummary(),
-    listCategories(),
-    listProducers(),
-  ]);
+  const [products, stockByProduct, inventory, categories, producers, packagingOptions] =
+    await Promise.all([
+      getProducts(),
+      getStockSummaryByProduct(),
+      getInventoryDashboardSummary(),
+      listCategories(),
+      listProducers(),
+      listPackagingOptions(),
+    ]);
 
   const { totalKg, lotCount, expiringSoonCount } = inventory;
   const variantCount = products.reduce((sum, p) => sum + p.variants.length, 0);
@@ -47,7 +50,7 @@ export default async function AdminProductsPage() {
       <PageHeader
         title="Ürünler"
         count={products.length}
-        description="Katalog, stok ve baz fiyat — hızlı düzenleme."
+        description="Katalog, stok ve baz fiyat. Hızlı düzenleme."
         primaryAction={
           <PillButton href="/panel/fiyat-listeleri" variant="secondary">
             Fiyat listeleri
@@ -77,6 +80,7 @@ export default async function AdminProductsPage() {
           products={rows}
           categories={categories.map((c) => ({ id: c.id, name: c.name }))}
           producers={producers.map((p) => ({ id: p.id, name: p.name }))}
+          packagingOptions={packagingOptions}
         />
       </div>
 

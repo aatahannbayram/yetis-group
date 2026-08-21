@@ -11,6 +11,7 @@ import {
   type ProductExcelField,
 } from "@/domain/catalog/product-excel";
 import { formatAttributeDisplay } from "@/infra/db/attributes";
+import { PACKAGING_ATTRIBUTE_KEY } from "@/lib/format/packaging";
 
 export type ProductExcelExportVariant = {
   sku: string;
@@ -170,7 +171,7 @@ function addGuideSheet(workbook: ExcelJS.Workbook, attributeNames: string[]) {
     ["category", "Mevcut kategori adı ile eşleşir (büyük/küçük harf duyarsız)."],
     ["producer", "Mevcut üretici adı ile eşleşir."],
     ["active", "Evet/Hayır — ürün ve varyant aktifliği."],
-    ["packagingType", "Teneke, Vakum, Koli, Kutu, Dökme"],
+    ["packagingType", "Teneke, Vakum, Koli, Kutu, Dökme veya /panel/nitelikler Ambalaj seçenekleri"],
     ["packSize", "Örn. 17 kg teneke"],
     ["unitFactor", "kg cinsinden paket katsayısı (3 ondalık)"],
     ["moq", "Minimum sipariş adedi"],
@@ -232,6 +233,11 @@ export async function parseProductsExcel(
   // exceljs typings expect older Buffer shape
   await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
 
+  const packagingAttr = attributes.find((a) => a.key === PACKAGING_ATTRIBUTE_KEY);
+  const packagingOptions =
+    packagingAttr?.options.map((o) => ({ value: o.value, label: o.label })) ?? undefined;
+  const productAttributes = attributes.filter((a) => a.key !== PACKAGING_ATTRIBUTE_KEY);
+
   const sheet =
     workbook.getWorksheet("Ürünler") ??
     workbook.worksheets.find((s) => s.name !== "Kolon_Aciklama") ??
@@ -259,7 +265,7 @@ export async function parseProductsExcel(
       colMap[c] = { field };
       continue;
     }
-    const attributeId = matchAttributeHeader(header, attributes);
+    const attributeId = matchAttributeHeader(header, productAttributes);
     colMap[c] = attributeId ? { attributeId } : {};
   }
 
@@ -313,7 +319,7 @@ export async function parseProductsExcel(
       category: bag.category?.trim() || null,
       producer: bag.producer?.trim() || null,
       active,
-      packagingType: parsePackagingType(bag.packagingType),
+      packagingType: parsePackagingType(bag.packagingType, packagingOptions),
       packSize: bag.packSize?.trim() || null,
       unitFactor: unitFactor > 0 ? unitFactor : 1,
       moq: moq > 0 ? Math.round(moq) : 1,

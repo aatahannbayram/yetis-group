@@ -5,7 +5,7 @@ import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PACKAGING_OPTIONS, packLabel } from "@/lib/format/packaging";
+import { PACKAGING_OPTIONS, packLabel, salesUnitLabel } from "@/lib/format/packaging";
 import type { PackagingType } from "@/generated/prisma";
 
 const fieldClass =
@@ -55,17 +55,20 @@ export function EditableVariantPackaging({
         className={`${fieldClass} w-28`}
         autoFocus
       />
-      <select
-        value={type}
-        onChange={(event) => setType(event.target.value)}
-        className={`${fieldClass} w-24`}
-      >
-        {PACKAGING_OPTIONS.map((t) => (
-          <option key={t.value} value={t.value}>
-            {t.label}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-col gap-0.5">
+        <select
+          value={type}
+          onChange={(event) => setType(event.target.value)}
+          className={`${fieldClass} w-24`}
+        >
+          {PACKAGING_OPTIONS.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-[10px] text-stone-400">Müşteride: {salesUnitLabel(type)}</span>
+      </div>
       <Input
         type="number"
         step="0.001"

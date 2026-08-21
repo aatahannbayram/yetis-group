@@ -17,6 +17,7 @@ import { upsertProductAttributeValue, listAttributeDefinitions } from "@/infra/d
 import {
   createProduct,
   createVariant,
+  deactivateVariant,
   updateProductDescription,
   updateVariantPackaging,
 } from "@/infra/db/products";
@@ -140,6 +141,18 @@ export async function updateVariantPackagingAction(
     packSize: input.packSize.trim() || null,
     unitFactor: input.unitFactor,
   });
+  if (slug) {
+    revalidatePath(`/panel/urunler/${slug}`);
+    revalidatePath(`/urunler/${slug}`);
+  }
+  revalidatePath("/panel/urunler");
+  revalidatePath("/panel/fiyat-listeleri");
+  revalidatePath("/urunler");
+}
+
+export async function deactivateVariantAction(variantId: string, slug?: string) {
+  await requireStaff();
+  await deactivateVariant(variantId);
   if (slug) {
     revalidatePath(`/panel/urunler/${slug}`);
     revalidatePath(`/urunler/${slug}`);

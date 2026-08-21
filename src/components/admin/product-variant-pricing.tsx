@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Plus, Users } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EditablePrice } from "@/components/admin/editable-price";
@@ -16,12 +16,13 @@ import {
 } from "@/components/ui/table";
 import {
   createVariantAction,
+  deactivateVariantAction,
   updateGroupPriceAction,
   updateVariantPackagingAction,
   updateVariantPriceAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import { cn } from "@/lib/utils";
-import { PACKAGING_OPTIONS, packLabel } from "@/lib/format/packaging";
+import { PACKAGING_OPTIONS, packLabel, salesUnitLabel } from "@/lib/format/packaging";
 
 const fieldClass =
   "h-9 w-full rounded-lg border border-stone-200 bg-white px-2.5 text-sm outline-none focus-visible:border-[#1B5E3A] focus-visible:ring-4 focus-visible:ring-[#1B5E3A]/15 dark:border-zinc-800 dark:bg-zinc-950";
@@ -62,11 +63,32 @@ export function ProductVariantPricing({
   groupPrices: GroupPriceMap;
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [newPackagingType, setNewPackagingType] = useState("KOLI");
   const [isPending, startTransition] = useTransition();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletePending, startDelete] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
   function priceKey(listId: string, variantId: string) {
     return `${listId}:${variantId}`;
+  }
+
+  function handleDeactivate(variantId: string) {
+    if (!window.confirm("Bu cinsi kaldırmak istediğinize emin misiniz? Mağazadan ve panelden gizlenir.")) {
+      return;
+    }
+    setDeleteError(null);
+    setDeletingId(variantId);
+    startDelete(async () => {
+      try {
+        await deactivateVariantAction(variantId, slug);
+      } catch (e) {
+        setDeleteError(e instanceof Error ? e.message : "Kaldırılamadı");
+      } finally {
+        setDeletingId(null);
+      }
+    });
   }
 
   return (
@@ -98,6 +120,7 @@ export function ProductVariantPricing({
               startTransition(async () => {
                 await createVariantAction(fd);
                 formRef.current?.reset();
+                setNewPackagingType("KOLI");
                 setShowForm(false);
               });
             }}
@@ -112,13 +135,21 @@ export function ProductVariantPricing({
                 <Input name="packSize" placeholder="Örn. 1 kg vakum" className={fieldClass} required />
               </Field>
               <Field label="Ambalaj">
-                <select name="packagingType" className={fieldClass} defaultValue="KOLI">
+                <select
+                  name="packagingType"
+                  className={fieldClass}
+                  value={newPackagingType}
+                  onChange={(e) => setNewPackagingType(e.target.value)}
+                >
                   {PACKAGING_OPTIONS.map((t) => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-[11px] text-stone-400">
+                  Müşteride: {salesUnitLabel(newPackagingType)} (adet için Vakum seçin)
+                </p>
               </Field>
               <Field label="Birim katsayısı (kg)">
                 <Input
@@ -182,6 +213,7 @@ export function ProductVariantPricing({
               <TableHead>MOQ</TableHead>
               <TableHead>KDV</TableHead>
               <TableHead className="text-right">Baz fiyat</TableHead>
+              <TableHead className="w-9" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -209,10 +241,28 @@ export function ProductVariantPricing({
                     onSave={(kurus) => updateVariantPriceAction(v.id, kurus)}
                   />
                 </TableCell>
+                <TableCell>
+                  <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label="Cinsi kaldır"
+                    disabled={deletePending && deletingId === v.id}
+                    onClick={() => handleDeactivate(v.id)}
+                    className="text-stone-400 hover:text-red-600"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        {deleteError ? (
+          <p className="border-t border-stone-100 px-4 py-2 text-xs text-red-600 dark:border-zinc-800">
+            {deleteError}
+          </p>
+        ) : null}
       </section>
 
       <section className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">

@@ -243,6 +243,31 @@ export async function updateVariantPackaging(
   });
 }
 
+/**
+ * Yanlışlıkla eklenen bir cinsi kaldırır. Sipariş/lot geçmişi olabileceği
+ * için gerçek silme değil, pasife alma: storefront ve panel listelerinde
+ * artık görünmez (isActive filtresi), geçmiş veriler bozulmaz.
+ */
+export async function deactivateVariant(variantId: string) {
+  const variant = await prisma.productVariant.findUnique({
+    where: { id: variantId },
+    select: { productId: true },
+  });
+  if (!variant) throw new Error("Cins bulunamadı");
+
+  const activeCount = await prisma.productVariant.count({
+    where: { productId: variant.productId, isActive: true },
+  });
+  if (activeCount <= 1) {
+    throw new Error("Bir ürünün en az bir aktif cinsi olmalı");
+  }
+
+  return prisma.productVariant.update({
+    where: { id: variantId },
+    data: { isActive: false },
+  });
+}
+
 export type ProductWithVariants = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
 export function defaultVariant(product: ProductWithVariants) {

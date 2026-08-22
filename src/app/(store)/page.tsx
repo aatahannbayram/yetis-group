@@ -418,7 +418,11 @@ export default async function StoreHomePage() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                <PillCta href="/auth?tab=uye" className="w-full justify-center sm:w-auto">
+                <PillCta
+                  href="/auth?tab=uye"
+                  showArrow={false}
+                  className="w-full justify-center sm:w-auto"
+                >
                   Bayi başvurusu yap
                 </PillCta>
                 <Link

@@ -34,8 +34,8 @@ export function PillCta({
         className={cn(
           base,
           "relative isolate overflow-hidden text-mkt-accent-ink",
-          "h-12 gap-3 pr-1.5 pl-6 text-[15px] tracking-[-0.015em]",
-          "sm:h-[3.25rem] sm:pr-1.5 sm:pl-7",
+          "h-12 gap-3 pr-6 pl-6 text-[15px] tracking-[-0.015em]",
+          "sm:h-[3.25rem] sm:pr-7 sm:pl-7",
           "bg-[linear-gradient(180deg,#4bb57d_0%,var(--mkt-accent)_48%,#248a58_100%)]",
           "shadow-[inset_0_1px_0_0_rgb(255_255_255/0.38),inset_0_-1px_0_0_rgb(0_0_0/0.12),0_1px_2px_rgb(0_0_0/0.18),0_12px_28px_-10px_rgb(16_70_42/0.55)]",
           "motion-safe:hover:-translate-y-0.5",

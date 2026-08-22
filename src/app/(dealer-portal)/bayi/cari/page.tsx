@@ -19,6 +19,8 @@ const PAYMENT_LABEL: Record<string, string> = {
   HAVALE: "Havale / EFT",
   CARI: "Cari hesap",
   ONLINE: "Online ödeme",
+  KAPIDA_NAKIT: "Kapıda nakit",
+  KAPIDA_POS: "Kapıda kart (POS)",
 };
 
 export default async function BayiCariPage() {

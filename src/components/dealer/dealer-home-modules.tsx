@@ -29,6 +29,8 @@ import { money } from "@/domain/money";
 import { Reveal } from "@/components/store/reveal";
 import { MOTION } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
+import type { SiteAnnouncement } from "@/domain/campaigns/live";
 
 const MODULE_SCENE: Partial<Record<HomeModule, string>> = {
   savedLists: "/scenes/how-quality.jpg",
@@ -60,6 +62,7 @@ export function DealerHomeModules({
   openCartLines,
   lastCartSummary,
   lastCartThumbnails,
+  announcements = [],
 }: {
   modules: HomeModule[];
   dealerName: string;
@@ -70,6 +73,7 @@ export function DealerHomeModules({
   openCartLines: number;
   lastCartSummary: string | null;
   lastCartThumbnails: string[];
+  announcements?: SiteAnnouncement[];
 }) {
   const wide = modules.filter((m) => FULL_WIDTH.includes(m));
   const tiles = modules.filter((m) => !FULL_WIDTH.includes(m));
@@ -77,6 +81,7 @@ export function DealerHomeModules({
   return (
     <div className="space-y-6 pb-24 sm:pb-8">
       <Hero dealerName={dealerName} dealerTypeLabel={dealerTypeLabel} />
+      <WeeklyAnnouncements items={announcements} variant="dealer" />
 
       <div className="space-y-4">
         {wide.map((mod, index) => {

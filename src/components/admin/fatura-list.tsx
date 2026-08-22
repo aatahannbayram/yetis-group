@@ -75,7 +75,7 @@ export type FaturaRow = {
   pdfPath: string | null;
   issuedAt: string;
   sentAt: string | null;
-  paymentMethod: "HAVALE" | "CARI" | "ONLINE" | null;
+  paymentMethod: "HAVALE" | "CARI" | "ONLINE" | "KAPIDA_NAKIT" | "KAPIDA_POS" | null;
   paidAt: string | null;
   paymentTermDays: number | null;
   lines: FaturaLineRow[];

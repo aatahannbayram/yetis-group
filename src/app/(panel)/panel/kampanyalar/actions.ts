@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
 import { createCampaign, updateCampaign, deleteCampaign } from "@/infra/db/campaigns";
+import type { CampaignKind } from "@/generated/prisma";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -20,6 +21,15 @@ function parseDate(value: FormDataEntryValue | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseKind(value: FormDataEntryValue | null): CampaignKind {
+  return String(value ?? "") === "KAMPANYA" ? "KAMPANYA" : "DUYURU";
+}
+
+function parseSortOrder(value: FormDataEntryValue | null): number {
+  const n = Number(String(value ?? "0").replace(",", "."));
+  return Number.isFinite(n) ? Math.round(n) : 0;
+}
+
 export async function createCampaignAction(formData: FormData) {
   await requireStaff();
   const name = String(formData.get("name") ?? "").trim();
@@ -27,10 +37,18 @@ export async function createCampaignAction(formData: FormData) {
   await createCampaign({
     name,
     note: String(formData.get("note") ?? ""),
+    kind: parseKind(formData.get("kind")),
+    href: String(formData.get("href") ?? "").trim() || null,
+    ctaLabel: String(formData.get("ctaLabel") ?? "").trim() || null,
+    imageUrl: String(formData.get("imageUrl") ?? "").trim() || null,
+    sortOrder: parseSortOrder(formData.get("sortOrder")),
     startDate: parseDate(formData.get("startDate")),
     endDate: parseDate(formData.get("endDate")),
   });
   revalidatePath("/panel/kampanyalar");
+  revalidatePath("/");
+  revalidatePath("/urunler");
+  revalidatePath("/bayi");
 }
 
 export async function updateCampaignAction(formData: FormData) {
@@ -42,10 +60,18 @@ export async function updateCampaignAction(formData: FormData) {
   await updateCampaign(id, {
     name,
     note: String(formData.get("note") ?? ""),
+    kind: parseKind(formData.get("kind")),
+    href: String(formData.get("href") ?? "").trim() || null,
+    ctaLabel: String(formData.get("ctaLabel") ?? "").trim() || null,
+    imageUrl: String(formData.get("imageUrl") ?? "").trim() || null,
+    sortOrder: parseSortOrder(formData.get("sortOrder")),
     startDate: parseDate(formData.get("startDate")),
     endDate: parseDate(formData.get("endDate")),
   });
   revalidatePath("/panel/kampanyalar");
+  revalidatePath("/");
+  revalidatePath("/urunler");
+  revalidatePath("/bayi");
 }
 
 export async function toggleCampaignActiveAction(formData: FormData) {
@@ -55,6 +81,9 @@ export async function toggleCampaignActiveAction(formData: FormData) {
   if (!id) throw new Error("id gerekli");
   await updateCampaign(id, { active: !active });
   revalidatePath("/panel/kampanyalar");
+  revalidatePath("/");
+  revalidatePath("/urunler");
+  revalidatePath("/bayi");
 }
 
 export async function deleteCampaignAction(formData: FormData) {
@@ -63,4 +92,7 @@ export async function deleteCampaignAction(formData: FormData) {
   if (!id) throw new Error("id gerekli");
   await deleteCampaign(id);
   revalidatePath("/panel/kampanyalar");
+  revalidatePath("/");
+  revalidatePath("/urunler");
+  revalidatePath("/bayi");
 }

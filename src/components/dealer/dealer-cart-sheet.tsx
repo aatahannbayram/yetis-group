@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import {
   Building2,
+  Banknote,
   CreditCard,
   Landmark,
   Package,
@@ -276,6 +277,20 @@ export function DealerCartSheet({
                       cardOk && cardLast4 ? `•••• ${cardLast4} kaydedildi` : "Kartla anında öde"
                     }
                   />
+                  <PayOption
+                    active={paymentMethod === "KAPIDA_NAKIT"}
+                    onSelect={() => selectPaymentMethod("KAPIDA_NAKIT")}
+                    icon={Banknote}
+                    title="Kapıda nakit"
+                    description="Teslimatta nakit tahsil edilir"
+                  />
+                  <PayOption
+                    active={paymentMethod === "KAPIDA_POS"}
+                    onSelect={() => selectPaymentMethod("KAPIDA_POS")}
+                    icon={CreditCard}
+                    title="Kapıda kart (POS)"
+                    description="Kurye POS fişini sisteme yükler"
+                  />
                   {cari.eligible ? (
                     <PayOption
                       active={paymentMethod === "CARI"}
@@ -286,6 +301,19 @@ export function DealerCartSheet({
                     />
                   ) : null}
                 </div>
+
+                {paymentMethod === "KAPIDA_NAKIT" || paymentMethod === "KAPIDA_POS" ? (
+                  <div className="rounded-2xl border border-[var(--panel-border)] bg-[var(--surface-3)]/60 p-4 text-[12px] text-[var(--panel-ink)]">
+                    <p className="font-semibold">
+                      {paymentMethod === "KAPIDA_POS" ? "Kapıda POS" : "Kapıda nakit"}
+                    </p>
+                    <p className="mt-1 text-[var(--panel-ink-muted)]">
+                      {paymentMethod === "KAPIDA_POS"
+                        ? "Teslimatta pos cihazından çekim yapılır; kurye fiş görselini yükler. Hem siz hem panelde görünür."
+                        : "Teslimatta nakit tahsil edilir; ön ödeme gerekmez."}
+                    </p>
+                  </div>
+                ) : null}
 
                 {paymentMethod === "ONLINE" ? (
                   <button

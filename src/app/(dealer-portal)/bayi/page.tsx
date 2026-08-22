@@ -12,6 +12,7 @@ import {
 } from "@/features/dealer/dealerProfiles";
 import { DealerHomeModules } from "@/components/dealer/dealer-home-modules";
 import { getOrCreateCart } from "@/infra/db/cart";
+import { listPublishedAnnouncements } from "@/infra/db/campaigns";
 
 const TYPE_LABEL: Record<string, string> = {
   BAYI: "Market / Şarküteri",
@@ -60,6 +61,7 @@ export default async function BayiHomePage() {
   });
   const modules = composeHomeModules(profile, lifecycle);
   const balanceKurus = calculateBalance(dealer.ledgerEntries);
+  const announcements = await listPublishedAnnouncements();
 
   const currentCart = await getOrCreateCart({
     userId: impId && staff ? null : session.user.id,
@@ -90,6 +92,7 @@ export default async function BayiHomePage() {
       openCartLines={currentCart?.lines.length ?? 0}
       lastCartSummary={lastSummary}
       lastCartThumbnails={lastCartThumbnails}
+      announcements={announcements}
     />
   );
 }

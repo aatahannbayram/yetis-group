@@ -20,7 +20,13 @@ export type CreditEligibilityInput = {
 
 export type CreditEligibilityResult = { ok: true } | { ok: false; reason: string };
 
-export type OrderPaymentMethodLike = "HAVALE" | "CARI" | "ONLINE" | null;
+export type OrderPaymentMethodLike =
+  | "HAVALE"
+  | "CARI"
+  | "ONLINE"
+  | "KAPIDA_NAKIT"
+  | "KAPIDA_POS"
+  | null;
 
 /** Limit varsa kullanılabilir kuruş: max(0, limit - exposure). Limit yoksa null. */
 export function availableCreditKurus(limitKurus: number | null, exposureKurus: number): number | null {
@@ -34,12 +40,28 @@ export function availableCreditKurus(limitKurus: number | null, exposureKurus: n
  * Havale: `confirmOrderPayment` ODEME yazar; teslimatta BORC beklenir
  * (`paidAt` dolu olsa da). Net: ödendiyse 0, değilse sipariş tutarı.
  * ONLINE mock `paidAt` set eder ama ODEME yazmaz; BORC çift borç olur, atlanır.
+ * Kapıda: teslimatta BORC; tahsilatta ODEME (`confirmCodCollection`).
  */
 export function shouldPostDeliveryDebt(input: {
   paymentMethod: OrderPaymentMethodLike;
   paidAt: Date | string | null;
 }): boolean {
   if (input.paymentMethod === "ONLINE" && input.paidAt != null) return false;
+  return true;
+}
+
+export function isCodPaymentMethod(method: OrderPaymentMethodLike): boolean {
+  return method === "KAPIDA_NAKIT" || method === "KAPIDA_POS";
+}
+
+/** Personel panosunda “ödeme bekliyor” rozeti (kapıda tahsilat teslimatta). */
+export function awaitsStaffPaymentConfirmation(input: {
+  paymentMethod: OrderPaymentMethodLike;
+  paidAt: Date | string | null;
+}): boolean {
+  if (input.paidAt) return false;
+  if (input.paymentMethod === "CARI") return false;
+  if (isCodPaymentMethod(input.paymentMethod)) return false;
   return true;
 }
 
@@ -58,6 +80,12 @@ export function proformaSettlementBadge(input: {
     return {
       kind: "open_account",
       label: days != null ? `Cari açık · ${days} gün` : "Cari açık",
+    };
+  }
+  if (input.paymentMethod === "KAPIDA_NAKIT" || input.paymentMethod === "KAPIDA_POS") {
+    return {
+      kind: "open_account",
+      label: input.paymentMethod === "KAPIDA_POS" ? "Kapıda kart (POS)" : "Kapıda nakit",
     };
   }
   if (!input.sentAt) return { kind: "unsent", label: "Gönderilmedi" };

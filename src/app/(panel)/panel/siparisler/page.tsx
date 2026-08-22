@@ -26,6 +26,8 @@ export default async function AdminOrdersPage() {
     note: o.note,
     paymentMethod: o.paymentMethod,
     paidAt: o.paidAt?.toISOString() ?? null,
+    paymentSlipUrl: o.paymentSlipUrl ?? null,
+    codCollectedAt: o.codCollectedAt?.toISOString() ?? null,
     createdAt: o.createdAt.toISOString(),
     lines: o.lines.map((l) => ({
       id: l.id,

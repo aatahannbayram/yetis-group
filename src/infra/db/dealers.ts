@@ -89,14 +89,33 @@ export type DealerInput = {
   deliveryZoneCode: string | null;
   priceListId: string | null;
   salesRepId: string | null;
+  lat: number | null;
+  lng: number | null;
 };
 
-export async function createDealer(input: DealerInput) {
-  return prisma.dealer.create({ data: input });
+export async function updateDealer(id: string, input: DealerInput) {
+  const { lat, lng, ...rest } = input;
+  return prisma.dealer.update({
+    where: { id },
+    data: {
+      ...rest,
+      lat,
+      lng,
+      geocodedAt: lat != null && lng != null ? new Date() : null,
+    },
+  });
 }
 
-export async function updateDealer(id: string, input: DealerInput) {
-  return prisma.dealer.update({ where: { id }, data: input });
+export async function createDealer(input: DealerInput) {
+  const { lat, lng, ...rest } = input;
+  return prisma.dealer.create({
+    data: {
+      ...rest,
+      lat,
+      lng,
+      geocodedAt: lat != null && lng != null ? new Date() : null,
+    },
+  });
 }
 
 export type DealerContactInfoInput = {

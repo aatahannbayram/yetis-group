@@ -50,6 +50,8 @@ import {
   createOrderAction,
   transitionOrderAction,
   confirmOrderPaymentAction,
+  confirmCodCollectionAction,
+  uploadOrderPaymentSlipAction,
   createShipmentFromOrderAction,
   reissueProformaAction,
   sendProformaEmailAction,
@@ -97,7 +99,13 @@ export type ProformaSummaryRow = {
   totalKurus: number;
 };
 
-export type OrderPaymentMethodRow = "HAVALE" | "CARI" | "ONLINE" | null;
+export type OrderPaymentMethodRow =
+  | "HAVALE"
+  | "CARI"
+  | "ONLINE"
+  | "KAPIDA_NAKIT"
+  | "KAPIDA_POS"
+  | null;
 
 export type DealerOptionRow = {
   id: string;
@@ -116,6 +124,8 @@ export type OrderRow = {
   note: string | null;
   paymentMethod: OrderPaymentMethodRow;
   paidAt: string | null;
+  paymentSlipUrl: string | null;
+  codCollectedAt: string | null;
   createdAt: string;
   lines: OrderLineRow[];
   events: OrderEventRow[];
@@ -127,21 +137,27 @@ const PAYMENT_LABEL: Record<NonNullable<OrderPaymentMethodRow>, string> = {
   HAVALE: "Havale / EFT",
   CARI: "Cari hesap",
   ONLINE: "Online ödeme",
+  KAPIDA_NAKIT: "Kapıda nakit",
+  KAPIDA_POS: "Kapıda kart (POS)",
 };
 
 const PAYMENT_TONE: Record<NonNullable<OrderPaymentMethodRow>, StatusTone> = {
   HAVALE: "info",
   CARI: "warning",
   ONLINE: "success",
+  KAPIDA_NAKIT: "warning",
+  KAPIDA_POS: "warning",
 };
 
 const PAYMENT_ICON: Record<NonNullable<OrderPaymentMethodRow>, LucideIcon> = {
   HAVALE: Landmark,
   CARI: Wallet,
   ONLINE: CreditCard,
+  KAPIDA_NAKIT: Wallet,
+  KAPIDA_POS: CreditCard,
 };
 
-/** CARİ'de ön ödeme kavramı yok; diğer yöntemlerde ödendi/bekliyor noktası. */
+/** CARİ ve kapıda tahsilatta panoda “ödeme bekliyor” baskısı yok. */
 function PaymentPendingDot({
   paidAt,
   paymentMethod,
@@ -150,6 +166,18 @@ function PaymentPendingDot({
   paymentMethod: OrderPaymentMethodRow;
 }) {
   if (paymentMethod === "CARI") return null;
+  if (paymentMethod === "KAPIDA_NAKIT" || paymentMethod === "KAPIDA_POS") {
+    return (
+      <span
+        className={cn(
+          "inline-block size-1.5 rounded-full",
+          paidAt ? "bg-[var(--success-solid)]" : "bg-[var(--info-solid,var(--primary-solid))]",
+        )}
+        title={paidAt ? "Tahsil edildi" : "Kapıda tahsil"}
+        aria-label={paidAt ? "Tahsil edildi" : "Kapıda tahsil"}
+      />
+    );
+  }
   return (
     <span
       className={cn(
@@ -275,7 +303,14 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
   const nextStatuses = nextOrderStatuses(order.status);
   const advanceStatuses = nextStatuses.filter((s) => s !== "CANCELLED");
   const canCancel = nextStatuses.includes("CANCELLED");
-  const awaitingPayment = order.paymentMethod !== "CARI" && !order.paidAt;
+  const awaitingPayment =
+    order.paymentMethod !== "CARI" &&
+    order.paymentMethod !== "KAPIDA_NAKIT" &&
+    order.paymentMethod !== "KAPIDA_POS" &&
+    !order.paidAt;
+  const isCod =
+    order.paymentMethod === "KAPIDA_NAKIT" || order.paymentMethod === "KAPIDA_POS";
+  const awaitsCodCollect = isCod && !order.paidAt;
 
   function advance(status: OrderStatus, cancelReasonValue?: string) {
     setError(null);
@@ -304,6 +339,26 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
         toast.success("Ödeme alındı olarak işaretlendi");
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Ödeme işaretlenemedi");
+      }
+    });
+  }
+
+  function collectCod(file?: File | null) {
+    setError(null);
+    startTransition(async () => {
+      try {
+        if (file && file.size > 0) {
+          const fd = new FormData();
+          fd.set("orderId", order.id);
+          fd.set("file", file);
+          await uploadOrderPaymentSlipAction(fd);
+        }
+        const formData = new FormData();
+        formData.set("orderId", order.id);
+        await confirmCodCollectionAction(formData);
+        toast.success("Kapıda tahsilat kaydedildi");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Tahsilat kaydedilemedi");
       }
     });
   }
@@ -570,6 +625,56 @@ function OrderDetailSheet({ order }: { order: OrderRow }) {
             <CircleDollarSign className="size-3.5" />
             Ödeme alındı olarak işaretle
           </Button>
+        ) : null}
+
+        {order.paymentSlipUrl ? (
+          <div className="space-y-2">
+            <p className="text-[length:var(--text-caption)] font-medium text-[var(--text-muted)]">
+              POS / ödeme fişi
+            </p>
+            <a
+              href={order.paymentSlipUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="relative block aspect-[4/3] max-w-xs overflow-hidden rounded-xl border border-[var(--panel-border)]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={order.paymentSlipUrl}
+                alt="Ödeme fişi"
+                className="size-full object-contain bg-[var(--surface-3)]"
+              />
+            </a>
+          </div>
+        ) : null}
+
+        {awaitsCodCollect ? (
+          <div className="space-y-2 rounded-xl border border-[var(--panel-border)] bg-[var(--surface-2)] p-3">
+            <p className="text-[length:var(--text-caption)] text-[var(--text-muted)]">
+              {order.paymentMethod === "KAPIDA_POS"
+                ? "Kapıda POS: fiş yükleyip tahsilatı kaydedin."
+                : "Kapıda nakit tahsilatı kaydedin."}
+            </p>
+            {order.paymentMethod === "KAPIDA_POS" ? (
+              <label className="flex cursor-pointer flex-col gap-2">
+                <span className="text-xs font-medium">POS fiş görseli</span>
+                <Input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={isPending}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    if (f) collectCod(f);
+                  }}
+                />
+              </label>
+            ) : (
+              <Button size="sm" disabled={isPending} onClick={() => collectCod(null)} className="gap-1.5">
+                <CircleDollarSign className="size-3.5" />
+                Nakit tahsil edildi
+              </Button>
+            )}
+          </div>
         ) : null}
 
         {advanceStatuses.length > 0 || canCancel ? (

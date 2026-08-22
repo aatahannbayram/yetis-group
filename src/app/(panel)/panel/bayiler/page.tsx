@@ -46,6 +46,8 @@ export default async function AdminDealersPage() {
       creditLimitKurus: dealer.creditLimitKurus,
       paymentTermDays: dealer.paymentTermDays,
       deliveryZoneCode: dealer.deliveryZoneCode,
+      lat: dealer.lat != null ? Number(dealer.lat) : null,
+      lng: dealer.lng != null ? Number(dealer.lng) : null,
       priceListId: dealer.priceListId,
       priceListName: dealer.priceList?.name ?? null,
       salesRepId: dealer.salesRepId,

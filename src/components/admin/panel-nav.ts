@@ -82,7 +82,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
         status: "ready",
       },
       { href: "/panel/teklifler", label: "Teklifler", icon: FileText, status: "ready" },
-      { href: "/panel/kampanyalar", label: "Kampanyalar", icon: Megaphone, status: "ready" },
+      { href: "/panel/kampanyalar", label: "Duyurular", icon: Megaphone, status: "ready" },
     ],
   },
   {
@@ -122,7 +122,7 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
     defaultCollapsed: true,
     items: [
       { href: "/panel/plasiyerler", label: "Plasiyerler", icon: UserRound, status: "ready" },
-      { href: "/panel/rotalar", label: "Rotalar", icon: Route, status: "soon" },
+      { href: "/panel/rotalar", label: "Rotalar", icon: Route, status: "ready" },
       { href: "/panel/ziyaretler", label: "Ziyaretler", icon: MapPin, status: "soon" },
     ],
   },

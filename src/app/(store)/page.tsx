@@ -17,7 +17,9 @@ import { SceneImage } from "@/components/store/scene-image";
 import { ProductTiltCard } from "@/components/store/product-tilt-card";
 import { StatCounter } from "@/components/store/stat-counter";
 import { PlatformShowcase } from "@/components/store/platform-showcase";
+import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
 import { ScrollItem, ScrollReveal, ScrollStagger } from "@/components/store/scroll-reveal";
+import { listPublishedAnnouncements } from "@/infra/db/campaigns";
 import {
   JsonLdScript,
   faqPageJsonLd,
@@ -169,7 +171,9 @@ const processTabs = [
   },
 ];
 
-export default function StoreHomePage() {
+export default async function StoreHomePage() {
+  const announcements = await listPublishedAnnouncements();
+
   return (
     <>
       <JsonLdScript
@@ -182,6 +186,7 @@ export default function StoreHomePage() {
       />
 
       <HomeHero />
+      <WeeklyAnnouncements items={announcements} />
 
       <Canvas>
       <Slab id="hakkimizda" className="relative overflow-hidden !p-0">

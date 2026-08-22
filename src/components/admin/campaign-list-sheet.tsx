@@ -24,6 +24,11 @@ export type CampaignRow = {
   id: string;
   name: string;
   note: string;
+  kind: "DUYURU" | "KAMPANYA";
+  href: string | null;
+  ctaLabel: string | null;
+  imageUrl: string | null;
+  sortOrder: number;
   startDate: string | null;
   endDate: string | null;
   active: boolean;
@@ -96,9 +101,60 @@ function CampaignForm({ campaign, onDone }: { campaign: CampaignRow | null; onDo
           name="name"
           required
           defaultValue={campaign?.name ?? ""}
-          placeholder="Örn. Ramazan ayı özel fiyatı"
+          placeholder="Örn. Sucuklar kataloğa giriyor"
           className={fieldClass}
           autoFocus
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[var(--text-muted)]">Tür</label>
+          <select name="kind" defaultValue={campaign?.kind ?? "DUYURU"} className={fieldClass}>
+            <option value="DUYURU">Site duyurusu</option>
+            <option value="KAMPANYA">İç kayıt</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[var(--text-muted)]">Sıra</label>
+          <Input
+            name="sortOrder"
+            type="number"
+            step="1"
+            defaultValue={campaign?.sortOrder ?? 0}
+            className={cn(fieldClass, "tabular-nums")}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[var(--text-muted)]">Link</label>
+          <Input
+            name="href"
+            defaultValue={campaign?.href ?? "/urunler"}
+            placeholder="/urunler"
+            className={fieldClass}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-[var(--text-muted)]">Buton metni</label>
+          <Input
+            name="ctaLabel"
+            defaultValue={campaign?.ctaLabel ?? "İncele"}
+            placeholder="Kataloğu aç"
+            className={fieldClass}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-[var(--text-muted)]">Görsel URL</label>
+        <Input
+          name="imageUrl"
+          defaultValue={campaign?.imageUrl ?? ""}
+          placeholder="/scenes/kitchen.jpg"
+          className={fieldClass}
         />
       </div>
 
@@ -176,7 +232,7 @@ function CampaignForm({ campaign, onDone }: { campaign: CampaignRow | null; onDo
           </Button>
         ) : null}
         <Button type="submit" disabled={isPending} className="h-10 flex-1 rounded-xl">
-          {isPending ? "Kaydediliyor…" : campaign ? "Kaydet" : "Kampanya oluştur"}
+          {isPending ? "Kaydediliyor…" : campaign ? "Kaydet" : "Duyuru oluştur"}
         </Button>
       </div>
     </form>
@@ -223,11 +279,10 @@ export function CampaignListSheet({ campaigns }: { campaigns: CampaignRow[] }) {
             <p className="truncate font-medium text-[var(--text-primary)]" title={row.original.name}>
               {row.original.name}
             </p>
-            {row.original.note ? (
-              <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
-                {row.original.note}
-              </p>
-            ) : null}
+            <p className="truncate text-[length:var(--text-caption)] text-[var(--text-muted)]">
+              {row.original.kind === "DUYURU" ? "Site duyurusu" : "İç kayıt"}
+              {row.original.note ? ` · ${row.original.note}` : ""}
+            </p>
           </div>
         ),
       },
@@ -271,7 +326,7 @@ export function CampaignListSheet({ campaigns }: { campaigns: CampaignRow[] }) {
         trailing={
           <Button type="button" onClick={openCreate} className="h-8 gap-1.5">
             <Plus className="size-4" aria-hidden />
-            Yeni kampanya
+            Yeni duyuru
           </Button>
         }
       />
@@ -279,12 +334,12 @@ export function CampaignListSheet({ campaigns }: { campaigns: CampaignRow[] }) {
       {campaigns.length === 0 ? (
         <EmptyState
           icon={Megaphone}
-          title="Henüz kampanya yok"
-          description="Ad, not ve tarih aralığı ile hafif kampanya kayıtları oluşturun."
+          title="Henüz duyuru yok"
+          description="Haftalık site duyurusu veya iç kampanya kaydı oluşturun."
           action={
             <Button type="button" onClick={openCreate} className="gap-1.5">
               <Plus className="size-4" aria-hidden />
-              Yeni kampanya
+              Yeni duyuru
             </Button>
           }
         />
@@ -298,7 +353,7 @@ export function CampaignListSheet({ campaigns }: { campaigns: CampaignRow[] }) {
           globalFilterFn={globalFilterFn}
           onRowOpen={(row) => openDetail(row.id)}
           emptyTitle="Kampanya yok"
-          emptyDescription="Yeni kampanya oluşturarak listeyi doldurun."
+          emptyDescription="Yeni duyuru oluşturarak listeyi doldurun."
           filterEmptyTitle="Filtre sonucu boş"
           filterEmptyDescription="Aramayı temizleyip tekrar deneyin."
         />
@@ -310,7 +365,7 @@ export function CampaignListSheet({ campaigns }: { campaigns: CampaignRow[] }) {
             <SheetTitle>{mode === "create" ? "Yeni Kampanya" : selected?.name}</SheetTitle>
             <SheetDescription>
               {mode === "create"
-                ? "Hafif kampanya kaydı; fiyat motoruna bağlı değildir."
+                ? "Site duyurusu veya iç kampanya kaydı. Fiyat motoruna bağlı değildir."
                 : "Kampanya bilgilerini düzenleyin."}
             </SheetDescription>
           </SheetHeader>

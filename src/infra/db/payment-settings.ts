@@ -24,11 +24,33 @@ export async function updatePaymentSettings(data: {
   accountHolder: string;
   iban: string;
   note: string;
+  depotLabel?: string;
+  depotLat?: number | null;
+  depotLng?: number | null;
 }) {
   const row = await prisma.paymentSettings.upsert({
     where: { id: SINGLETON_ID },
-    update: data,
-    create: { id: SINGLETON_ID, ...data },
+    update: {
+      bankTransferEnabled: data.bankTransferEnabled,
+      bankName: data.bankName,
+      accountHolder: data.accountHolder,
+      iban: data.iban,
+      note: data.note,
+      ...(data.depotLabel !== undefined ? { depotLabel: data.depotLabel } : {}),
+      ...(data.depotLat !== undefined ? { depotLat: data.depotLat } : {}),
+      ...(data.depotLng !== undefined ? { depotLng: data.depotLng } : {}),
+    },
+    create: {
+      id: SINGLETON_ID,
+      bankTransferEnabled: data.bankTransferEnabled,
+      bankName: data.bankName,
+      accountHolder: data.accountHolder,
+      iban: data.iban,
+      note: data.note,
+      depotLabel: data.depotLabel ?? "Yetiş Grup Depo",
+      depotLat: data.depotLat ?? null,
+      depotLng: data.depotLng ?? null,
+    },
   });
   revalidateTag("payment-settings", "max");
   return row;

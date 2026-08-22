@@ -4,18 +4,21 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
-import { confirmOrderPayment, createOrder, transitionOrder } from "@/infra/db/orders";
+import { confirmOrderPayment, confirmCodCollection, setOrderPaymentSlip, createOrder, transitionOrder } from "@/infra/db/orders";
 import { createShipment } from "@/infra/db/shipments";
 import { prisma } from "@/infra/db/client";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 import type { OrderStatus } from "@/domain/order/state-machine";
 import { trySendProforma, voidAndReissueProforma } from "@/infra/db/proforma";
+import { saveUploadedImage } from "@/infra/storage/local";
+import { assertCan } from "@/policies";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session || !(await isStaffUser(session.user.id))) {
     throw new Error("Yetkisiz");
   }
+  return session;
 }
 
 export async function createOrderAction(formData: FormData) {
@@ -24,9 +27,9 @@ export async function createOrderAction(formData: FormData) {
   const note = String(formData.get("note") ?? "").trim() || undefined;
   const linesRaw = String(formData.get("lines") ?? "[]");
   const paymentMethodRaw = String(formData.get("paymentMethod") ?? "");
-  const paymentMethod = (["HAVALE", "CARI", "ONLINE"] as const).includes(
-    paymentMethodRaw as OrderPaymentMethod,
-  )
+  const paymentMethod = (
+    ["HAVALE", "CARI", "ONLINE", "KAPIDA_NAKIT", "KAPIDA_POS"] as const
+  ).includes(paymentMethodRaw as OrderPaymentMethod)
     ? (paymentMethodRaw as OrderPaymentMethod)
     : undefined;
 
@@ -68,6 +71,42 @@ export async function confirmOrderPaymentAction(formData: FormData) {
   revalidatePath("/panel/siparisler");
   revalidatePath("/panel/cari");
   revalidatePath("/bayi/cari");
+  revalidatePath("/bayi/siparislerim");
+}
+
+export async function confirmCodCollectionAction(formData: FormData) {
+  const session = await requireStaff();
+  assertCan("order:cod_collect", {
+    isStaff: true,
+    userId: session.user.id,
+    dealerId: null,
+  });
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) throw new Error("Sipariş gerekli");
+  const order = await prisma.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: { paymentSlipUrl: true },
+  });
+  await confirmCodCollection(orderId, { paymentSlipUrl: order.paymentSlipUrl });
+  revalidatePath("/panel/siparisler");
+  revalidatePath("/panel/cari");
+  revalidatePath("/bayi/cari");
+  revalidatePath("/bayi/siparislerim");
+  revalidatePath("/panel/rotalar");
+}
+
+export async function uploadOrderPaymentSlipAction(formData: FormData) {
+  await requireStaff();
+  const orderId = String(formData.get("orderId") ?? "");
+  const file = formData.get("file");
+  if (!orderId) throw new Error("Sipariş gerekli");
+  if (!(file instanceof File) || file.size === 0) throw new Error("Fiş görseli gerekli");
+  const url = await saveUploadedImage(file, `payment-slips-${orderId}`);
+  await setOrderPaymentSlip(orderId, url);
+  revalidatePath("/panel/siparisler");
+  revalidatePath("/bayi/siparislerim");
+  revalidatePath("/panel/rotalar");
+  return url;
 }
 
 export async function createShipmentFromOrderAction(formData: FormData) {

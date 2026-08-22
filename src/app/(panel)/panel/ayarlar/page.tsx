@@ -1,4 +1,4 @@
-import { Landmark } from "lucide-react";
+import { Landmark, MapPin } from "lucide-react";
 import { getPaymentSettings } from "@/infra/db/payment-settings";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,42 @@ export default async function AdminSettingsPage() {
               defaultValue={payment.note}
               placeholder="Açıklama kısmına sipariş numaranızı yazınız."
               className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 border-t border-border pt-4 sm:col-span-2">
+            <MapPin className="size-5 text-brand-700" />
+            <h3 className="text-base font-semibold">Sevkiyat deposu</h3>
+          </div>
+          <p className="text-body-sm text-muted-foreground sm:col-span-2">
+            Rota planında mesafeler bu noktadan hesaplanır (yakından uzağa).
+          </p>
+          <div className="space-y-1 sm:col-span-2">
+            <label className="text-caption text-muted-foreground">Depo adı</label>
+            <Input
+              name="depotLabel"
+              defaultValue={payment.depotLabel}
+              placeholder="Yetiş Grup Depo"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-caption text-muted-foreground">Enlem (lat)</label>
+            <Input
+              name="depotLat"
+              type="number"
+              step="0.0000001"
+              defaultValue={payment.depotLat?.toString() ?? "41.015137"}
+              className="tabular-nums"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-caption text-muted-foreground">Boylam (lng)</label>
+            <Input
+              name="depotLng"
+              type="number"
+              step="0.0000001"
+              defaultValue={payment.depotLng?.toString() ?? "28.979530"}
+              className="tabular-nums"
             />
           </div>
 

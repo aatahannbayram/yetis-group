@@ -249,7 +249,11 @@ export async function createOrderFromCart(input: {
       ? "Ödeme: Banka havalesi / EFT"
       : input.paymentMethod === "CARI"
         ? "Ödeme: Cari hesap"
-        : "Ödeme: Online (kart)";
+        : input.paymentMethod === "KAPIDA_NAKIT"
+          ? "Ödeme: Kapıda nakit"
+          : input.paymentMethod === "KAPIDA_POS"
+            ? "Ödeme: Kapıda kart (POS)"
+            : "Ödeme: Online (kart)";
   const note = [paymentLabel, input.note?.trim()].filter(Boolean).join("\n") || undefined;
 
   const order = await createOrder({
@@ -435,6 +439,9 @@ export async function confirmOrderPayment(orderId: string) {
   if (order.paymentMethod === "CARI") {
     throw new Error("Cari hesap siparişleri için ödeme onayı gerekmez");
   }
+  if (order.paymentMethod === "KAPIDA_NAKIT" || order.paymentMethod === "KAPIDA_POS") {
+    throw new Error("Kapıda ödeme tahsilatı teslimatta yapılır");
+  }
   if (order.paidAt) {
     throw new Error("Bu sipariş zaten ödendi olarak işaretli");
   }
@@ -452,4 +459,66 @@ export async function confirmOrderPayment(orderId: string) {
   });
 
   return prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+}
+
+/**
+ * Kapıda nakit / POS tahsilatı. POS için `paymentSlipUrl` zorunlu.
+ * Teslimatta oluşan BORC ile netleşecek ODEME kaydı yazar.
+ */
+export async function confirmCodCollection(
+  orderId: string,
+  input?: { paymentSlipUrl?: string | null },
+) {
+  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  if (order.paymentMethod !== "KAPIDA_NAKIT" && order.paymentMethod !== "KAPIDA_POS") {
+    throw new Error("Bu sipariş kapıda ödeme değil");
+  }
+  if (order.paidAt) {
+    throw new Error("Bu sipariş zaten tahsil edildi");
+  }
+  const slip = input?.paymentSlipUrl?.trim() || null;
+  if (order.paymentMethod === "KAPIDA_POS" && !slip) {
+    throw new Error("Kapıda kart (POS) için fiş görseli zorunlu");
+  }
+
+  const now = new Date();
+  await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: orderId },
+      data: {
+        paidAt: now,
+        codCollectedAt: now,
+        ...(slip
+          ? { paymentSlipUrl: slip, paymentSlipUploadedAt: now }
+          : {}),
+      },
+    });
+    await tx.ledgerEntry.create({
+      data: {
+        dealerId: order.dealerId,
+        type: "ODEME",
+        amountKurus: order.totalKurus,
+        description:
+          order.paymentMethod === "KAPIDA_POS"
+            ? `Sipariş #${order.id.slice(-6)} kapıda POS tahsilatı`
+            : `Sipariş #${order.id.slice(-6)} kapıda nakit tahsilatı`,
+      },
+    });
+  });
+
+  return prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+}
+
+/** Attach / replace POS slip without collecting (staff upload before collect). */
+export async function setOrderPaymentSlip(orderId: string, paymentSlipUrl: string) {
+  const order = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  if (order.paymentMethod !== "KAPIDA_POS" && order.paymentMethod !== "KAPIDA_NAKIT") {
+    throw new Error("Fiş yalnızca kapıda ödeme siparişlerine eklenebilir");
+  }
+  const url = paymentSlipUrl.trim();
+  if (!url) throw new Error("Fiş URL gerekli");
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { paymentSlipUrl: url, paymentSlipUploadedAt: new Date() },
+  });
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/infra/db/client";
 import { getProducts } from "@/infra/db/products";
 import { getShippableStockByVariant } from "@/infra/db/inventory";
 import { money, type Money } from "@/domain/money";
+import type { AttributeType } from "@/generated/prisma";
 
 export type DealerCatalogVariant = {
   id: string;
@@ -14,6 +15,14 @@ export type DealerCatalogVariant = {
   priceKurus: number;
   unitPrice: Money;
   stockKg: number;
+};
+
+export type DealerCatalogAttributeValue = {
+  valueText: string | null;
+  valueNumber: string | null;
+  valueBoolean: boolean | null;
+  selectedOptions: { option: { label: string } }[];
+  attribute: { key: string; name: string; type: AttributeType; unit: string | null };
 };
 
 export type DealerCatalogProduct = {
@@ -31,6 +40,7 @@ export type DealerCatalogProduct = {
   producer: { name: string; region: string | null; story: string };
   media: { id: string; url: string; kind: "IMAGE" | "VIDEO" }[];
   certificates: string[];
+  attributeValues: DealerCatalogAttributeValue[];
   variants: DealerCatalogVariant[];
 };
 
@@ -77,6 +87,20 @@ export async function getDealerCatalog(dealerId: string): Promise<DealerCatalogP
         product.attributeValues
           .find((v) => v.attribute.key === "sertifika")
           ?.selectedOptions.map((s) => s.option.label) ?? [];
+      const attributeValues: DealerCatalogAttributeValue[] = product.attributeValues
+        .filter((v) => v.attribute.key !== "sertifika")
+        .map((v) => ({
+          valueText: v.valueText,
+          valueNumber: v.valueNumber ? v.valueNumber.toString() : null,
+          valueBoolean: v.valueBoolean,
+          selectedOptions: v.selectedOptions.map((s) => ({ option: { label: s.option.label } })),
+          attribute: {
+            key: v.attribute.key,
+            name: v.attribute.name,
+            type: v.attribute.type,
+            unit: v.attribute.unit,
+          },
+        }));
       return {
         id: product.id,
         name: product.name,
@@ -96,6 +120,7 @@ export async function getDealerCatalog(dealerId: string): Promise<DealerCatalogP
         },
         media: product.media.map((m) => ({ id: m.id, url: m.url, kind: m.kind })),
         certificates,
+        attributeValues,
         variants,
       };
     })

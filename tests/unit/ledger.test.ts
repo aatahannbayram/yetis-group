@@ -135,6 +135,11 @@ describe("shouldPostDeliveryDebt", () => {
   it("posts BORC for ONLINE if capture failed (no paidAt)", () => {
     expect(shouldPostDeliveryDebt({ paymentMethod: "ONLINE", paidAt: null })).toBe(true);
   });
+
+  it("posts BORC for unpaid kapida delivery", () => {
+    expect(shouldPostDeliveryDebt({ paymentMethod: "KAPIDA_NAKIT", paidAt: null })).toBe(true);
+    expect(shouldPostDeliveryDebt({ paymentMethod: "KAPIDA_POS", paidAt: null })).toBe(true);
+  });
 });
 
 describe("proformaSettlementBadge", () => {

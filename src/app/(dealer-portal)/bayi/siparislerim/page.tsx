@@ -165,6 +165,22 @@ export default async function BayiSiparislerimPage({
                         {order.note}
                       </p>
                     ) : null}
+                    {order.paymentSlipUrl ? (
+                      <a
+                        href={order.paymentSlipUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex items-center gap-2 text-xs font-medium text-[var(--primary-text)] hover:underline"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={order.paymentSlipUrl}
+                          alt=""
+                          className="size-10 rounded-md object-cover ring-1 ring-black/5"
+                        />
+                        POS / ödeme fişini gör
+                      </a>
+                    ) : null}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">

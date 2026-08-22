@@ -45,6 +45,7 @@ model User {
   stageAudits   LeadStageAudit[]
   assignedLeads Lead[]           @relation("LeadAssignee")
   leadTasks     LeadTask[]       @relation("LeadTaskAssignee")
+  assignedRoutes DeliveryRoute[] @relation("RouteAssignee")
 
   @@map("user")
 }
@@ -151,6 +152,10 @@ model Dealer {
   creditLimitKurus    Int?
   paymentTermDays     Int?
   deliveryZoneCode    String?
+  /** WGS84 coordinates for route planning (optional until geocoded). */
+  lat                 Decimal?             @db.Decimal(10, 7)
+  lng                 Decimal?             @db.Decimal(10, 7)
+  geocodedAt          DateTime?
   priceListId         String?
   priceList           PriceList?           @relation(fields: [priceListId], references: [id])
   salesRepId          String?
@@ -167,6 +172,7 @@ model Dealer {
   orders           Order[]
   notifications    Notification[]
   whatsappMessages WhatsAppOutboxMessage[]
+  deliveryStops    DeliveryStop[]
 
   @@map("dealer")
 }
@@ -656,8 +662,11 @@ model Shipment {
   deliveredAt DateTime?
 
   allocations ShipmentLotAllocation[]
+  deliveryStopId String?
+  deliveryStop   DeliveryStop? @relation(fields: [deliveryStopId], references: [id], onDelete: SetNull)
 
   @@index([dealerId, createdAt])
+  @@index([deliveryStopId])
   @@map("shipment")
 }
 
@@ -670,6 +679,75 @@ model ShipmentLotAllocation {
   quantityKg Decimal  @db.Decimal(10, 3)
 
   @@map("shipment_lot_allocation")
+}
+
+enum DeliveryRouteStatus {
+  DRAFT
+  ACTIVE
+  DONE
+  CANCELLED
+}
+
+enum DeliveryStopStatus {
+  PENDING
+  EN_ROUTE
+  DONE
+  SKIPPED
+}
+
+model DeliveryRoute {
+  id             String              @id @default(cuid())
+  date           DateTime            @db.Date
+  status         DeliveryRouteStatus @default(DRAFT)
+  depotLabel     String              @default("")
+  depotLat       Decimal             @db.Decimal(10, 7)
+  depotLng       Decimal             @db.Decimal(10, 7)
+  assignedUserId String?
+  assignedUser   User?               @relation("RouteAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  note           String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  stops DeliveryStop[]
+
+  @@index([date, status])
+  @@map("delivery_route")
+}
+
+model DeliveryStop {
+  id          String             @id @default(cuid())
+  routeId     String
+  route       DeliveryRoute      @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  dealerId    String
+  dealer      Dealer             @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  sequence    Int
+  status      DeliveryStopStatus @default(PENDING)
+  distanceKm  Decimal?           @db.Decimal(10, 3)
+  note        String?
+  arrivedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  orders    DeliveryStopOrder[]
+  shipments Shipment[]
+
+  @@unique([routeId, dealerId])
+  @@index([routeId, sequence])
+  @@map("delivery_stop")
+}
+
+model DeliveryStopOrder {
+  id      String       @id @default(cuid())
+  stopId  String
+  stop    DeliveryStop @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  orderId String
+  order   Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([stopId, orderId])
+  @@map("delivery_stop_order")
 }
 
 // ---- Pricing ----
@@ -711,6 +789,10 @@ model PaymentSettings {
   accountHolder       String   @default("")
   iban                String   @default("")
   note                String   @default("")
+  /** Depot for route distance sorting (WGS84). */
+  depotLabel          String   @default("Yetiş Grup Depo")
+  depotLat            Decimal? @db.Decimal(10, 7)
+  depotLng            Decimal? @db.Decimal(10, 7)
   updatedAt           DateTime @updatedAt
 
   @@map("payment_settings")
@@ -772,25 +854,32 @@ enum OrderPaymentMethod {
   HAVALE
   CARI
   ONLINE
+  KAPIDA_NAKIT
+  KAPIDA_POS
 }
 
 model Order {
-  id            String              @id @default(cuid())
-  dealerId      String
-  dealer        Dealer              @relation(fields: [dealerId], references: [id])
-  status        OrderStatus         @default(SUBMITTED)
-  totalKurus    Int
-  note          String?
-  paymentMethod OrderPaymentMethod?
-  paidAt        DateTime?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  id                     String              @id @default(cuid())
+  dealerId               String
+  dealer                 Dealer              @relation(fields: [dealerId], references: [id])
+  status                 OrderStatus         @default(SUBMITTED)
+  totalKurus             Int
+  note                   String?
+  paymentMethod          OrderPaymentMethod?
+  paidAt                 DateTime?
+  /** POS slip image for KAPIDA_POS (public /uploads URL). */
+  paymentSlipUrl         String?
+  paymentSlipUploadedAt  DateTime?
+  codCollectedAt         DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   lines          OrderLine[]
   events         OrderEvent[]
   shipments      Shipment[]
   proformas      ProformaInvoice[]
   lotAllocations OrderLotAllocation[]
+  stopLinks      DeliveryStopOrder[]
 
   @@index([dealerId, createdAt])
   @@map("order")
@@ -1050,18 +1139,29 @@ model Notification {
   @@map("notification")
 }
 
-// ---- Campaigns (lightweight MVP; not wired to pricing engine - see M18) ----
+// ---- Campaigns (site duyuru + hafif kayıt; fiyat motoruna bağlı değil, M18) ----
+
+enum CampaignKind {
+  DUYURU
+  KAMPANYA
+}
 
 model Campaign {
-  id        String    @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
-  note      String    @default("")
+  note      String       @default("")
+  kind      CampaignKind @default(KAMPANYA)
+  href      String?
+  ctaLabel  String?
+  imageUrl  String?
+  sortOrder Int          @default(0)
   startDate DateTime?
   endDate   DateTime?
-  active    Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  active    Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
+  @@index([kind, active, sortOrder])
   @@map("campaign")
 }
 

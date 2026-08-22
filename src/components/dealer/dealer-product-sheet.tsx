@@ -13,6 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { splitPdpCopy } from "@/components/store/pdp-description";
+import { DealerProductAttributes } from "@/components/dealer/dealer-product-attributes";
 import { formatMoney } from "@/lib/format/money";
 import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
 import { cn } from "@/lib/utils";
@@ -148,6 +149,10 @@ export function DealerProductSheet({
                   }
                 />
               </dl>
+
+              {product.attributeValues.length > 0 ? (
+                <DealerProductAttributes values={product.attributeValues} />
+              ) : null}
 
               {product.variants.length > 1 ? (
                 <div>

@@ -9,6 +9,7 @@ import {
   ClipboardList,
   FileText,
   Home,
+  LayoutGrid,
   LogOut,
   MapPin,
   MessageCircle,
@@ -40,6 +41,7 @@ const nav: {
 }[] = [
   { href: "/bayi", label: "Özet", icon: Home, exact: true, primary: true },
   { href: "/bayi/siparis", label: "Sipariş", icon: ShoppingCart, primary: true },
+  { href: "/bayi/katalog", label: "Katalog", icon: LayoutGrid, primary: true },
   { href: "/bayi/siparislerim", label: "Geçmiş", icon: ClipboardList, primary: true },
   { href: "/bayi/teslimat", label: "Teslimat", icon: Truck },
   { href: "/bayi/cari", label: "Cari", icon: Wallet, primary: true },
@@ -127,7 +129,7 @@ export function DealerNav({
             className="hidden items-center rounded-full bg-white/70 p-1 ring-1 ring-black/6 md:flex"
             aria-label="Bayi menü"
           >
-            {nav.slice(0, 5).map((item) => {
+            {nav.slice(0, 6).map((item) => {
               const active = item.exact
                 ? pathname === item.href
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -222,7 +224,7 @@ export function DealerNav({
 
         <div className="hidden md:block">
           <div className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-3 pb-2.5 sm:px-4">
-            {nav.slice(5).map((item) => {
+            {nav.slice(6).map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
@@ -248,7 +250,7 @@ export function DealerNav({
         className="fixed inset-x-0 bottom-0 z-30 border-t border-[var(--panel-border)] bg-[color-mix(in_srgb,var(--panel-canvas)_92%,white)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
         aria-label="Bayi mobil menü"
       >
-        <ul className="grid grid-cols-4 px-2 pt-1.5 pb-1">
+        <ul className="grid grid-cols-5 px-2 pt-1.5 pb-1">
           {nav
             .filter((item) => item.primary)
             .map((item) => {

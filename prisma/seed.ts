@@ -615,6 +615,13 @@ async function seedM13CatalogDepth() {
       ],
     },
     {
+      key: "yag-orani",
+      name: "Yağ oranı",
+      type: "NUMBER" as const,
+      unit: "%",
+      options: [] as { value: string; label: string }[],
+    },
+    {
       key: "sertifika",
       name: "Sertifika",
       type: "MULTI_SELECT" as const,
@@ -668,6 +675,7 @@ async function seedM13CatalogDepth() {
         key: a.key,
         name: a.name,
         type: a.type,
+        unit: "unit" in a ? a.unit : undefined,
         filterable: a.key === "ambalaj" ? false : a.type !== "TEXT",
         sortOrder: a.key === "ambalaj" ? -10 : i,
         options: a.options.length
@@ -696,15 +704,15 @@ async function seedM13CatalogDepth() {
   }
 
   const products = await prisma.product.findMany({ include: { media: true } });
-  const defaults: Record<string, { sut?: string; yore?: string; olgun?: string }> = {
-    "tam-yagli-beyaz-peynir-17kg": { sut: "inek", yore: "trakya", olgun: "taze" },
-    "kasar-peyniri-dilimli-1kg": { sut: "inek", yore: "anadolu", olgun: "olgun" },
-    "kasar-peyniri-blok-3kg": { sut: "inek", yore: "anadolu", olgun: "olgun" },
-    "tulum-peyniri-1kg": { sut: "koyun", yore: "ege", olgun: "yari" },
-    "lor-peyniri-1kg": { sut: "inek", yore: "trakya", olgun: "taze" },
-    "tereyagi-500g": { sut: "inek", yore: "karadeniz", olgun: "taze" },
-    "yogurt-5kg": { sut: "inek", yore: "anadolu", olgun: "taze" },
-    "gunluk-sut-1l": { sut: "inek", yore: "trakya", olgun: "taze" },
+  const defaults: Record<string, { sut?: string; yore?: string; olgun?: string; yag?: number }> = {
+    "tam-yagli-beyaz-peynir-17kg": { sut: "inek", yore: "trakya", olgun: "taze", yag: 50 },
+    "kasar-peyniri-dilimli-1kg": { sut: "inek", yore: "anadolu", olgun: "olgun", yag: 45 },
+    "kasar-peyniri-blok-3kg": { sut: "inek", yore: "anadolu", olgun: "olgun", yag: 45 },
+    "tulum-peyniri-1kg": { sut: "koyun", yore: "ege", olgun: "yari", yag: 50 },
+    "lor-peyniri-1kg": { sut: "inek", yore: "trakya", olgun: "taze", yag: 8 },
+    "tereyagi-500g": { sut: "inek", yore: "karadeniz", olgun: "taze", yag: 82 },
+    "yogurt-5kg": { sut: "inek", yore: "anadolu", olgun: "taze", yag: 3.5 },
+    "gunluk-sut-1l": { sut: "inek", yore: "trakya", olgun: "taze", yag: 3.5 },
   };
 
   for (const product of products) {
@@ -799,9 +807,22 @@ async function seedM13CatalogDepth() {
       });
     }
 
+    async function setNumber(key: string, n: number) {
+      const def = byKey[key];
+      if (!def) return;
+      await prisma.productAttributeValue.upsert({
+        where: {
+          productId_attributeId: { productId: product.id, attributeId: def.id },
+        },
+        create: { productId: product.id, attributeId: def.id, valueNumber: n },
+        update: { valueNumber: n },
+      });
+    }
+
     await setSelect("sut-tipi", d.sut!);
     await setSelect("yore", d.yore!);
     await setSelect("olgunlasma", d.olgun!);
+    if (d.yag !== undefined) await setNumber("yag-orani", d.yag);
     await setMulti("sertifika", ["helal", "iso"]);
     await setMulti("alerjen", ["sut", "laktoz"]);
     await setText("saklama", "0–4°C soğuk depo");
@@ -894,6 +915,9 @@ async function seedDealerDemoData() {
       paymentTermDays: 30,
       deliveryZoneCode: "IST-AVR",
       salesRepId,
+      lat: 41.0082,
+      lng: 28.9784,
+      geocodedAt: new Date(),
     },
   });
 
@@ -907,7 +931,28 @@ async function seedDealerDemoData() {
       paymentTermDays: 45,
       deliveryZoneCode: "ANT-1",
       salesRepId,
+      lat: 36.8969,
+      lng: 30.7133,
+      geocodedAt: new Date(),
     },
+  });
+
+  // Ensure geo even when vergi already filled from prior seeds
+  await prisma.dealer.updateMany({
+    where: { unvan: "Test Bayi", lat: null },
+    data: { lat: 41.0082, lng: 28.9784, geocodedAt: new Date() },
+  });
+  await prisma.dealer.updateMany({
+    where: { unvan: "Test HORECA", lat: null },
+    data: { lat: 36.8969, lng: 30.7133, geocodedAt: new Date() },
+  });
+  await prisma.dealer.updateMany({
+    where: { unvan: "Kadıköy Zincir Market A.Ş.", lat: null },
+    data: { lat: 40.9905, lng: 29.025, geocodedAt: new Date() },
+  });
+  await prisma.dealer.updateMany({
+    where: { unvan: "Marmara Gıda Ara Toptan Ltd. Şti.", lat: null },
+    data: { lat: 41.06, lng: 28.85, geocodedAt: new Date() },
   });
 
   const zincirExists = await prisma.dealer.findFirst({
@@ -927,6 +972,9 @@ async function seedDealerDemoData() {
         deliveryZoneCode: "IST-AND",
         priceListId: priceListBySlug.get("zincir-market") ?? null,
         salesRepId,
+        lat: 40.9905,
+        lng: 29.025,
+        geocodedAt: new Date(),
       },
     });
   }
@@ -947,6 +995,9 @@ async function seedDealerDemoData() {
         deliveryZoneCode: "IST-AVR",
         priceListId: priceListBySlug.get("standart") ?? null,
         salesRepId,
+        lat: 41.06,
+        lng: 28.85,
+        geocodedAt: new Date(),
       },
     });
   }
@@ -955,24 +1006,35 @@ async function seedDealerDemoData() {
 }
 
 async function seedPaymentSettingsDemo() {
-  const existing = await prisma.paymentSettings.findUnique({ where: { id: "singleton" } });
-  if (existing && (existing.bankTransferEnabled || existing.iban)) {
-    console.log("Skipping payment settings demo - already configured.");
-    return;
-  }
   const demo = {
     bankTransferEnabled: true,
     bankName: "Ziraat Bankası",
     accountHolder: "Yetiş Gıda San. Tic. A.Ş.",
     iban: "TR33 0001 0009 4123 4567 8900 01",
     note: "Açıklama kısmına sipariş numaranızı yazınız.",
+    depotLabel: "Yetiş Grup Depo",
+    depotLat: 41.015137,
+    depotLng: 28.97953,
   };
+  const existing = await prisma.paymentSettings.findUnique({ where: { id: "singleton" } });
+  if (existing && (existing.bankTransferEnabled || existing.iban)) {
+    await prisma.paymentSettings.updateMany({
+      where: { id: "singleton", depotLat: null },
+      data: {
+        depotLabel: demo.depotLabel,
+        depotLat: demo.depotLat,
+        depotLng: demo.depotLng,
+      },
+    });
+    console.log("Skipping payment settings bank demo - already configured (depot filled if missing).");
+    return;
+  }
   await prisma.paymentSettings.upsert({
     where: { id: "singleton" },
     update: demo,
     create: { id: "singleton", ...demo },
   });
-  console.log("Seeded demo ödeme ayarları (banka havalesi / EFT).");
+  console.log("Seeded demo ödeme ayarları (banka havalesi / EFT + depo).");
 }
 
 async function seedShippingDemoVariety() {
@@ -1379,6 +1441,66 @@ async function seedExtraCins() {
   console.log(added > 0 ? `Seeded ${added} extra cins variant(s).` : "Extra cins variants already present.");
 }
 
+async function seedSiteAnnouncements() {
+  const start = new Date();
+  const end = new Date();
+  end.setDate(end.getDate() + 14);
+
+  const announcements = [
+    {
+      name: "Sucuklar kataloğa giriyor",
+      note: "Bu hafta fermente sucuk çeşitlerini B2B listeye alıyoruz. Sipariş ve stok bilgisi onaylı hesabınızda açılacak.",
+      href: "/urunler",
+      ctaLabel: "Kataloğu aç",
+      imageUrl: "/scenes/kitchen.jpg",
+      sortOrder: 0,
+    },
+    {
+      name: "Eski kaşar teker stokları yenilendi",
+      note: "12-15 kg teker partileri depoya girdi. Tartım siparişi bayi panelinden verilir.",
+      href: "/urunler",
+      ctaLabel: "Ürünleri gör",
+      imageUrl: "/scenes/offer-board.jpg",
+      sortOrder: 1,
+    },
+    {
+      name: "Soğuk zincir teslimat günleri",
+      note: "Bölge günleri hesabınızda görünür. Kapalı güne sipariş düşmez.",
+      href: "/iletisim",
+      ctaLabel: "Teslimat sor",
+      imageUrl: "/scenes/cold-chain.jpg",
+      sortOrder: 2,
+    },
+  ];
+
+  for (const item of announcements) {
+    const existing = await prisma.campaign.findFirst({ where: { name: item.name } });
+    if (existing) {
+      await prisma.campaign.update({
+        where: { id: existing.id },
+        data: {
+          ...item,
+          kind: "DUYURU",
+          active: true,
+          startDate: start,
+          endDate: end,
+        },
+      });
+    } else {
+      await prisma.campaign.create({
+        data: {
+          ...item,
+          kind: "DUYURU",
+          active: true,
+          startDate: start,
+          endDate: end,
+        },
+      });
+    }
+  }
+  console.log("Seeded site announcements.");
+}
+
 async function main() {
   await seedLeads();
   await seedCatalog();
@@ -1394,6 +1516,7 @@ async function main() {
   await seedShipmentDemoData();
   await seedLedgerDemoData();
   await seedOrderDemoData();
+  await seedSiteAnnouncements();
 }
 
 main()

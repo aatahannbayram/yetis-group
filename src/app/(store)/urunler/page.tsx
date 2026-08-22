@@ -18,6 +18,8 @@ import { buildPageMetadata } from "@/lib/seo/metadata";
 import { JsonLdScript, breadcrumbJsonLd, itemListJsonLd } from "@/lib/seo/json-ld";
 import { getImage } from "@/content/images";
 import { catalogFallbackImage } from "@/content/catalog-images";
+import { listPublishedAnnouncements } from "@/infra/db/campaigns";
+import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Ürün kataloğu | Toptan yöresel gıda",
@@ -35,9 +37,10 @@ export default async function ProductsPage({
   const { kategori } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
   const dealerId = session?.user.id ? await getUserDealerId(session.user.id) : null;
-  const [products, categories] = await Promise.all([
+  const [products, categories, announcements] = await Promise.all([
     getProductsWithPricing(session?.user.id, kategori),
     listCategories(),
+    listPublishedAnnouncements(),
   ]);
 
   const rootCategories = categories
@@ -95,7 +98,8 @@ export default async function ProductsPage({
 
       <Slab>
         <div className="mkt-pad">
-          <div className="mt-2">
+          <WeeklyAnnouncements items={announcements} variant="catalog" />
+          <div className={announcements.length > 0 ? "mt-8" : "mt-2"}>
             <Suspense fallback={null}>
               <ProductGrid
                 activeCategory={kategori}

@@ -72,6 +72,8 @@ function readDealerInput(formData: FormData): DealerInput {
     deliveryZoneCode: str("deliveryZoneCode"),
     priceListId: str("priceListId"),
     salesRepId: str("salesRepId"),
+    lat: num("lat"),
+    lng: num("lng"),
   };
 }
 

@@ -1,4 +1,4 @@
-import { formatAttributeDisplay } from "@/infra/db/attributes";
+import { formatAttributeDisplay } from "@/lib/format/attribute-value";
 import type { AttributeType } from "@/generated/prisma";
 import { productJsonLd } from "@/lib/seo/json-ld";
 import { cn } from "@/lib/utils";

@@ -10,6 +10,11 @@ export default async function KampanyalarPage() {
     id: c.id,
     name: c.name,
     note: c.note,
+    kind: c.kind,
+    href: c.href,
+    ctaLabel: c.ctaLabel,
+    imageUrl: c.imageUrl,
+    sortOrder: c.sortOrder,
     startDate: c.startDate?.toISOString() ?? null,
     endDate: c.endDate?.toISOString() ?? null,
     active: c.active,
@@ -29,9 +34,9 @@ export default async function KampanyalarPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
-        title="Kampanyalar"
+        title="Duyurular"
         count={rows.length}
-        description="Ad, not ve tarih aralığıyla hafif kampanya kayıtları. Fiyat motoruna bağlı değildir."
+        description="Sitede yayınlanan haftalık duyurular ve iç kampanya kayıtları. Fiyat motoruna bağlı değildir."
       />
 
       <section aria-label="Özet" className="grid gap-3 sm:grid-cols-3">

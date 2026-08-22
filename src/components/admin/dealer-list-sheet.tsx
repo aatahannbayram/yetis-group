@@ -97,6 +97,8 @@ export type DealerRow = {
   creditLimitKurus: number | null;
   paymentTermDays: number | null;
   deliveryZoneCode: string | null;
+  lat: number | null;
+  lng: number | null;
   priceListId: string | null;
   priceListName: string | null;
   salesRepId: string | null;
@@ -607,6 +609,33 @@ export function DealerListSheet({
                     className={fieldControlClass}
                   />
                 </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field id="dealer-lat" label="Enlem (lat)">
+                    <Input
+                      id="dealer-lat"
+                      name="lat"
+                      type="number"
+                      step="0.0000001"
+                      defaultValue={editing?.lat ?? ""}
+                      placeholder="41.0082"
+                      className={cn(fieldControlClass, "tabular-nums")}
+                    />
+                  </Field>
+                  <Field id="dealer-lng" label="Boylam (lng)">
+                    <Input
+                      id="dealer-lng"
+                      name="lng"
+                      type="number"
+                      step="0.0000001"
+                      defaultValue={editing?.lng ?? ""}
+                      placeholder="28.9784"
+                      className={cn(fieldControlClass, "tabular-nums")}
+                    />
+                  </Field>
+                </div>
+                <p className="text-[11px] text-[var(--panel-ink-muted)]">
+                  Rota planı için gerekli. Yoksa bayi rotaya alınamaz.
+                </p>
               </Section>
 
               <Section title="Atamalar">

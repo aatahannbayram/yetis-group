@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "postinstall": "prisma generate && node scripts/prepare-swc-wasm.mjs",
+    "prebuild": "rm -rf .next",
     "build": "next build --webpack",
     "start": "next start -p $PORT",
     "lint": "eslint",

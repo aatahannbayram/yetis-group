@@ -74,7 +74,7 @@ export function ProductGallery({
             src={current.url}
             fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
             alt={alt}
-            className="object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
+            className="object-contain p-6 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
             sizes="(min-width: 1024px) 40vw, 92vw"
             priority
           />
@@ -171,7 +171,7 @@ export function ProductGallery({
                   src={current.url}
                   fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
                   alt={alt}
-                  className={fullscreen ? "object-contain" : "object-cover"}
+                  className="object-contain"
                   sizes="100vw"
                 />
               </button>

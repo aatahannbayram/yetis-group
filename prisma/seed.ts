@@ -1455,23 +1455,14 @@ async function seedSiteAnnouncements() {
       imageUrl: "/scenes/kitchen.jpg",
       sortOrder: 0,
     },
-    {
-      name: "Eski kaşar teker stokları yenilendi",
-      note: "12-15 kg teker partileri depoya girdi. Tartım siparişi bayi panelinden verilir.",
-      href: "/urunler",
-      ctaLabel: "Ürünleri gör",
-      imageUrl: "/scenes/offer-board.jpg",
-      sortOrder: 1,
-    },
-    {
-      name: "Soğuk zincir teslimat günleri",
-      note: "Bölge günleri hesabınızda görünür. Kapalı güne sipariş düşmez.",
-      href: "/iletisim",
-      ctaLabel: "Teslimat sor",
-      imageUrl: "/scenes/cold-chain.jpg",
-      sortOrder: 2,
-    },
   ];
+  await prisma.campaign.deleteMany({
+    where: {
+      name: {
+        in: ["Eski kaşar teker stokları yenilendi", "Soğuk zincir teslimat günleri"],
+      },
+    },
+  });
 
   for (const item of announcements) {
     const existing = await prisma.campaign.findFirst({ where: { name: item.name } });

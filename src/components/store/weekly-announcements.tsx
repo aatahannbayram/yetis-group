@@ -96,7 +96,13 @@ export function WeeklyAnnouncements({
           </p>
         </ScrollReveal>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)] lg:items-stretch">
+        <div
+          className={
+            rest.length > 0
+              ? "mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)] lg:items-stretch"
+              : "mt-10"
+          }
+        >
           <article className="group relative isolate min-h-[22rem] overflow-hidden rounded-[1.5rem]">
             <Cover
               src={featured.imageUrl}
@@ -145,13 +151,7 @@ export function WeeklyAnnouncements({
                 </li>
               ))}
             </ul>
-          ) : (
-            <div className="flex flex-col justify-end rounded-[1.15rem] border border-white/10 bg-white/[0.04] p-6">
-              <p className="text-[13px] leading-relaxed text-white/60">
-                Haftalık duyurular panelden yönetilir. Yeni ürün, stok ve sevkiyat haberleri burada yayınlanır.
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
     </section>

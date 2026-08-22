@@ -56,7 +56,7 @@ export type ImageAsset = {
 export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   hero: {
     id: "hero",
-    src: "/hero-dairy.jpg",
+    src: "/hero-dairy-2.jpg",
     alt: "Yetiş Grup, yöresel peynir ve kırsal süt ürünleri",
     topic: "Hero: süt ürünleri tezgâh atmosferi",
     usedAt: "home.hero-og",
@@ -66,7 +66,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "home-hero-portrait": {
     id: "home-hero-portrait",
-    src: "/scenes/home-hero.jpg",
+    src: "/scenes/home-hero-2.jpg",
     alt: "Altın saat ışığında merada inekler",
     topic: "Anasayfa hero: tam ekran mera",
     usedAt: "home.hero-portrait",
@@ -216,7 +216,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "offer-board": {
     id: "offer-board",
-    src: "/scenes/offer-board.jpg",
+    src: "/scenes/offer-board-2.jpg",
     alt: "Peynir tahtası, yöresel ürünler",
     topic: "Ne sunuyoruz görseli",
     usedAt: "home.offer-board",
@@ -256,7 +256,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "about-sales": {
     id: "about-sales",
-    src: "/scenes/how-sales.jpg",
+    src: "/scenes/how-sales-2.jpg",
     alt: "Satış ekibi, bayi ziyareti",
     topic: "Hakkımızda: satış yüzü",
     usedAt: "about.face-sales",
@@ -296,7 +296,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "cta-final": {
     id: "cta-final",
-    src: "/scenes/how-sales.jpg",
+    src: "/scenes/how-sales-2.jpg",
     alt: "Bayi sipariş masası",
     topic: "Final bayi CTA",
     usedAt: "home.cta-final",
@@ -346,7 +346,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "auth-side": {
     id: "auth-side",
-    src: "/scenes/offer-board.jpg",
+    src: "/scenes/offer-board-2.jpg",
     alt: "Bayi giriş görseli",
     topic: "Auth yan görsel",
     usedAt: "auth.side",
@@ -366,7 +366,7 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "story-field": {
     id: "story-field",
-    src: "/products/kasar.jpg",
+    src: "/scenes/story-field.jpg",
     alt: "Kaşar peyniri, ahşap tahtada",
     topic: "Hikâye bloğu: peynir still life",
     usedAt: "home.story-field",

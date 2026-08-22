@@ -34,13 +34,13 @@ import type { SiteAnnouncement } from "@/domain/campaigns/live";
 
 const MODULE_SCENE: Partial<Record<HomeModule, string>> = {
   savedLists: "/scenes/how-quality.jpg",
-  offers: "/scenes/offer-board.jpg",
+  offers: "/scenes/offer-board-2.jpg",
   orderTimeline: "/scenes/truck-close.jpg",
   monthSummary: "/scenes/warehouse.jpg",
   shelfRotation: "/scenes/how-ops.jpg",
   menuCost: "/scenes/kitchen.jpg",
   volumeTier: "/scenes/cold-chain.jpg",
-  branchOverview: "/scenes/how-sales.jpg",
+  branchOverview: "/scenes/how-sales-2.jpg",
   winback: "/scenes/whatsapp-desk.jpg",
   repeatLastOrder: "/scenes/kitchen.jpg",
 };

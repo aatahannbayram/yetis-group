@@ -21,7 +21,7 @@ export function DashboardHero() {
     <div className="space-y-4">
       <div className="relative min-h-52 overflow-hidden rounded-3xl sm:min-h-60">
         <Image
-          src="/hero-dairy.jpg"
+          src="/hero-dairy-2.jpg"
           alt=""
           fill
           priority

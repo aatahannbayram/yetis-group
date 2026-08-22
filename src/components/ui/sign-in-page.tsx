@@ -31,7 +31,7 @@ type Props = {
  */
 export function LoginPage({
   initialMode = "giris",
-  imageSrc = "/hero-dairy.jpg",
+  imageSrc = "/hero-dairy-2.jpg",
   imageAlt = "Yetiş Grup, temiz gıda",
   staffHint = false,
 }: Props) {

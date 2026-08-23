@@ -19,6 +19,7 @@ import {
   ShoppingCart,
   Sparkles,
   TrendingUp,
+  Truck,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -33,16 +34,16 @@ import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
 import type { SiteAnnouncement } from "@/domain/campaigns/live";
 
 const MODULE_SCENE: Partial<Record<HomeModule, string>> = {
-  savedLists: "/scenes/how-quality.jpg",
+  savedLists: "/hero-dairy-2.jpg",
   offers: "/scenes/offer-board-2.jpg",
   orderTimeline: "/scenes/truck-close.jpg",
   monthSummary: "/scenes/warehouse.jpg",
-  shelfRotation: "/scenes/how-ops.jpg",
+  shelfRotation: "/scenes/story-field.jpg",
   menuCost: "/scenes/kitchen.jpg",
   volumeTier: "/scenes/cold-chain.jpg",
   branchOverview: "/scenes/how-sales-2.jpg",
   winback: "/scenes/whatsapp-desk.jpg",
-  repeatLastOrder: "/scenes/kitchen.jpg",
+  repeatLastOrder: "/scenes/promo-beyaz-counter.jpg",
 };
 
 const FULL_WIDTH: HomeModule[] = [
@@ -295,7 +296,7 @@ function Hero({ dealerName, dealerTypeLabel }: { dealerName: string; dealerTypeL
       <section className="relative overflow-hidden rounded-[1.35rem] shadow-[0_16px_40px_-20px_rgb(12_40_28/0.55)]">
         <div className="absolute inset-0">
           <Image
-            src="/scenes/delivery.jpg"
+            src="/scenes/yetis-grup-bayi-welcome.jpg"
             alt=""
             fill
             priority
@@ -306,7 +307,7 @@ function Hero({ dealerName, dealerTypeLabel }: { dealerName: string; dealerTypeL
         </div>
         <div className="relative flex flex-col gap-6 px-5 py-8 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-10">
           <div className="min-w-0">
-            <span className="inline-flex items-center rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-white uppercase ring-1 ring-white/20 backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full bg-[var(--panel-surface)]/12 px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-white uppercase ring-1 ring-white/20 backdrop-blur-sm">
               {dealerTypeLabel}
             </span>
             <h1 className="mt-4 max-w-lg text-[1.85rem] font-semibold tracking-[-0.03em] text-white sm:text-4xl">
@@ -326,7 +327,7 @@ function Hero({ dealerName, dealerTypeLabel }: { dealerName: string; dealerTypeL
             </Link>
             <Link
               href="/bayi/cari"
-              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white/12 px-5 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-white/18"
+              className="inline-flex h-11 items-center gap-1.5 rounded-full bg-[var(--panel-surface)]/12 px-5 text-[14px] font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm hover:bg-[var(--panel-surface)]/18"
             >
               <Wallet className="size-4" aria-hidden />
               Cari
@@ -383,7 +384,7 @@ function SceneTile({
 
         <div className="relative flex h-full flex-col p-4 sm:p-5">
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/12 text-white ring-1 ring-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--panel-surface)]/12 text-white ring-1 ring-white/20 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
               <Icon className="size-4.5" aria-hidden />
             </span>
             <div className="min-w-0 flex-1">
@@ -414,7 +415,7 @@ function SceneTile({
 function AlertBanner({ delay }: { delay: number }) {
   return (
     <Reveal delay={delay}>
-      <section className="relative overflow-hidden rounded-2xl border border-[var(--panel-border)] border-l-[3px] border-l-[var(--danger-solid)] bg-white p-4 shadow-[var(--shadow-sm)] sm:p-5">
+      <section className="relative overflow-hidden rounded-2xl border border-[var(--panel-border)] border-l-[3px] border-l-[var(--danger-solid)] bg-[var(--panel-surface)] p-4 shadow-[var(--shadow-sm)] sm:p-5">
         <div className="flex items-start gap-3">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--danger-subtle)] text-[var(--danger-solid)]">
             <AlertTriangle className="size-4.5" aria-hidden />
@@ -439,51 +440,121 @@ function AlertBanner({ delay }: { delay: number }) {
 
 function OnboardingCard({ delay }: { delay: number }) {
   const steps = [
-    { n: 1, title: "Firma", body: "Unvan ve iletişim bilgilerini kontrol edin", href: "/bayi/firmam" },
-    { n: 2, title: "İlk sipariş", body: "Katalogdan ekleyin veya geçen siparişi tekrarlayın", href: "/bayi/siparis" },
-    { n: 3, title: "Teslimat", body: "Bölge ve gününüzün açık olduğunu doğrulayın", href: "/bayi/teslimat" },
+    {
+      n: 1,
+      title: "Firma",
+      body: "Unvan ve iletişim bilgilerini kontrol edin",
+      href: "/bayi/firmam",
+      icon: Building2,
+    },
+    {
+      n: 2,
+      title: "İlk sipariş",
+      body: "Katalogdan ekleyin veya geçen siparişi tekrarlayın",
+      href: "/bayi/siparis",
+      icon: ShoppingCart,
+    },
+    {
+      n: 3,
+      title: "Teslimat",
+      body: "Bölge ve gününüzün açık olduğunu doğrulayın",
+      href: "/bayi/teslimat",
+      icon: Truck,
+    },
   ] as const;
+  const done = 0;
+  const total = steps.length;
+  const progress = Math.round((done / total) * 100);
 
   return (
     <Reveal delay={delay}>
-      <section className="overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] bg-white shadow-[0_8px_24px_-18px_rgb(33_28_22/0.28)]">
-        <div className="flex items-center gap-3 border-b border-[var(--panel-border)] px-5 py-4">
-          <span className="flex size-9 items-center justify-center rounded-full bg-[var(--brand-50)] text-[var(--brand-700)]">
-            <CheckCircle2 className="size-4.5" aria-hidden />
-          </span>
-          <div>
-            <h2 className="font-semibold text-[var(--panel-ink)]">Kuruluma devam</h2>
-            <p className="text-[13px] text-[var(--panel-ink-muted)]">Üç kısa adım, sonra sipariş akışı açılır.</p>
+      <section className="overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] bg-[var(--panel-surface)] shadow-[var(--shadow-sm)]">
+        <div className="border-b border-[var(--panel-border)] bg-[linear-gradient(135deg,var(--primary-subtle),transparent_60%)] px-5 pt-4 pb-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-2xl bg-[var(--panel-surface)] text-[var(--primary-text)] shadow-[var(--shadow-sm)] ring-1 ring-[var(--panel-border)]">
+                <CheckCircle2 className="size-5" aria-hidden />
+              </span>
+              <div>
+                <h2 className="text-[1.05rem] font-semibold tracking-[-0.02em] text-[var(--panel-ink)]">
+                  Kuruluma devam
+                </h2>
+                <p className="mt-0.5 text-[13px] text-[var(--panel-ink-muted)]">
+                  Üç kısa adım, sonra sipariş akışı açılır
+                </p>
+              </div>
+            </div>
+            <span className="rounded-full bg-[var(--panel-surface)] px-2.5 py-1 text-[11px] font-semibold tabular-nums text-[var(--panel-ink-muted)] ring-1 ring-[var(--panel-border)]">
+              {done} / {total}
+            </span>
+          </div>
+          <div
+            className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Kurulum ilerlemesi"
+          >
+            <div
+              className="h-full rounded-full bg-[var(--primary-solid)] transition-[width] duration-500"
+              style={{ width: `${Math.max(progress, 8)}%` }}
+            />
           </div>
         </div>
-        <ol className="grid sm:grid-cols-3">
-          {steps.map((step, i) => (
-            <li
-              key={step.href}
-              className={cn(
-                "relative p-5",
-                i < steps.length - 1 && "border-b border-[var(--panel-border)] sm:border-r sm:border-b-0",
-              )}
-            >
-              <Link href={step.href} className="group block">
-                <span className="flex size-7 items-center justify-center rounded-full bg-[var(--brand-700)] text-[11px] font-bold text-white">
-                  {step.n}
-                </span>
-                <p className="mt-3 font-semibold text-[var(--panel-ink)] group-hover:text-[var(--brand-700)]">
-                  {step.title}
-                </p>
-                <p className="mt-1 text-[13px] leading-snug text-[var(--panel-ink-muted)]">{step.body}</p>
-                <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--brand-700)]">
-                  Aç <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </span>
-              </Link>
-            </li>
-          ))}
+
+        <ol className="grid gap-0 sm:grid-cols-3">
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <li
+                key={step.href}
+                className={cn(
+                  "relative",
+                  i < steps.length - 1 &&
+                    "border-b border-[var(--panel-border)] sm:border-r sm:border-b-0",
+                )}
+              >
+                <Link
+                  href={step.href}
+                  className="group flex h-full flex-col gap-3.5 p-5 transition-colors hover:bg-[var(--surface-2)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="relative flex size-11 items-center justify-center rounded-2xl bg-[var(--primary-subtle)] text-[var(--primary-text)] ring-1 ring-[var(--primary-solid)]/15 transition-transform duration-200 group-hover:scale-[1.04]">
+                      <Icon className="size-5" strokeWidth={1.55} aria-hidden />
+                      <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-[var(--brand-700)] text-[10px] font-bold text-white shadow-sm dark:bg-[var(--primary-solid)] dark:text-[#06231a]">
+                        {step.n}
+                      </span>
+                    </span>
+                    <span className="mt-1 inline-flex size-7 items-center justify-center rounded-full text-[var(--panel-ink-muted)] opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100">
+                      <ArrowRight className="size-4" aria-hidden />
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold tracking-[-0.015em] text-[var(--panel-ink)] group-hover:text-[var(--primary-text)]">
+                      {step.title}
+                    </p>
+                    <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--panel-ink-muted)]">
+                      {step.body}
+                    </p>
+                  </div>
+                  <span className="mt-auto inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--primary-text)]">
+                    Adıma git
+                    <ArrowRight
+                      className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                      aria-hidden
+                    />
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ol>
       </section>
     </Reveal>
   );
 }
+
 
 function StatusStrip({
   creditLimitKurus,
@@ -500,74 +571,133 @@ function StatusStrip({
 }) {
   const remaining =
     creditLimitKurus != null ? Math.max(0, creditLimitKurus - balanceKurus) : null;
-  const pct =
+  const usedPct =
     creditLimitKurus && creditLimitKurus > 0
       ? Math.min(100, Math.round((balanceKurus / creditLimitKurus) * 100))
       : 0;
-  const over = creditLimitKurus != null && pct >= 85;
+  const remainingPct =
+    creditLimitKurus && creditLimitKurus > 0 && remaining != null
+      ? Math.min(100, Math.round((remaining / creditLimitKurus) * 100))
+      : 0;
+  const over = creditLimitKurus != null && remainingPct <= 15;
   const barColor =
-    pct >= 85
+    remainingPct <= 15
       ? "bg-[var(--danger-solid)]"
-      : pct >= 60
+      : remainingPct <= 40
         ? "bg-[var(--warning-solid)]"
         : "bg-[var(--success-solid)]";
 
   return (
     <Reveal delay={delay}>
-      <section className="overflow-hidden rounded-[1.35rem] border border-[var(--panel-border)] bg-white shadow-[0_8px_24px_-18px_rgb(33_28_22/0.28)]">
-        <div className="grid sm:grid-cols-3">
-          <div className="relative p-5 sm:col-span-1 sm:border-r sm:border-[var(--panel-border)]">
-            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
-              <Wallet className="size-3.5" aria-hidden />
-              Kalan kredi
+      <section className="rounded-[1.35rem] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-2 shadow-[var(--shadow-sm)] sm:p-2.5">
+        <div className="grid gap-2 sm:grid-cols-3">
+          <div
+            className={cn(
+              "rounded-[1.1rem] p-4 ring-1 ring-[var(--panel-border)]/80 sm:p-5",
+              over
+                ? "bg-[linear-gradient(180deg,var(--danger-subtle),var(--panel-surface)_72%)]"
+                : "bg-[var(--surface-2)]",
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <span
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-xl ring-1",
+                  over
+                    ? "bg-[var(--danger-subtle)] text-[var(--danger-text)] ring-[var(--danger-solid)]/20"
+                    : "bg-[var(--panel-surface)] text-[var(--panel-ink-muted)] ring-[var(--panel-border)]",
+                )}
+              >
+                <Wallet className="size-4" strokeWidth={1.6} aria-hidden />
+              </span>
+              <p className="text-[12px] font-semibold tracking-wide text-[var(--panel-ink-muted)] uppercase">
+                Kalan kredi
+              </p>
             </div>
             <p
               className={cn(
-                "mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums",
+                "mt-3 text-[1.85rem] font-bold tracking-[-0.03em] tabular-nums",
                 over ? "text-[var(--danger-text)]" : "text-[var(--panel-ink)]",
               )}
             >
               {remaining != null ? formatMoney(money(remaining)) : "Tanımsız"}
             </p>
             {creditLimitKurus != null ? (
-              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-3)]" aria-hidden>
+              <div
+                className="mt-3.5 h-2 overflow-hidden rounded-full bg-[var(--surface-3)]"
+                role="progressbar"
+                aria-valuenow={remainingPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Kalan kredi oranı"
+              >
                 <div
-                  className={cn("h-full rounded-full transition-[width] duration-700 ease-out", barColor)}
-                  style={{ width: `${pct}%` }}
+                  className={cn(
+                    "h-full rounded-full transition-[width] duration-700 ease-out",
+                    barColor,
+                  )}
+                  style={{ width: `${remainingPct}%` }}
                 />
               </div>
             ) : null}
             {over ? (
-              <p className="mt-2 text-[12px] font-medium text-[var(--danger-text)]">Limit doldu</p>
+              <p className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-[var(--danger-subtle)] px-2 py-0.5 text-[11px] font-semibold text-[var(--danger-text)] ring-1 ring-[var(--danger-solid)]/15">
+                <AlertTriangle className="size-3" aria-hidden />
+                Limit doldu
+              </p>
+            ) : creditLimitKurus != null ? (
+              <p className="mt-2.5 text-[12px] text-[var(--panel-ink-muted)]">
+                Kullanılan %{usedPct}
+              </p>
             ) : null}
           </div>
 
-          <div className="border-t border-[var(--panel-border)] p-5 sm:border-t-0 sm:border-r">
-            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
-              <CalendarDays className="size-3.5" aria-hidden />
-              Vade
+          <div className="rounded-[1.1rem] bg-[var(--surface-2)] p-4 ring-1 ring-[var(--panel-border)]/80 sm:p-5">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-[var(--panel-surface)] text-[var(--panel-ink-muted)] ring-1 ring-[var(--panel-border)]">
+                <CalendarDays className="size-4" strokeWidth={1.6} aria-hidden />
+              </span>
+              <p className="text-[12px] font-semibold tracking-wide text-[var(--panel-ink-muted)] uppercase">
+                Vade
+              </p>
             </div>
-            <p className="mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums text-[var(--panel-ink)]">
-              {paymentTermDays != null ? paymentTermDays : "-"}
+            <p className="mt-3 text-[1.85rem] font-bold tracking-[-0.03em] tabular-nums text-[var(--panel-ink)]">
+              {paymentTermDays != null ? paymentTermDays : "—"}
               {paymentTermDays != null ? (
-                <span className="ml-1 text-[15px] font-semibold text-[var(--panel-ink-muted)]">gün</span>
+                <span className="ml-1.5 text-[15px] font-semibold text-[var(--panel-ink-muted)]">
+                  gün
+                </span>
               ) : null}
             </p>
-            <p className="mt-2 text-[13px] text-[var(--panel-ink-muted)]">Fatura vadesi cari hesapta.</p>
+            <p className="mt-2.5 text-[13px] leading-snug text-[var(--panel-ink-muted)]">
+              Fatura vadesi cari hesapta.
+            </p>
           </div>
 
-          <Link href="/bayi/siparis" className="group border-t border-[var(--panel-border)] p-5 sm:border-t-0">
-            <div className="flex items-center gap-2 text-[12px] font-medium text-[var(--panel-ink-muted)]">
-              <ShoppingCart className="size-3.5" aria-hidden />
-              Açık sepet
+          <Link
+            href="/bayi/siparis"
+            className="group rounded-[1.1rem] bg-[var(--surface-2)] p-4 ring-1 ring-[var(--panel-border)]/80 transition-colors hover:bg-[var(--primary-subtle)]/50 hover:ring-[var(--primary-solid)]/25 sm:p-5"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-9 items-center justify-center rounded-xl bg-[var(--primary-subtle)] text-[var(--primary-text)] ring-1 ring-[var(--primary-solid)]/15 transition-transform group-hover:scale-[1.04]">
+                <ShoppingCart className="size-4" strokeWidth={1.6} aria-hidden />
+              </span>
+              <p className="text-[12px] font-semibold tracking-wide text-[var(--panel-ink-muted)] uppercase">
+                Açık sepet
+              </p>
             </div>
-            <p className="mt-2 text-[1.75rem] font-bold tracking-tight tabular-nums text-[var(--panel-ink)]">
+            <p className="mt-3 text-[1.85rem] font-bold tracking-[-0.03em] tabular-nums text-[var(--panel-ink)]">
               {openCartLines}
-              <span className="ml-1 text-[15px] font-semibold text-[var(--panel-ink-muted)]">satır</span>
+              <span className="ml-1.5 text-[15px] font-semibold text-[var(--panel-ink-muted)]">
+                satır
+              </span>
             </p>
-            <span className="mt-2 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--brand-700)]">
+            <span className="mt-2.5 inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--primary-text)]">
               Siparişe git
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden />
+              <ArrowRight
+                className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                aria-hidden
+              />
             </span>
           </Link>
         </div>
@@ -575,6 +705,7 @@ function StatusStrip({
     </Reveal>
   );
 }
+
 
 function RepeatLastOrder({
   summary,
@@ -587,11 +718,14 @@ function RepeatLastOrder({
 }) {
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const scene = MODULE_SCENE.repeatLastOrder ?? "/scenes/kitchen.jpg";
+  const scene = MODULE_SCENE.repeatLastOrder ?? "/scenes/promo-beyaz-counter.jpg";
+  const chips = summary
+    ? summary.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 4)
+    : [];
 
   return (
     <Reveal delay={delay}>
-      <section className="group relative overflow-hidden rounded-[1.35rem] shadow-[0_16px_40px_-20px_rgb(12_40_28/0.5)]">
+      <section className="group relative overflow-hidden rounded-[1.35rem] shadow-[0_18px_44px_-22px_rgb(12_40_28/0.55)] ring-1 ring-[var(--panel-border)]/40">
         <div className="absolute inset-0" aria-hidden>
           <Image
             src={scene}
@@ -600,50 +734,66 @@ function RepeatLastOrder({
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
             sizes="(min-width: 1024px) 1152px, 100vw"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(105deg,color-mix(in_srgb,var(--brand-900)_94%,transparent)_0%,color-mix(in_srgb,var(--brand-800)_82%,transparent)_38%,color-mix(in_srgb,var(--brand-700)_45%,transparent)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(115deg,color-mix(in_srgb,var(--brand-900)_96%,transparent)_0%,color-mix(in_srgb,var(--brand-800)_84%,transparent)_42%,color-mix(in_srgb,var(--brand-700)_38%,transparent)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_82%_45%,rgb(255_255_255/0.14),transparent_52%)]" />
         </div>
 
-        <div className="relative grid gap-5 p-5 sm:grid-cols-[1fr_auto] sm:items-end sm:gap-8 sm:p-6 lg:p-7">
+        <div className="relative grid gap-6 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-8 sm:p-6 lg:p-7">
           <div className="min-w-0">
-            <div className="flex items-center gap-2.5">
-              <span className="flex size-9 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/25 backdrop-blur-sm">
-                <RotateCcw className="size-4.5" aria-hidden />
-              </span>
-              <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">
-                Geçen siparişi tekrarla
-              </h2>
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-semibold tracking-[0.06em] text-white/92 uppercase ring-1 ring-white/22 backdrop-blur-md">
+              <RotateCcw className="size-3.5" aria-hidden />
+              Hızlı aksiyon
             </div>
+            <h2 className="mt-3 text-[1.35rem] font-semibold tracking-[-0.03em] text-white sm:text-[1.55rem]">
+              Geçen siparişi tekrarla
+            </h2>
 
             {thumbnails.length > 0 ? (
-              <div className="mt-4 flex items-center -space-x-2.5">
-                {thumbnails.map((url, i) => (
-                  <span
-                    key={url}
-                    className="relative size-10 overflow-hidden rounded-full border-2 border-white/80 shadow-[var(--shadow-sm)]"
-                    style={{ zIndex: thumbnails.length - i }}
-                  >
-                    <Image src={url} alt="" fill className="object-cover" sizes="40px" />
-                  </span>
-                ))}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <div className="flex items-center -space-x-2.5">
+                  {thumbnails.slice(0, 4).map((url, i) => (
+                    <span
+                      key={`${url}-${i}`}
+                      className="relative size-11 overflow-hidden rounded-full border-2 border-white/85 shadow-[0_4px_12px_rgb(0_0_0/0.28)]"
+                      style={{ zIndex: thumbnails.length - i }}
+                    >
+                      <Image src={url} alt="" fill className="object-cover" sizes="44px" />
+                    </span>
+                  ))}
+                </div>
+                {chips.length > 0 ? (
+                  <div className="flex min-w-0 flex-wrap gap-1.5">
+                    {chips.map((chip) => (
+                      <span
+                        key={chip}
+                        className="rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-medium text-white/88 ring-1 ring-white/18 backdrop-blur-sm"
+                      >
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                ) : summary ? (
+                  <p className="min-w-0 flex-1 truncate text-[13px] text-white/78">{summary}</p>
+                ) : null}
               </div>
-            ) : null}
-
-            <p className="mt-3 max-w-xl text-[length:var(--panel-font-size)] leading-relaxed text-white/80">
-              {summary ?? "Önceki sepet satırlarını tek tıkla sepete yükleyin."}
-            </p>
+            ) : (
+              <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-white/80">
+                {summary ?? "Önceki sepet satırlarını tek tıkla sepete yükleyin."}
+              </p>
+            )}
 
             {message ? (
-              <p className="mt-2 text-caption text-white/75" role="status">
+              <p className="mt-3 text-[13px] font-medium text-white/88" role="status">
                 {message}
               </p>
             ) : null}
           </div>
 
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[220px]">
+          <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:min-w-[230px]">
             <button
               type="button"
               disabled={pending}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-[length:var(--panel-font-size)] font-semibold text-[var(--brand-800)] shadow-[var(--shadow-sm)] transition-[transform,opacity] duration-200 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-white px-5 text-[14px] font-semibold text-[var(--brand-800)] shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[transform,opacity] duration-200 hover:scale-[1.015] active:scale-[0.985] disabled:opacity-60"
               onClick={() => {
                 start(async () => {
                   const res = await repeatLastCartAction();
@@ -656,7 +806,7 @@ function RepeatLastOrder({
             </button>
             <Link
               href="/bayi/siparis"
-              className="inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-white/10 px-4 text-caption font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors hover:bg-white/15"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-1 rounded-full bg-white/10 px-5 text-[13px] font-semibold text-white ring-1 ring-white/25 backdrop-blur-sm transition-colors hover:bg-white/16"
             >
               Sipariş ekranına git
               <ArrowRight className="size-3.5" aria-hidden />
@@ -667,3 +817,4 @@ function RepeatLastOrder({
     </Reveal>
   );
 }
+

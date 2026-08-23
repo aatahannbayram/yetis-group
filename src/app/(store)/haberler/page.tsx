@@ -75,12 +75,12 @@ export default async function BlogIndexPage({
           fill
           priority
           quality={80}
-          className="scale-105 object-[42%_center]"
+          className="scale-105 object-center"
           sizes="100vw"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.72)_0%,rgba(12,10,8,0.28)_32%,rgba(10,14,10,0.22)_48%,rgba(10,14,10,0.70)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.5)_0%,rgba(12,10,8,0.14)_32%,rgba(10,14,10,0.1)_48%,rgba(10,14,10,0.55)_100%)]"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />

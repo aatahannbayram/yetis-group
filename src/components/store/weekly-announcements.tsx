@@ -80,14 +80,21 @@ export function WeeklyAnnouncements({
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#0f1f17] text-white" aria-labelledby="weekly-news-title">
+    <section
+      className="relative overflow-hidden bg-[#17130f] text-white"
+      aria-labelledby="weekly-news-title"
+    >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(48,163,105,0.22),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_15%_0%,rgba(217,119,6,0.28),transparent_52%),radial-gradient(ellipse_at_85%_100%,rgba(154,52,18,0.22),transparent_55%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay [background-image:url('data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%22120%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]"
       />
       <div className="relative mkt-pad">
         <ScrollReveal>
-          <p className="mkt-label text-mkt-accent">Haftalık duyurular</p>
+          <p className="mkt-label text-[#f2b84b]">Haftalık duyurular</p>
           <h2 id="weekly-news-title" className="mkt-h2 mt-3 max-w-xl text-balance text-white">
             Yeni nesil katalog güncellemesi.
           </h2>
@@ -111,7 +118,7 @@ export function WeeklyAnnouncements({
             />
             <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,14,10,0.05)_0%,rgba(10,14,10,0.55)_48%,rgba(10,14,10,0.88)_100%)]" />
             <div className="absolute inset-x-0 bottom-0 z-[2] flex flex-col gap-3 p-6 sm:p-8">
-              <p className="mkt-label text-mkt-accent">Bu hafta</p>
+              <p className="mkt-label text-[#f2b84b]">Bu hafta</p>
               <h3 className="max-w-md text-[1.65rem] leading-tight font-semibold tracking-[-0.03em] sm:text-[2rem]">
                 {featured.name}
               </h3>
@@ -142,7 +149,7 @@ export function WeeklyAnnouncements({
                       {item.note ? (
                         <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-white/65">{item.note}</p>
                       ) : null}
-                      <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-mkt-accent">
+                      <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-[#f2b84b]">
                         {item.ctaLabel}
                         <ArrowUpRight className="size-3.5" />
                       </p>

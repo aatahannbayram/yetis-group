@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minimize2, X, ZoomIn } from "lucide-react";
+import { Maximize2, Minimize2, X, ZoomIn } from "lucide-react";
 import { CatalogImage } from "@/components/store/catalog-image";
 import { cn } from "@/lib/utils";
 import { PdpOriginHint } from "@/components/store/pdp-origin-hint";
@@ -176,11 +176,16 @@ export function ProductGallery({
                 />
               </button>
             )}
-            {fullscreen ? (
-              <span className="pointer-events-none absolute top-4 left-4 z-30 flex size-10 items-center justify-center rounded-full bg-black/40 text-white">
+            <span
+              aria-hidden
+              className="pointer-events-none absolute top-4 left-4 z-30 flex size-10 items-center justify-center rounded-full bg-black/40 text-white"
+            >
+              {fullscreen ? (
                 <Minimize2 className="size-4" aria-hidden />
-              </span>
-            ) : null}
+              ) : (
+                <Maximize2 className="size-4" aria-hidden />
+              )}
+            </span>
           </div>
         </DialogContent>
       </Dialog>

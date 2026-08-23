@@ -74,7 +74,7 @@ export function DealerProductSheet({
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
       <SheetContent
         side="right"
-        className="w-full gap-0 overflow-y-auto p-0 sm:max-w-lg"
+        className="w-full gap-0 overflow-y-auto p-0 sm:max-w-2xl"
       >
         {product && variant ? (
           <>

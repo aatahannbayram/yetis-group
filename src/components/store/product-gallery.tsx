@@ -24,11 +24,17 @@ export function ProductGallery({
   fallbackUrl,
   fallbackAlt,
   region,
+  stageClassName,
+  imageClassName,
+  className,
 }: {
   items: MediaItem[];
   fallbackUrl: string | null;
   fallbackAlt: string;
   region?: string | null;
+  stageClassName?: string;
+  imageClassName?: string;
+  className?: string;
 }) {
   const gallery =
     items.length > 0
@@ -54,11 +60,12 @@ export function ProductGallery({
   const isImage = current.kind === "IMAGE";
 
   return (
-    <div>
+    <div className={className}>
       <div
         className={cn(
           "group/stage relative w-full overflow-hidden rounded-[1.5rem] bg-[#FAF8F3]",
-          "aspect-[4/5] max-h-[26rem] sm:aspect-square sm:max-h-[28rem]",
+          !stageClassName && "aspect-[4/5] max-h-[26rem] sm:aspect-square sm:max-h-[28rem]",
+          stageClassName,
         )}
       >
         {region ? <PdpOriginHint region={region} /> : null}
@@ -67,14 +74,17 @@ export function ProductGallery({
           <video
             src={current.url}
             controls
-            className="relative z-10 size-full object-contain p-5 md:p-10"
+            className={cn("relative z-10 size-full object-contain p-5 md:p-10", imageClassName)}
           />
         ) : (
           <CatalogImage
             src={current.url}
             fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
             alt={alt}
-            className="object-contain p-6 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]"
+            className={cn(
+              "object-contain p-6 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]",
+              imageClassName,
+            )}
             sizes="(min-width: 1024px) 40vw, 92vw"
             priority
           />

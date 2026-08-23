@@ -2,44 +2,31 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { CircleAlert, Pencil, X } from "lucide-react";
+import { CircleAlert, MapPin, Pencil, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { updateDealerProfileAction } from "@/app/(dealer-portal)/bayi/firmam/actions";
 
-export type DealerProfileFieldsProps = {
-  vergiNo: string | null;
-  vergiDairesi: string | null;
+export type DealerAddressFieldsProps = {
+  unvan: string;
   email: string | null;
   phone: string | null;
   city: string | null;
   district: string | null;
   addressLine: string | null;
   deliveryAddressLine: string | null;
-  creditLimitLabel: string | null;
-  paymentTermLabel: string | null;
-  priceListName: string | null;
-  salesRepLabel: string | null;
+  deliveryZoneCode: string | null;
 };
 
-function ReadOnlyField({ label, value }: { label: string; value: string | null }) {
-  return (
-    <div className="border-t border-[var(--panel-border)] px-4 py-3 sm:border-t-0 sm:odd:border-r sm:[&:nth-child(-n+2)]:border-t">
-      <dt className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
-        {label}
-      </dt>
-      <dd className="mt-1 text-sm text-[var(--panel-ink)]">{value?.trim() || "-"}</dd>
-    </div>
-  );
-}
+const fieldClass =
+  "h-10 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
 
-export function DealerProfileFields(props: DealerProfileFieldsProps) {
+export function DealerAddressFields(props: DealerAddressFieldsProps) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const [email, setEmail] = useState(props.email ?? "");
   const [phone, setPhone] = useState(props.phone ?? "");
   const [city, setCity] = useState(props.city ?? "");
   const [district, setDistrict] = useState(props.district ?? "");
@@ -47,7 +34,6 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
   const [deliveryAddressLine, setDeliveryAddressLine] = useState(props.deliveryAddressLine ?? "");
 
   function cancel() {
-    setEmail(props.email ?? "");
     setPhone(props.phone ?? "");
     setCity(props.city ?? "");
     setDistrict(props.district ?? "");
@@ -72,13 +58,15 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
     });
   }
 
-  const fieldClass =
-    "h-9 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-2.5 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
+  const billing = [props.addressLine, props.district, props.city].filter(Boolean).join(", ");
+  const delivery =
+    props.deliveryAddressLine?.trim() ||
+    [props.addressLine, props.district, props.city].filter(Boolean).join(", ");
 
   if (!editing) {
     return (
-      <>
-        <div className="flex items-center justify-end px-4 pt-3">
+      <div className="space-y-4">
+        <div className="flex justify-end">
           <Button
             type="button"
             size="sm"
@@ -87,45 +75,32 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
             onClick={() => setEditing(true)}
           >
             <Pencil className="size-3.5" aria-hidden />
-            Bilgilerimi düzenle
+            Adresleri düzenle
           </Button>
         </div>
-        <dl className="grid gap-0 sm:grid-cols-2">
-          <ReadOnlyField label="Vergi no" value={props.vergiNo} />
-          <ReadOnlyField label="Vergi dairesi" value={props.vergiDairesi} />
-          <ReadOnlyField label="E-posta" value={props.email} />
-          <ReadOnlyField label="Telefon" value={props.phone} />
-          <ReadOnlyField
-            label="Şehir / ilçe"
-            value={[props.district, props.city].filter(Boolean).join(" / ") || null}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <AddressCard
+            title="Fatura adresi"
+            lines={[props.unvan, billing || null, props.phone ? `Tel: ${props.phone}` : null]}
           />
-          <ReadOnlyField label="Fatura adresi" value={props.addressLine} />
-          <ReadOnlyField label="Teslimat adresi" value={props.deliveryAddressLine} />
-          <ReadOnlyField label="Kredi limiti" value={props.creditLimitLabel} />
-          <ReadOnlyField label="Vade" value={props.paymentTermLabel} />
-          <ReadOnlyField label="Fiyat listesi" value={props.priceListName} />
-          <ReadOnlyField label="Satış temsilcisi" value={props.salesRepLabel} />
-        </dl>
-      </>
+          <AddressCard
+            title="Teslimat adresi"
+            lines={[
+              delivery || null,
+              props.deliveryZoneCode ? `Bölge kodu: ${props.deliveryZoneCode}` : null,
+              props.city ? `Şehir: ${props.city}` : null,
+            ]}
+            tip="Soğuk zincir günleri bölge koduna göre kısıtlanır. Bölge kodunu satış ekibi değiştirir."
+          />
+        </div>
+      </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4">
+      <input type="hidden" name="email" value={props.email ?? ""} />
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block space-y-1">
-          <span className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
-            E-posta
-          </span>
-          <Input
-            name="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="siparis@firma.com"
-            className={fieldClass}
-          />
-        </label>
         <label className="block space-y-1">
           <span className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             Telefon
@@ -166,31 +141,32 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
           <span className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             Fatura adresi
           </span>
-          <Input
+          <textarea
             name="addressLine"
             value={addressLine}
             onChange={(e) => setAddressLine(e.target.value)}
             placeholder="Mahalle, sokak, no"
-            className={fieldClass}
+            rows={3}
+            className="w-full resize-y rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 py-2 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15"
           />
         </label>
         <label className="block space-y-1 sm:col-span-2">
           <span className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             Teslimat adresi
           </span>
-          <Input
+          <textarea
             name="deliveryAddressLine"
             value={deliveryAddressLine}
             onChange={(e) => setDeliveryAddressLine(e.target.value)}
-            placeholder="Faturadan farklıysa yazın"
-            className={fieldClass}
+            placeholder="Faturadan farklıysa yazın. Boş bırakılırsa fatura adresi kullanılır."
+            rows={3}
+            className="w-full resize-y rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 py-2 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15"
           />
         </label>
       </div>
 
       <p className="text-xs text-[var(--panel-ink-muted)]">
-        Unvan, vergi bilgisi, kredi limiti ve fiyat listesi burada değiştirilemez - bunlar için
-        destek ekibiyle iletişime geçin.
+        Teslimat bölgesi ve unvan burada değişmez. Yeni şube için destek ekibine yazın.
       </p>
 
       {error ? (
@@ -201,13 +177,7 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={isPending}
-          onClick={cancel}
-          className="h-9 gap-1.5"
-        >
+        <Button type="button" variant="outline" disabled={isPending} onClick={cancel} className="h-9 gap-1.5">
           <X className="size-3.5" aria-hidden />
           Vazgeç
         </Button>
@@ -216,5 +186,35 @@ export function DealerProfileFields(props: DealerProfileFieldsProps) {
         </Button>
       </div>
     </form>
+  );
+}
+
+function AddressCard({
+  title,
+  lines,
+  tip,
+}: {
+  title: string;
+  lines: Array<string | null>;
+  tip?: string;
+}) {
+  const filled = lines.filter(Boolean) as string[];
+  return (
+    <article className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4">
+      <div className="flex items-center gap-2">
+        <MapPin className="size-4 text-[var(--primary-text)]" aria-hidden />
+        <h2 className="text-sm font-semibold text-[var(--panel-ink)]">{title}</h2>
+      </div>
+      {filled.length === 0 ? (
+        <p className="mt-3 text-sm text-[var(--panel-ink-muted)]">Kayıtlı adres yok.</p>
+      ) : (
+        <ul className="mt-3 space-y-1 text-sm text-[var(--panel-ink)]">
+          {filled.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      )}
+      {tip ? <p className="mt-3 text-xs text-[var(--panel-ink-muted)]">{tip}</p> : null}
+    </article>
   );
 }

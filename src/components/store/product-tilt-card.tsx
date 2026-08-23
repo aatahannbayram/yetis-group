@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   motion,
-  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useSpring,
@@ -21,9 +20,7 @@ type ProductTiltCardProps = {
 };
 
 /**
- * Same mouse-tracked tilt + cursor glow as components/ui/product-card.tsx,
- * applied to our own photographic catalog card instead of the generic
- * icon-badge layout — keeps the real product photo, tag, and copy.
+ * Mouse-tracked tilt on photographic catalog cards. Real product photo, tag, and copy.
  */
 export function ProductTiltCard({ href, slot, tag, name, note }: ProductTiltCardProps) {
   const reduced = useReducedMotion();
@@ -35,10 +32,6 @@ export function ProductTiltCard({ href, slot, tag, name, note }: ProductTiltCard
   const springConfig = { stiffness: 300, damping: 22 };
   const springRotateX = useSpring(rotateX, springConfig);
   const springRotateY = useSpring(rotateY, springConfig);
-
-  const glowX = useTransform(mouseX, [0, 1], [0, 100]);
-  const glowY = useTransform(mouseY, [0, 1], [0, 100]);
-  const glow = useMotionTemplate`radial-gradient(110px at ${glowX}% ${glowY}%, color-mix(in srgb, var(--mkt-accent) 55%, transparent), transparent 70%)`;
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     const { left, top, width, height } = event.currentTarget.getBoundingClientRect();
@@ -71,13 +64,6 @@ export function ProductTiltCard({ href, slot, tag, name, note }: ProductTiltCard
           className="transition-transform duration-500 group-hover:scale-105"
           sizes="(min-width: 768px) 220px, 70vw"
         />
-        {reduced ? null : (
-          <motion.div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            style={{ background: glow }}
-          />
-        )}
       </motion.div>
       <span className="mkt-pill mkt-label mt-2.5 inline-flex bg-mkt-card-muted px-2.5 py-0.5 text-mkt-ink-muted">
         {tag}

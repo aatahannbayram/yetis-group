@@ -60,10 +60,10 @@ function NavItem({
         <SidebarMenuButton
           disabled
           tooltip={`${label} — yakında`}
-          className="h-9 cursor-not-allowed rounded-lg px-2.5 text-sidebar-foreground/40 opacity-70"
+          className="h-9 cursor-not-allowed rounded-[12px] px-2.5 text-sidebar-foreground/40 opacity-70"
           aria-disabled
         >
-          <Icon className="!size-[18px] stroke-[1.5] opacity-70" aria-hidden />
+          <Icon className="!size-[18px] stroke-[1.25] opacity-70" aria-hidden />
           <span className="flex-1 truncate font-normal">{label}</span>
           <span className="text-[10px] font-medium text-sidebar-foreground/35">Yakında</span>
         </SidebarMenuButton>
@@ -78,10 +78,10 @@ function NavItem({
         isActive={active}
         tooltip={label}
         className={cn(
-          "h-9 rounded-lg px-2.5 transition-colors duration-150",
+          "h-9 rounded-[12px] px-2.5 transition-colors duration-150",
           active
             ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground shadow-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            : "font-normal text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
+            : "font-normal text-sidebar-foreground/75 hover:bg-sidebar-accent/55 hover:text-sidebar-accent-foreground",
         )}
       >
         <Link
@@ -93,8 +93,8 @@ function NavItem({
         >
           <Icon
             className={cn(
-              "!size-[18px] stroke-[1.5]",
-              active ? "text-sidebar-primary" : "text-sidebar-foreground/45",
+              "!size-[18px] stroke-[1.25]",
+              active ? "text-sidebar-primary" : "text-sidebar-foreground/50",
             )}
             aria-hidden
           />
@@ -197,9 +197,10 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
   return (
     <Sidebar
       collapsible="icon"
-      className="w-[248px] border-sidebar-border bg-sidebar text-sidebar-foreground"
+      variant="inset"
+      className="w-[248px] border-transparent bg-transparent text-sidebar-foreground"
     >
-      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 border-b border-sidebar-border bg-transparent p-0 px-4 md:h-16">
+      <SidebarHeader className="h-14 shrink-0 justify-center gap-0 border-b border-sidebar-border/60 bg-transparent p-0 px-4 md:h-16">
         <Link
           href="/panel"
           className="flex h-full items-center justify-center transition-opacity hover:opacity-80"

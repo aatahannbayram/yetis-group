@@ -1448,18 +1448,30 @@ async function seedSiteAnnouncements() {
 
   const announcements = [
     {
-      name: "Sucuklar kataloğa giriyor",
-      note: "Bu hafta fermente sucuk çeşitlerini B2B listeye alıyoruz. Sipariş ve stok bilgisi onaylı hesabınızda açılacak.",
+      name: "Olgun kaşar dilimleri listeye girdi",
+      note: "Bu hafta dilimli olgun kaşarı B2B kataloğa alıyoruz. Fiyat ve stok onaylı hesabınızda açılır.",
       href: "/urunler",
       ctaLabel: "Kataloğu aç",
-      imageUrl: "/scenes/kitchen.jpg",
+      imageUrl: "/scenes/promo-market-aisle.jpg",
       sortOrder: 0,
+    },
+    {
+      name: "Ezine teneke stokları yenilendi",
+      note: "Taze teneke beyaz peynir partileri soğuk depoya indi. Lot ve SKT bayi panelinde görünür.",
+      href: "/urunler",
+      ctaLabel: "Stoku gör",
+      imageUrl: "/scenes/promo-beyaz-counter.jpg",
+      sortOrder: 1,
     },
   ];
   await prisma.campaign.deleteMany({
     where: {
       name: {
-        in: ["Eski kaşar teker stokları yenilendi", "Soğuk zincir teslimat günleri"],
+        in: [
+          "Sucuklar kataloğa giriyor",
+          "Eski kaşar teker stokları yenilendi",
+          "Soğuk zincir teslimat günleri",
+        ],
       },
     },
   });

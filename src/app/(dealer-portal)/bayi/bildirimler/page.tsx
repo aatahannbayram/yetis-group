@@ -55,7 +55,7 @@ export default async function Page() {
           description="Sipariş verdiğinizde ve sipariş durumu değiştiğinde burada görünecek."
         />
       ) : (
-        <ul className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-white shadow-[var(--shadow-sm)]">
+        <ul className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-[var(--panel-surface)] shadow-[var(--shadow-sm)]">
           {notifications.map((n) => {
             const unread = !n.readAt;
             const Icon = TYPE_ICON[n.type] ?? Bell;

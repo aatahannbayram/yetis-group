@@ -73,7 +73,7 @@ export default async function BayiFirsatlarPage() {
       </header>
 
       {offers.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-6 py-14 text-center">
           <Sparkles className="mx-auto size-8 text-[var(--panel-ink-muted)]" aria-hidden />
           <p className="mt-3 font-medium text-[var(--panel-ink)]">Şu an fırsat yok</p>
           <p className="mt-1 text-sm text-[var(--panel-ink-muted)]">

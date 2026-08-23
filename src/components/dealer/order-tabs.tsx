@@ -74,8 +74,8 @@ export function OrderTabs({
                 className={cn(
                   "group flex w-full flex-col items-start gap-2 rounded-[var(--radius-lg)] border p-4 text-left shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color,background-color] duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-md)]",
                   active
-                    ? "border-[var(--primary-solid)] bg-[linear-gradient(160deg,var(--primary-subtle),white_65%)]"
-                    : "border-[var(--panel-border)] bg-white hover:border-[var(--primary-solid)]/40",
+                    ? "border-[var(--primary-solid)] bg-[linear-gradient(160deg,var(--primary-subtle),var(--panel-surface)_65%)]"
+                    : "border-[var(--panel-border)] bg-[var(--panel-surface)] hover:border-[var(--primary-solid)]/40",
                 )}
               >
                 <span
@@ -98,7 +98,7 @@ export function OrderTabs({
 
       {tab === "quick" ? (
         <Reveal>
-          <section className="rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-white p-5 shadow-[var(--shadow-sm)]">
+          <section className="rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-5 shadow-[var(--shadow-sm)]">
             <p className="text-[length:var(--panel-font-size)] text-[var(--panel-ink-muted)]">
               SKU veya ürün adıyla satır satır ekleme. Excel yapıştırma yakında.
             </p>
@@ -112,7 +112,7 @@ export function OrderTabs({
               />
               <input
                 id="quick-sku"
-                className="h-12 w-full rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-white pr-3 pl-9 text-[length:var(--panel-font-size)] shadow-[var(--shadow-sm)] outline-none transition-colors focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
+                className="h-12 w-full rounded-[var(--radius-sm)] border border-[var(--border-strong)] bg-[var(--panel-surface)] pr-3 pl-9 text-[length:var(--panel-font-size)] shadow-[var(--shadow-sm)] outline-none transition-colors focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
                 placeholder="Örn. beyaz peynir veya SKU"
               />
             </div>
@@ -124,7 +124,7 @@ export function OrderTabs({
         <div className="space-y-4">
           {categories.length > 0 ? (
             <Reveal>
-              <section className="rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-white p-5 shadow-[var(--shadow-sm)]">
+              <section className="rounded-[var(--radius-lg)] border border-[var(--panel-border)] bg-[var(--panel-surface)] p-5 shadow-[var(--shadow-sm)]">
                 <h2 className="font-semibold text-[var(--panel-ink)]">Kategoriden hızlı seç</h2>
                 <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
                   {categories.map((c) => {
@@ -162,7 +162,7 @@ export function OrderTabs({
           ) : null}
 
           <Reveal delay={MOTION.stagger}>
-            <section className="relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--primary-solid)]/20 bg-[linear-gradient(160deg,var(--primary-subtle),white_70%)] p-5 shadow-[var(--shadow-sm)]">
+            <section className="relative overflow-hidden rounded-[var(--radius-lg)] border border-[var(--primary-solid)]/20 bg-[linear-gradient(160deg,var(--primary-subtle),var(--panel-surface)_70%)] p-5 shadow-[var(--shadow-sm)]">
               <p className="font-semibold text-[var(--panel-ink)]">Tam katalog mağaza deneyiminde</p>
               <p className="mt-1 text-[length:var(--panel-font-size)] text-[var(--panel-ink-muted)]">
                 Fiyat listenize göre filtrelenmiş tüm ürünleri görün, sepete ekleyin.

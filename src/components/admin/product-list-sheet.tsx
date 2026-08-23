@@ -410,15 +410,15 @@ export function ProductListSheet({
           )}
           style={fullScreen ? { width: "100vw", maxWidth: "100vw" } : undefined}
         >
-          <button
-            type="button"
+                  <button
+                    type="button"
             onClick={() => setFullScreen((v) => !v)}
             className="absolute top-3 right-12 inline-flex size-8 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--primary-text)]"
             title={fullScreen ? "Daralt" : "Tam ekran"}
             aria-label={fullScreen ? "Daralt" : "Tam ekran"}
           >
             {fullScreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-          </button>
+                  </button>
 
           {mode === "create" ? (
             <>

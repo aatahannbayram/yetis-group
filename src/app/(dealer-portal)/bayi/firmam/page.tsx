@@ -53,7 +53,7 @@ export default async function BayiFirmamPage() {
         </p>
       </header>
 
-      <section className="overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+      <section className="overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
         <div className="flex items-start gap-3 border-b border-[var(--panel-border)] px-4 py-4">
           <span className="flex size-10 items-center justify-center rounded-lg bg-[var(--primary-subtle)] text-[var(--primary-text)]">
             <Building2 className="size-5" aria-hidden />
@@ -87,6 +87,7 @@ export default async function BayiFirmamPage() {
           city={dealer.city}
           district={dealer.district}
           addressLine={dealer.addressLine}
+          deliveryAddressLine={dealer.deliveryAddressLine}
           creditLimitLabel={
             dealer.creditLimitKurus != null ? formatMoney(money(dealer.creditLimitKurus)) : null
           }
@@ -103,11 +104,11 @@ export default async function BayiFirmamPage() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-[var(--panel-ink)]">Kullanıcılar</h2>
         {dealer.users.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-4 py-8 text-center text-sm text-[var(--panel-ink-muted)]">
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-8 text-center text-sm text-[var(--panel-ink-muted)]">
             Bağlı kullanıcı yok.
           </p>
         ) : (
-          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
             {dealer.users.map((u) => (
               <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
                 <div>

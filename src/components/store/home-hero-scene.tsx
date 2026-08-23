@@ -60,7 +60,7 @@ export function HomeHeroScene() {
 
       <div className="relative z-10 flex min-h-[100svh] flex-col justify-end px-5 pb-10 pt-28 sm:px-8 sm:pb-12 md:px-12 md:pb-14 lg:justify-center lg:px-16 lg:pb-16 lg:pt-32">
         <motion.div
-          className="max-w-xl"
+          className="max-w-2xl"
           initial={reduced ? "visible" : "hidden"}
           animate="visible"
           variants={{
@@ -72,29 +72,29 @@ export function HomeHeroScene() {
         >
           <motion.p
             variants={item}
-            className="mkt-section-label !text-mkt-accent [text-shadow:0_1px_10px_rgba(0,0,0,0.4)]"
+            className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-white/18 bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/90 backdrop-blur-md md:mb-6 md:text-[12px] md:tracking-[0.16em]"
           >
-            Temiz gıdaya eriş, sağlıklı yetiş
+            <span className="size-1.5 rounded-full bg-mkt-accent" aria-hidden />
+            Toptan peynir · Listeniz hesabınızda
           </motion.p>
           <motion.h1
             variants={item}
             className={cn(
-              "mkt-display mt-4 text-balance text-white",
-              "text-[clamp(2.4rem,6.2vw,4.35rem)] leading-[1.06] tracking-[-0.03em]",
-              "[text-shadow:0_2px_28px_rgba(0,0,0,0.38)]",
+              "mkt-display text-balance",
+              "text-[clamp(2.35rem,6.4vw,4.25rem)] leading-[1.06] tracking-[-0.038em]",
+              "[text-shadow:0_2px_32px_rgba(0,0,0,0.4)]",
             )}
           >
-            Toptan peynir.
-            <span className="mt-1 block text-[0.72em] font-medium tracking-[-0.028em] text-white/92">
-              Listeniz hesabınızda.
-            </span>
+            <span className="block text-white">Temiz gıdaya eriş,</span>
+            <span className="mt-1 block text-mkt-accent">sağlıklı yetiş</span>
           </motion.h1>
           <motion.p
             variants={item}
-            className="mt-5 max-w-md text-[15px] leading-relaxed text-white/88 md:mt-6 md:text-[16px] md:leading-relaxed"
+            className="mt-5 max-w-lg text-[15px] leading-relaxed text-white/88 md:mt-6 md:text-[16px] md:leading-[1.65]"
           >
-            Market, şarküteri ve HORECA. Onaylı hesapta kademeli fiyat açılır; sipariş lot ve SKT
-            ile kilitlenir. SKT’si geçen yola çıkmaz.
+            Kırsalın peynirini market, şarküteri ve HORECA tezgâhına taşıyoruz. Onaylı hesabınızda
+            fiyat listeniz açılır; size özel panelden kolayca sipariş verip takibini yapabilirsiniz.
+            Her sevkiyat lot ve SKT ile kayıtlıdır; süresi geçen hiçbir parti yola çıkmaz.
           </motion.p>
 
           <motion.div

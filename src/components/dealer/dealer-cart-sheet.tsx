@@ -158,7 +158,7 @@ export function DealerCartSheet({
         >
           <OrderCelebrate active={celebrate} />
 
-          <SheetHeader className="border-b border-[var(--panel-border)] bg-white px-5 py-4 pr-12">
+          <SheetHeader className="border-b border-[var(--panel-border)] bg-[var(--panel-surface)] px-5 py-4 pr-12">
             <SheetTitle className="text-[1.25rem] font-semibold tracking-[-0.02em] text-[var(--panel-ink)]">
               {step === "pay" ? (celebrate ? "Sipariş alındı" : "Ödeme") : "Sepet"}
             </SheetTitle>
@@ -374,7 +374,7 @@ export function DealerCartSheet({
                     onChange={(e) => setNote(e.target.value)}
                     rows={2}
                     placeholder="Teslimat / özel istek"
-                    className="mt-1 w-full resize-none rounded-lg border border-[var(--panel-border)] bg-white px-3 py-2 text-sm outline-none focus-visible:border-[var(--primary-solid)]"
+                    className="mt-1 w-full resize-none rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 py-2 text-sm outline-none focus-visible:border-[var(--primary-solid)]"
                   />
                 </label>
 
@@ -384,7 +384,7 @@ export function DealerCartSheet({
           </div>
 
           {lines.length > 0 ? (
-            <SheetFooter className="gap-3 border-t border-[var(--panel-border)] bg-white px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <SheetFooter className="gap-3 border-t border-[var(--panel-border)] bg-[var(--panel-surface)] px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <div className="flex items-baseline justify-between gap-3">
                 <div>
                   <p className="text-[12px] font-medium text-[var(--panel-ink-muted)]">
@@ -400,7 +400,7 @@ export function DealerCartSheet({
                 <button
                   type="button"
                   onClick={handleStartCheckout}
-                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[var(--panel-ink)] text-[15px] font-semibold text-white transition-colors hover:bg-black"
+                  className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[var(--panel-ink)] text-[15px] font-semibold text-[var(--panel-canvas)] transition-colors hover:opacity-90"
                 >
                   Ödemeye Geç
                 </button>
@@ -431,7 +431,7 @@ export function DealerCartSheet({
                     type="button"
                     disabled={pending}
                     onClick={handleConfirmPay}
-                    className="inline-flex h-12 flex-[1.5] items-center justify-center rounded-full bg-[var(--panel-ink)] text-[15px] font-semibold text-white transition-colors hover:bg-black disabled:opacity-50"
+                    className="inline-flex h-12 flex-[1.5] items-center justify-center rounded-full bg-[var(--panel-ink)] text-[15px] font-semibold text-[var(--panel-canvas)] transition-colors hover:opacity-90 disabled:opacity-50"
                   >
                     {pending ? "Gönderiliyor…" : "Siparişi Gönder"}
                   </button>
@@ -511,7 +511,7 @@ function PayOption({
         "flex w-full items-start gap-2.5 rounded-2xl border px-3.5 py-3.5 text-left transition-colors",
         active
           ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)]"
-          : "border-[var(--panel-border)] bg-white hover:bg-[var(--surface-3)]",
+          : "border-[var(--panel-border)] bg-[var(--panel-surface)] hover:bg-[var(--surface-3)]",
       )}
     >
       <Icon className="mt-0.5 size-4 shrink-0 text-[var(--primary-text)]" aria-hidden />

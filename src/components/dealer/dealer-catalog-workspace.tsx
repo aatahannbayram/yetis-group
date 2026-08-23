@@ -87,7 +87,7 @@ export function DealerCatalogWorkspace({ products }: { products: DealerCatalogPr
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Ürün adı"
-              className="h-11 w-full rounded-lg border border-[var(--panel-border)] bg-white pr-3 pl-10 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
+              className="h-11 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--surface-2)] pr-3 pl-10 text-sm text-[var(--panel-ink)] outline-none placeholder:text-[var(--panel-ink-muted)] focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
             />
           </label>
         </div>
@@ -103,7 +103,7 @@ export function DealerCatalogWorkspace({ products }: { products: DealerCatalogPr
         {lastError ? <p className="text-xs text-[var(--danger-text)]">{lastError}</p> : null}
 
         {filtered.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white/60 px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--surface-2)]/60 px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
             Eşleşen ürün yok.
           </p>
         ) : (
@@ -117,9 +117,9 @@ export function DealerCatalogWorkspace({ products }: { products: DealerCatalogPr
                   key={product.id}
                   type="button"
                   onClick={() => setDetailId(product.id)}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white text-left transition-shadow hover:shadow-[0_8px_24px_-16px_rgb(33_28_22/0.35)]"
+                  className="group flex flex-col overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--surface-2)] text-left transition-shadow hover:shadow-[0_8px_24px_-16px_rgb(33_28_22/0.35)]"
                 >
-                  <div className="relative aspect-square bg-[#FAF8F3]">
+                  <div className="relative aspect-square bg-[var(--surface-3)]">
                     <CatalogImage
                       src={catalogFallbackImage(product.categoryName, product.imageUrl)}
                       fallbackSrc={catalogFallbackImage(product.categoryName, null)}
@@ -128,7 +128,7 @@ export function DealerCatalogWorkspace({ products }: { products: DealerCatalogPr
                       sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
                     />
                     {product.requiresColdChain ? (
-                      <span className="absolute top-2 left-2 flex size-6 items-center justify-center rounded-full bg-white/90 text-[var(--primary-text)] ring-1 ring-black/6">
+                      <span className="absolute top-2 left-2 flex size-6 items-center justify-center rounded-full bg-[var(--panel-surface)]/90 text-[var(--primary-text)] ring-1 ring-black/6">
                         <Snowflake className="size-3.5" aria-hidden />
                       </span>
                     ) : null}
@@ -148,7 +148,7 @@ export function DealerCatalogWorkspace({ products }: { products: DealerCatalogPr
                         {badges.map((b) => (
                           <span
                             key={b}
-                            className="rounded-full bg-[#FAF8F3] px-2 py-0.5 text-[10px] font-medium text-[var(--panel-ink-muted)]"
+                            className="rounded-full bg-[var(--surface-3)] px-2 py-0.5 text-[10px] font-medium text-[var(--panel-ink-muted)]"
                           >
                             {b}
                           </span>
@@ -213,8 +213,8 @@ function FilterChip({
       className={cn(
         "h-8 shrink-0 rounded-md border px-3 text-xs font-medium transition-colors",
         active
-          ? "border-[var(--panel-ink)] bg-[var(--panel-ink)] text-white"
-          : "border-[var(--panel-border)] bg-white text-[var(--panel-ink-muted)] hover:border-[var(--panel-ink)]/30",
+          ? "border-[var(--panel-ink)] bg-[var(--panel-ink)] text-[var(--panel-canvas)]"
+          : "border-[var(--panel-border)] bg-[var(--surface-2)] text-[var(--panel-ink-muted)] hover:border-[var(--panel-ink)]/30 hover:text-[var(--panel-ink)]",
       )}
     >
       {label}

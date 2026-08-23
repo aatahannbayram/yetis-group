@@ -43,7 +43,7 @@ const MODULE_SCENE: Partial<Record<HomeModule, string>> = {
   volumeTier: "/scenes/cold-chain.jpg",
   branchOverview: "/scenes/how-sales-2.jpg",
   winback: "/scenes/whatsapp-desk.jpg",
-  repeatLastOrder: "/scenes/promo-beyaz-counter.jpg",
+  repeatLastOrder: "/scenes/yetis-beyaz-counter-full.jpg",
 };
 
 const FULL_WIDTH: HomeModule[] = [
@@ -718,7 +718,7 @@ function RepeatLastOrder({
 }) {
   const [pending, start] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const scene = MODULE_SCENE.repeatLastOrder ?? "/scenes/promo-beyaz-counter.jpg";
+  const scene = MODULE_SCENE.repeatLastOrder ?? "/scenes/yetis-beyaz-counter-full.jpg";
   const chips = summary
     ? summary.split(",").map((s) => s.trim()).filter(Boolean).slice(0, 4)
     : [];

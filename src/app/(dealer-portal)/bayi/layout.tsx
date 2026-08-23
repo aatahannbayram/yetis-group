@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { prisma } from "@/infra/db/client";
-import { countUnreadDealer } from "@/infra/db/notifications";
+import { countUnreadDealer, listDealerNotifications } from "@/infra/db/notifications";
 import { getPaymentSettings } from "@/infra/db/payment-settings";
 import { getDealerCreditExposure } from "@/infra/db/orders";
 import { availableCreditKurus, canUseOnAccount } from "@/domain/ledger";
@@ -48,12 +48,23 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
   });
   if (!dealer) redirect(staff ? "/panel" : "/urunler");
 
-  const [unreadNotifications, initialCart, paymentSettings, exposureKurus] = await Promise.all([
-    countUnreadDealer(dealer.id),
-    fetchDealerCartAction(),
-    getPaymentSettings(),
-    getDealerCreditExposure(dealer.id),
-  ]);
+  const [unreadNotifications, dealerNotifications, initialCart, paymentSettings, exposureKurus] =
+    await Promise.all([
+      countUnreadDealer(dealer.id),
+      listDealerNotifications(dealer.id, 12),
+      fetchDealerCartAction(),
+      getPaymentSettings(),
+      getDealerCreditExposure(dealer.id),
+    ]);
+
+  const notifications = dealerNotifications.map((n) => ({
+    id: n.id,
+    title: n.title,
+    body: n.body,
+    link: n.link,
+    readAt: n.readAt?.toISOString() ?? null,
+    createdAt: n.createdAt.toISOString(),
+  }));
 
   const cariEligibility = canUseOnAccount({
     dealerPaymentMethod: dealer.paymentMethod,
@@ -76,8 +87,16 @@ export default async function BayiLayout({ children }: { children: React.ReactNo
           {impersonating ? (
             <ImpersonationBanner dealerId={dealer.id} dealerName={dealer.unvan} />
           ) : null}
-          <DealerNav dealerName={dealer.unvan} unreadNotifications={unreadNotifications} />
-          <main className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-8">{children}</main>
+          <DealerNav
+            dealerName={dealer.unvan}
+            unreadNotifications={unreadNotifications}
+            notifications={notifications}
+          />
+          <main className="mx-auto max-w-6xl px-3 py-6 sm:px-5 sm:py-8">
+            <div className="rounded-[var(--radius-xl)] bg-[var(--panel-surface)] p-4 shadow-[var(--shadow-md)] ring-1 ring-[var(--panel-border)]/55 sm:p-6 md:p-7">
+              {children}
+            </div>
+          </main>
         </WorkspaceShell>
         <DealerCartSheet
           payment={{

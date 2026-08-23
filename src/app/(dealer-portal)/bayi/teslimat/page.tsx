@@ -42,7 +42,7 @@ export default async function BayiTeslimatPage() {
       </header>
 
       {shipments.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-6 py-14 text-center">
           <Truck className="mx-auto size-8 text-[var(--panel-ink-muted)]" aria-hidden />
           <p className="mt-3 font-medium text-[var(--panel-ink)]">Henüz sevkiyat yok</p>
           <p className="mt-1 text-sm text-[var(--panel-ink-muted)]">
@@ -56,7 +56,7 @@ export default async function BayiTeslimatPage() {
           </Link>
         </div>
       ) : (
-        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
           {shipments.map((s) => (
             <li key={s.id} className="flex flex-col gap-2 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1">

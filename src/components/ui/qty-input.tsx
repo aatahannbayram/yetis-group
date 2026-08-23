@@ -98,7 +98,7 @@ export function QtyInput({
         }}
         className={cn(
           field,
-          "border-x border-[var(--panel-border)] bg-transparent text-center tabular-nums outline-none",
+          "border-x border-[var(--panel-border)] bg-transparent text-center text-[var(--panel-ink)] tabular-nums outline-none",
           inputClassName,
         )}
       />

@@ -65,7 +65,7 @@ export default async function BayiCariPage() {
       </header>
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-[var(--panel-border)] bg-white p-4 sm:col-span-1">
+        <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 sm:col-span-1">
           <p className="flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             <Wallet className="size-3.5" aria-hidden />
             Bakiye
@@ -82,7 +82,7 @@ export default async function BayiCariPage() {
             {balanceKurus > 0 ? "Borç (bizden alacak)" : balanceKurus < 0 ? "Alacak" : "Kapalı"}
           </p>
         </div>
-        <div className="rounded-xl border border-[var(--panel-border)] bg-white p-4">
+        <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4">
           <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             Kredi limiti
           </p>
@@ -96,7 +96,7 @@ export default async function BayiCariPage() {
             </p>
           ) : null}
         </div>
-        <div className="rounded-xl border border-[var(--panel-border)] bg-white p-4">
+        <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4">
           <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
             Vade
           </p>
@@ -115,11 +115,11 @@ export default async function BayiCariPage() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-[var(--panel-ink)]">Bekleyen siparişler</h2>
         {pendingOrders.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
             Bekleyen (henüz teslim edilmemiş) sipariş yok.
           </p>
         ) : (
-          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
             {pendingOrders.map((order) => {
               const awaitingPayment = order.paymentMethod !== "CARI" && !order.paidAt;
               return (
@@ -158,11 +158,11 @@ export default async function BayiCariPage() {
       <section>
         <h2 className="mb-3 text-sm font-semibold text-[var(--panel-ink)]">Hareketler</h2>
         {recent.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
             Henüz cari hareket yok.
           </p>
         ) : (
-          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
             {recent.map((entry) => (
               <li key={entry.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">

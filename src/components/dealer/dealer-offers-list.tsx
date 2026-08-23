@@ -36,7 +36,7 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
         return (
           <StaggerItem key={o.id}>
             <HoverLift className="h-full">
-              <article className="flex h-full flex-col overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white shadow-[var(--shadow-sm)]">
+              <article className="flex h-full flex-col overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] shadow-[var(--shadow-sm)]">
                 <Link
                   href={detailHref}
                   className="group/img relative block aspect-[16/10] overflow-hidden bg-[var(--surface-3)]"
@@ -60,7 +60,7 @@ export function DealerOffersList({ offers }: { offers: DealerOffer[] }) {
                       "absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold shadow-sm backdrop-blur-sm",
                       tone === "danger" && "bg-[var(--danger-text)] text-white",
                       tone === "warn" && "bg-amber-100/95 text-amber-900",
-                      tone === "soft" && "bg-white/90 text-[var(--panel-ink)]",
+                      tone === "soft" && "bg-[var(--panel-surface)]/90 text-[var(--panel-ink)]",
                     )}
                   >
                     <Clock className="size-3" aria-hidden />

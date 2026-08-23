@@ -172,7 +172,29 @@ const processTabs = [
 ];
 
 export default async function StoreHomePage() {
-  const announcements = await listPublishedAnnouncements();
+  const published = await listPublishedAnnouncements();
+  const announcements =
+    published.length >= 2
+      ? published
+      : [
+          {
+            id: "fallback-kasar",
+            name: "Olgun kaşar dilimleri listeye girdi",
+            note: "Bu hafta dilimli olgun kaşarı B2B kataloğa alıyoruz. Fiyat ve stok onaylı hesabınızda açılır.",
+            href: "/urunler",
+            ctaLabel: "Kataloğu aç",
+            imageUrl: "/scenes/promo-market-aisle.jpg",
+          },
+          {
+            id: "fallback-beyaz",
+            name: "Ezine teneke stokları yenilendi",
+            note: "Taze teneke beyaz peynir partileri soğuk depoya indi. Lot ve SKT bayi panelinde görünür.",
+            href: "/urunler",
+            ctaLabel: "Stoku gör",
+            imageUrl: "/scenes/promo-beyaz-counter.jpg",
+          },
+          ...published,
+        ].slice(0, 2);
 
   return (
     <>
@@ -186,7 +208,6 @@ export default async function StoreHomePage() {
       />
 
       <HomeHero />
-      <WeeklyAnnouncements items={announcements} />
 
       <Canvas>
       <Slab id="hakkimizda" className="relative overflow-hidden !p-0">
@@ -288,7 +309,11 @@ export default async function StoreHomePage() {
           </div>
         </div>
       </Slab>
+      </Canvas>
 
+      <WeeklyAnnouncements items={announcements} />
+
+      <Canvas>
       <Slab className="relative overflow-hidden !p-0">
         <ScrollReveal className="h-full">
           <AboutTabs tabs={processTabs} visual imageSide="start" />
@@ -298,7 +323,13 @@ export default async function StoreHomePage() {
       <Slab id="cozumler" className="relative overflow-hidden !p-0">
         <div className="relative min-h-[440px] overflow-hidden sm:min-h-[500px] lg:min-h-[560px]">
           <ScrollReveal from="scale" className="absolute inset-0">
-            <SceneImage id="hero" fill quality={65} className="object-center" sizes="100vw" />
+            <SceneImage
+              id="hero"
+              fill
+              quality={90}
+              className="object-cover object-[center_42%]"
+              sizes="100vw"
+            />
           </ScrollReveal>
           <div
             aria-hidden
@@ -307,8 +338,8 @@ export default async function StoreHomePage() {
           <div className="absolute inset-x-0 bottom-0 z-10 px-5 py-10 sm:px-8 sm:py-12 md:px-12 md:py-14 lg:px-14 lg:py-16">
             <ScrollReveal>
               <p className="mkt-section-label !text-mkt-accent">İşinizi kolaylaştıranlar</p>
-              <h2 className="mkt-h2 mt-3 max-w-lg text-balance text-white">
-                Peyniriniz yola çıkmadan netleşir.
+              <h2 className="mkt-h2 mt-3 max-w-xl text-balance text-white">
+                Ürünleriniz siparişte netleşir, yola öyle çıkar.
               </h2>
               <p className="mt-3 max-w-md text-[15px] leading-relaxed text-white/75">
                 Lot, SKT, teslimat günü ve WhatsApp: hepsi bayi hesabınızda.
@@ -420,7 +451,6 @@ export default async function StoreHomePage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                 <PillCta
                   href="/auth?tab=uye"
-                  showArrow={false}
                   className="w-full justify-center sm:w-auto"
                 >
                   Bayi başvurusu yap

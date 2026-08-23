@@ -15,6 +15,7 @@ export async function updateDealerProfileAction(formData: FormData) {
   const city = String(formData.get("city") ?? "").trim();
   const district = String(formData.get("district") ?? "").trim();
   const addressLine = String(formData.get("addressLine") ?? "").trim();
+  const deliveryAddressLine = String(formData.get("deliveryAddressLine") ?? "").trim();
 
   if (email && !EMAIL_RE.test(email)) {
     throw new Error("Geçerli bir e-posta girin");
@@ -26,8 +27,10 @@ export async function updateDealerProfileAction(formData: FormData) {
     city: city || null,
     district: district || null,
     addressLine: addressLine || null,
+    deliveryAddressLine: deliveryAddressLine || null,
   });
 
   revalidatePath("/bayi/firmam");
+  revalidatePath("/bayi/adreslerim");
   revalidatePath("/panel/bayiler");
 }

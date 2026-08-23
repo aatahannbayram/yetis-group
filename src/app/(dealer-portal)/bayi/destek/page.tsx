@@ -21,7 +21,7 @@ export default async function BayiDestekPage() {
       <div className="grid gap-3 sm:grid-cols-3">
         <a
           href={`tel:${phoneHref}`}
-          className="rounded-xl border border-[var(--panel-border)] bg-white p-4 transition-colors hover:border-[var(--primary-solid)]/40"
+          className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 transition-colors hover:border-[var(--primary-solid)]/40"
         >
           <Phone className="size-5 text-[var(--primary-text)]" aria-hidden />
           <p className="mt-3 text-sm font-semibold text-[var(--panel-ink)]">Telefon</p>
@@ -31,7 +31,7 @@ export default async function BayiDestekPage() {
         </a>
         <a
           href={`mailto:${SITE.email}?subject=Bayi%20destek`}
-          className="rounded-xl border border-[var(--panel-border)] bg-white p-4 transition-colors hover:border-[var(--primary-solid)]/40"
+          className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 transition-colors hover:border-[var(--primary-solid)]/40"
         >
           <Mail className="size-5 text-[var(--primary-text)]" aria-hidden />
           <p className="mt-3 text-sm font-semibold text-[var(--panel-ink)]">E-posta</p>
@@ -41,7 +41,7 @@ export default async function BayiDestekPage() {
           href={`https://wa.me/${waDigits}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-xl border border-[var(--panel-border)] bg-white p-4 transition-colors hover:border-[var(--primary-solid)]/40"
+          className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4 transition-colors hover:border-[var(--primary-solid)]/40"
         >
           <MessageCircle className="size-5 text-[var(--primary-text)]" aria-hidden />
           <p className="mt-3 text-sm font-semibold text-[var(--panel-ink)]">WhatsApp</p>
@@ -49,7 +49,7 @@ export default async function BayiDestekPage() {
         </a>
       </div>
 
-      <section className="rounded-xl border border-[var(--panel-border)] bg-white p-4">
+      <section className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] p-4">
         <h2 className="text-sm font-semibold text-[var(--panel-ink)]">Sık konular</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--panel-ink-muted)]">
           <li>

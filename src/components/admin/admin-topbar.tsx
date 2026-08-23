@@ -67,7 +67,7 @@ export function AdminTopbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background px-3 md:h-16 md:gap-3 md:px-4">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border/50 bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] px-3 backdrop-blur-xl md:h-16 md:gap-3 md:px-5">
       <SidebarTrigger className="size-10 shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground md:size-9" />
       <Separator orientation="vertical" className="hidden h-5 sm:block" />
 

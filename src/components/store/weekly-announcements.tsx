@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { SiteAnnouncement } from "@/domain/campaigns/live";
-import { PillCta } from "@/components/store/pill-cta";
 import { ScrollReveal } from "@/components/store/scroll-reveal";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +16,40 @@ function Cover({ src, alt, className }: { src: string | null; alt: string; class
       fill
       unoptimized={src.startsWith("/uploads/")}
       className={cn("object-cover", className)}
-      sizes="(min-width: 1024px) 55vw, 100vw"
+      sizes="(min-width: 1024px) 50vw, 100vw"
     />
+  );
+}
+
+function AdBanner({ item }: { item: SiteAnnouncement }) {
+  return (
+    <Link
+      href={item.href}
+      className="group relative isolate flex min-h-[16.5rem] flex-col justify-end overflow-hidden rounded-[1.35rem] text-white sm:min-h-[18.5rem] lg:min-h-[20rem]"
+    >
+      <Cover
+        src={item.imageUrl}
+        alt=""
+        className="transition-transform duration-700 group-hover:scale-[1.04]"
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,14,10,0.08)_0%,rgba(10,14,10,0.45)_42%,rgba(10,14,10,0.9)_100%)]"
+      />
+      <div className="relative z-[2] flex flex-col gap-2.5 p-5 sm:p-6">
+        <p className="mkt-label text-white/70">Bu hafta</p>
+        <h3 className="max-w-md text-[1.25rem] leading-tight font-semibold tracking-[-0.03em] sm:text-[1.45rem]">
+          {item.name}
+        </h3>
+        {item.note ? (
+          <p className="max-w-md text-[13px] leading-relaxed text-white/80 sm:text-[14px]">{item.note}</p>
+        ) : null}
+        <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-white/14 px-3.5 py-2 text-[12.5px] font-semibold backdrop-blur-sm transition-colors group-hover:bg-white/22">
+          {item.ctaLabel}
+          <ArrowUpRight className="size-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </span>
+      </div>
+    </Link>
   );
 }
 
@@ -30,7 +61,9 @@ export function WeeklyAnnouncements({
   variant?: "home" | "catalog" | "dealer";
 }) {
   if (items.length === 0) return null;
-  const [featured, ...rest] = items;
+  const [featured] = items;
+  const banners = items.slice(0, 2);
+  const extras = items.slice(2);
 
   if (variant === "catalog") {
     return (
@@ -80,79 +113,50 @@ export function WeeklyAnnouncements({
   }
 
   return (
-    <section className="relative overflow-hidden bg-[#f0eee8]" aria-labelledby="weekly-news-title">
+    <section className="relative overflow-hidden bg-[#f0eee8]" aria-labelledby="weekly-ads-title">
       <div className="relative mkt-pad">
         <ScrollReveal>
-          <p className="mkt-label text-mkt-ink-muted">Haftalık duyurular</p>
-          <h2 id="weekly-news-title" className="mkt-h2 mt-3 max-w-xl text-balance text-mkt-ink">
-            Yeni nesil katalog güncellemesi.
+          <p className="mkt-label text-mkt-ink-muted">Haftalık</p>
+          <h2 id="weekly-ads-title" className="mkt-h2 mt-3 max-w-xl text-balance text-mkt-ink">
+            Duyurular
           </h2>
           <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-mkt-ink-muted">
-            Bu hafta rafta olanlar, yakında eklenecek ürünler ve bayiye özel haberler burada.
+            Yeni partiler, yenilenen stoklar ve bayiye özel katalog güncellemeleri.
           </p>
         </ScrollReveal>
 
-        <div
-          className={
-            rest.length > 0
-              ? "mt-10 grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(16rem,0.85fr)] lg:items-stretch"
-              : "mt-10"
-          }
-        >
-          <article className="group relative isolate min-h-[22rem] overflow-hidden rounded-[1.5rem] text-white">
-            <Cover
-              src={featured.imageUrl}
-              alt=""
-              className="transition-transform duration-700 group-hover:scale-[1.04]"
-            />
-            <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(10,14,10,0.05)_0%,rgba(10,14,10,0.55)_48%,rgba(10,14,10,0.88)_100%)]" />
-            <div className="absolute inset-x-0 bottom-0 z-[2] flex flex-col gap-3 p-6 sm:p-8">
-              <p className="mkt-label text-white/70">Bu hafta</p>
-              <h3 className="max-w-md text-[1.65rem] leading-tight font-semibold tracking-[-0.03em] sm:text-[2rem]">
-                {featured.name}
-              </h3>
-              {featured.note ? (
-                <p className="max-w-md text-[14px] leading-relaxed text-white/80 sm:text-[15px]">{featured.note}</p>
-              ) : null}
-              <div className="pt-1">
-                <PillCta href={featured.href} variant="glass" className="w-full justify-center sm:w-auto">
-                  {featured.ctaLabel}
-                </PillCta>
-              </div>
-            </div>
-          </article>
-
-          {rest.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {rest.slice(0, 3).map((item) => (
-                <li key={item.id}>
-                  <Link
-                    href={item.href}
-                    className="flex h-full min-h-[6.5rem] overflow-hidden rounded-[1.15rem] border border-[color:var(--mkt-border)] bg-mkt-slab transition-colors hover:bg-[#f0eee8]"
-                  >
-                    <div className="relative w-[5.5rem] shrink-0 sm:w-28">
-                      <Cover src={item.imageUrl} alt="" />
-                    </div>
-                    <div className="flex min-w-0 flex-1 flex-col justify-center px-4 py-3">
-                      <p className="truncate text-[15px] font-semibold tracking-[-0.02em] text-mkt-ink">
-                        {item.name}
-                      </p>
-                      {item.note ? (
-                        <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-mkt-ink-muted">
-                          {item.note}
-                        </p>
-                      ) : null}
-                      <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-mkt-ink">
-                        {item.ctaLabel}
-                        <ArrowUpRight className="size-3.5" />
-                      </p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-2">
+          {banners.map((item) => (
+            <AdBanner key={item.id} item={item} />
+          ))}
         </div>
+
+        {extras.length > 0 ? (
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {extras.slice(0, 3).map((item) => (
+              <li key={item.id}>
+                <Link
+                  href={item.href}
+                  className="flex h-full min-h-[5.5rem] overflow-hidden rounded-[1.1rem] border border-[color:var(--mkt-border)] bg-mkt-slab transition-colors hover:bg-[#ebe8e0]"
+                >
+                  <div className="relative w-[4.75rem] shrink-0 sm:w-24">
+                    <Cover src={item.imageUrl} alt="" />
+                  </div>
+                  <div className="flex min-w-0 flex-1 flex-col justify-center px-3.5 py-3">
+                    <p className="truncate text-[14px] font-semibold tracking-[-0.02em] text-mkt-ink">
+                      {item.name}
+                    </p>
+                    {item.note ? (
+                      <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-mkt-ink-muted">
+                        {item.note}
+                      </p>
+                    ) : null}
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </section>
   );

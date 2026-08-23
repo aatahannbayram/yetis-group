@@ -121,7 +121,7 @@ export function DealerOrderWorkspace({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Ürün adı veya stok kodu"
-              className="h-11 w-full rounded-lg border border-[var(--panel-border)] bg-white pr-3 pl-10 text-sm outline-none focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
+              className="h-11 w-full rounded-lg border border-[var(--panel-border)] bg-[var(--surface-2)] pr-3 pl-10 text-sm text-[var(--panel-ink)] outline-none placeholder:text-[var(--panel-ink-muted)] focus-visible:border-[var(--primary-solid)] focus-visible:ring-3 focus-visible:ring-[var(--primary-solid)]/15"
             />
           </label>
         </div>
@@ -144,11 +144,11 @@ export function DealerOrderWorkspace({
         {lastError ? <p className="text-xs text-[var(--danger-text)]">{lastError}</p> : null}
 
         {filtered.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white/60 px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
+          <p className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--surface-2)]/60 px-4 py-10 text-center text-sm text-[var(--panel-ink-muted)]">
             Eşleşen ürün yok.
           </p>
         ) : (
-          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+          <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--surface-2)]">
             {filtered.map((product) => {
               const v = variantOf(product);
               const stock = stockLabel(v.stockKg);
@@ -269,9 +269,16 @@ export function DealerOrderWorkspace({
                           type="button"
                           disabled={isPending || insufficientForMoq}
                           onClick={() => addProduct(product)}
-                          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--primary-solid)] px-3.5 text-sm font-semibold text-white transition-[transform,background-color] hover:bg-[var(--primary-hover)] active:scale-[0.97] disabled:opacity-40"
+                          className={cn(
+                            "inline-flex h-9 items-center gap-1.5 rounded-full px-3.5 text-sm font-semibold transition-[transform,background-color] active:scale-[0.97] disabled:pointer-events-none",
+                            insufficientForMoq
+                              ? "bg-[var(--surface-3)] text-[var(--panel-ink-muted)] ring-1 ring-[var(--panel-border)]"
+                              : "bg-[var(--primary-solid)] text-white hover:bg-[var(--primary-hover)] dark:text-[#06231a]",
+                          )}
                         >
-                          <Plus className="size-3.5" aria-hidden />
+                          {!insufficientForMoq ? (
+                            <Plus className="size-3.5" aria-hidden />
+                          ) : null}
                           {insufficientForMoq ? "Stok yetersiz" : "Ekle"}
                         </button>
                       </div>
@@ -333,8 +340,8 @@ function FilterChip({
       className={cn(
         "h-8 shrink-0 rounded-md border px-3 text-xs font-medium transition-colors",
         active
-          ? "border-[var(--panel-ink)] bg-[var(--panel-ink)] text-white"
-          : "border-[var(--panel-border)] bg-white text-[var(--panel-ink-muted)] hover:border-[var(--panel-ink)]/30",
+          ? "border-[var(--panel-ink)] bg-[var(--panel-ink)] text-[var(--panel-canvas)]"
+          : "border-[var(--panel-border)] bg-[var(--surface-2)] text-[var(--panel-ink-muted)] hover:border-[var(--panel-ink)]/30 hover:text-[var(--panel-ink)]",
       )}
     >
       {label}

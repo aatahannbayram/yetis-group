@@ -99,7 +99,7 @@ export default async function BayiSiparislerimPage({
       </section>
 
       {orders.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-6 py-14 text-center">
           <ClipboardList className="mx-auto size-8 text-[var(--panel-ink-muted)]" aria-hidden />
           <p className="mt-3 font-medium text-[var(--panel-ink)]">Henüz sipariş yok</p>
           <p className="mt-1 text-sm text-[var(--panel-ink-muted)]">
@@ -113,7 +113,7 @@ export default async function BayiSiparislerimPage({
           </Link>
         </div>
       ) : (
-        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
           {orders.map((order) => {
             const thumbs = order.lines
               .map((l) => l.variant.product.imageUrl)
@@ -202,7 +202,7 @@ export default async function BayiSiparislerimPage({
 
 function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-xl border border-[var(--panel-border)] bg-white px-4 py-3">
+    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-3">
       <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
         {label}
       </p>

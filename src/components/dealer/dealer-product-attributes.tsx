@@ -59,7 +59,7 @@ export function DealerProductAttributes({
             const display = formatAttributeDisplay(v);
             if (!display) return null;
             return (
-              <div key={v.attribute.key} className="rounded-lg bg-[#FAF8F3] px-3 py-2">
+              <div key={v.attribute.key} className="rounded-lg bg-[var(--surface-3)] px-3 py-2">
                 <dt className="text-[11px] text-[var(--panel-ink-muted)]">{v.attribute.name}</dt>
                 <dd className="mt-0.5 text-[13px] font-medium text-[var(--panel-ink)]">
                   {display}

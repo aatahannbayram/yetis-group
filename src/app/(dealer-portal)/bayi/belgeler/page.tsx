@@ -27,7 +27,7 @@ export default async function BayiBelgelerPage() {
       </header>
 
       {docs.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-white px-6 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-[var(--panel-border)] bg-[var(--panel-surface)] px-6 py-14 text-center">
           <FileText className="mx-auto size-8 text-[var(--panel-ink-muted)]" aria-hidden />
           <p className="mt-3 font-medium text-[var(--panel-ink)]">Belge yok</p>
           <p className="mt-1 text-sm text-[var(--panel-ink-muted)]">
@@ -41,7 +41,7 @@ export default async function BayiBelgelerPage() {
           </Link>
         </div>
       ) : (
-        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-white">
+        <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--panel-surface)]">
           {docs.map((doc) => (
             <li
               key={doc.id}
@@ -77,7 +77,7 @@ export default async function BayiBelgelerPage() {
                 {doc.status === "ISSUED" ? (
                   <a
                     href={`/api/proforma/${doc.id}/pdf`}
-                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[var(--panel-border)] bg-white px-3 text-xs font-semibold text-[var(--panel-ink)] hover:bg-[var(--surface-3)]"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 text-xs font-semibold text-[var(--panel-ink)] hover:bg-[var(--surface-3)]"
                   >
                     <Download className="size-3.5" aria-hidden />
                     PDF

@@ -11,8 +11,8 @@ import type { LucideIcon } from "lucide-react";
 export type DealerCardTone = "neutral" | "danger" | "feature";
 
 const CARD_SHELL: Record<DealerCardTone, string> = {
-  neutral: "border-[var(--panel-border)] bg-white",
-  danger: "border-[var(--panel-border)] border-l-[3px] border-l-[var(--danger-solid)] bg-white",
+  neutral: "border-[var(--panel-border)] bg-[var(--panel-surface)]",
+  danger: "border-[var(--panel-border)] border-l-[3px] border-l-[var(--danger-solid)] bg-[var(--panel-surface)]",
   feature:
     "border-transparent bg-[linear-gradient(135deg,var(--brand-800),var(--brand-600))] text-white",
 };
@@ -26,7 +26,7 @@ const ICON_TONE: Record<DealerCardTone, string> = {
 const ICON_BG: Record<DealerCardTone, string> = {
   neutral: "bg-[var(--surface-3)]",
   danger: "bg-[var(--danger-subtle)]",
-  feature: "bg-white/15",
+  feature: "bg-[var(--panel-surface)]/15",
 };
 
 /** Shared card shell for the dealer portal: quiet by default, hover lift, one accent per meaning. */

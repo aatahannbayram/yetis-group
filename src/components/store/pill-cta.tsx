@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type PillCtaProps = {
@@ -7,11 +6,10 @@ type PillCtaProps = {
   children: React.ReactNode;
   variant?: "primary" | "secondary" | "ghost" | "glass";
   className?: string;
-  showArrow?: boolean;
 };
 
 /**
- * Signature CTA: accent fill, inner light, dark arrow disc.
+ * Signature CTA: accent fill, inner light.
  * `glass` is for photo heroes (frosted white outline).
  */
 export function PillCta({
@@ -19,7 +17,6 @@ export function PillCta({
   children,
   variant = "primary",
   className,
-  showArrow = true,
 }: PillCtaProps) {
   const base =
     "mkt-pill group/cta inline-flex items-center justify-center font-semibold outline-none select-none " +
@@ -34,8 +31,8 @@ export function PillCta({
         className={cn(
           base,
           "relative isolate overflow-hidden text-mkt-accent-ink",
-          "h-12 gap-3 pr-6 pl-6 text-[15px] tracking-[-0.015em]",
-          "sm:h-[3.25rem] sm:pr-7 sm:pl-7",
+          "h-12 px-6 text-[15px] tracking-[-0.015em]",
+          "sm:h-[3.25rem] sm:px-7",
           "bg-[linear-gradient(180deg,#4bb57d_0%,var(--mkt-accent)_48%,#248a58_100%)]",
           "shadow-[inset_0_1px_0_0_rgb(255_255_255/0.38),inset_0_-1px_0_0_rgb(0_0_0/0.12),0_1px_2px_rgb(0_0_0/0.18),0_12px_28px_-10px_rgb(16_70_42/0.55)]",
           "motion-safe:hover:-translate-y-0.5",
@@ -49,21 +46,6 @@ export function PillCta({
           className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_35%,rgb(255_255_255/0.22)_48%,transparent_62%)] opacity-0 transition-opacity duration-300 group-hover/cta:opacity-100"
         />
         <span className="relative">{children}</span>
-        {showArrow ? (
-          <span
-            className={cn(
-              "relative inline-flex shrink-0 items-center justify-center rounded-full",
-              "size-9 sm:size-10",
-              "bg-[#0a0a0a] text-white",
-              "shadow-[inset_0_1px_0_0_rgb(255_255_255/0.18),0_1px_2px_rgb(0_0_0/0.28)]",
-              "transition-transform duration-200 ease-out",
-              "motion-safe:group-hover/cta:scale-105",
-            )}
-            aria-hidden
-          >
-            <ArrowUpRight className="size-4 transition-transform duration-200 motion-safe:group-hover/cta:translate-x-0.5 motion-safe:group-hover/cta:-translate-y-0.5" />
-          </span>
-        ) : null}
       </Link>
     );
   }

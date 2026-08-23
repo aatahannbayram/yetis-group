@@ -119,27 +119,31 @@ export async function createDealer(input: DealerInput) {
 }
 
 export type DealerContactInfoInput = {
-  email: string | null;
-  phone: string | null;
-  city: string | null;
-  district: string | null;
-  addressLine: string | null;
+  email?: string | null;
+  phone?: string | null;
+  city?: string | null;
+  district?: string | null;
+  addressLine?: string | null;
+  deliveryAddressLine?: string | null;
 };
 
 /**
- * Narrow, dealer-portal-safe update: contact/billing-address fields only.
- * Never touches unvan, vergi, status, credit limit, price list or sales rep
- * - those stay staff-only (edited via updateDealer in the admin panel).
+ * Narrow, dealer-portal-safe update: contact and address fields only.
+ * Never touches unvan, vergi, status, credit limit, zone, price list or sales rep.
+ * Those stay staff-only (edited via updateDealer in the admin panel).
  */
 export async function updateDealerContactInfo(dealerId: string, input: DealerContactInfoInput) {
   return prisma.dealer.update({
     where: { id: dealerId },
     data: {
-      email: input.email,
-      phone: input.phone,
-      city: input.city,
-      district: input.district,
-      addressLine: input.addressLine,
+      ...(input.email !== undefined ? { email: input.email } : {}),
+      ...(input.phone !== undefined ? { phone: input.phone } : {}),
+      ...(input.city !== undefined ? { city: input.city } : {}),
+      ...(input.district !== undefined ? { district: input.district } : {}),
+      ...(input.addressLine !== undefined ? { addressLine: input.addressLine } : {}),
+      ...(input.deliveryAddressLine !== undefined
+        ? { deliveryAddressLine: input.deliveryAddressLine }
+        : {}),
     },
   });
 }

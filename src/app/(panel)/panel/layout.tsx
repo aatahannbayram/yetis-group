@@ -50,9 +50,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <TooltipProvider delayDuration={200}>
       <AdminShell>
-        <SidebarProvider>
+        <SidebarProvider className="bg-[var(--canvas)]">
           <AdminSidebar openLeadsCount={openLeadsCount} />
-          <SidebarInset className="min-w-0 bg-background">
+          <SidebarInset className="min-w-0 overflow-hidden bg-[var(--surface)] md:peer-data-[variant=inset]:m-3 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-[var(--radius-xl)] md:peer-data-[variant=inset]:shadow-[var(--shadow-md)] md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-[var(--border)]/60">
             {impersonated ? (
               <ImpersonationBanner dealerId={impersonated.id} dealerName={impersonated.unvan} />
             ) : null}
@@ -69,7 +69,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               }))}
               unreadCount={unreadCount}
             />
-            <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:p-6">
+            <main className="flex-1 px-3 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
               <MotionShell>{children}</MotionShell>
             </main>
           </SidebarInset>

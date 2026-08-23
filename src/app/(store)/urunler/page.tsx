@@ -65,7 +65,7 @@ export default async function ProductsPage({
         ]}
       />
 
-      <Slab className="relative min-h-[40vh] overflow-hidden !p-0 md:min-h-[48vh]">
+      <Slab className="relative min-h-[36vh] overflow-hidden !p-0 md:min-h-[42vh]">
         <SceneImage
           id="products-hero"
           fill
@@ -76,18 +76,16 @@ export default async function ProductsPage({
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.72)_0%,rgba(12,10,8,0.28)_32%,rgba(10,14,10,0.22)_48%,rgba(10,14,10,0.72)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,8,0.72)_0%,rgba(12,10,8,0.28)_32%,rgba(10,14,10,0.22)_48%,rgba(10,14,10,0.78)_100%)]"
         />
         <div className="absolute inset-x-0 top-0 z-20">
           <SiteHeader variant="overlay" />
         </div>
-        <div className="relative z-10 flex min-h-[40vh] flex-col items-center justify-end px-5 pb-10 pt-24 text-center md:min-h-[48vh] md:px-10 md:pb-14 md:pt-28">
+        <div className="relative z-10 flex min-h-[36vh] flex-col items-center justify-end px-5 pt-24 pb-6 text-center md:min-h-[42vh] md:px-10 md:pt-28 md:pb-8">
           <Reveal>
-            <p className="mkt-label text-white/70">Katalog</p>
-            <h1 className="mkt-display mt-3 text-balance text-white md:text-[clamp(2.75rem,6vw,4.5rem)]">
-              Ürünler
-            </h1>
-            <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-white/75">
+            <p className="mkt-label text-white/70">B2B peynir kataloğu</p>
+            <h1 className="mkt-h2 mt-2 text-balance text-white">Ürün Kataloğu</h1>
+            <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-white/75">
               {session
                 ? "Hikâye ve ambalaj burada. Fiyat, stok ve sipariş miktarı bayi panelinde."
                 : "Katalog herkese açık. Fiyat ve stok onaylı bayi girişi sonrası panelde görünür."}

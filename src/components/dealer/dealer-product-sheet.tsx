@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { CalendarClock, MapPin, Snowflake } from "lucide-react";
 import { catalogFallbackImage } from "@/content/catalog-images";
-import { CatalogImage } from "@/components/store/catalog-image";
+import { ProductGallery } from "@/components/store/product-gallery";
 import type { DealerCatalogProduct, DealerCatalogVariant } from "@/infra/db/dealer-catalog";
 import {
   Sheet,
@@ -54,8 +54,6 @@ export function DealerProductSheet({
   error?: string | null;
 }) {
   const open = Boolean(product && variant);
-  const hero =
-    product?.media.find((m) => m.kind === "IMAGE")?.url ?? product?.imageUrl ?? null;
   const { lead, body } = splitPdpCopy(product?.description ?? "");
   const stockKg = variant?.stockKg ?? 0;
   const tone = variant ? stockTone(stockKg) : "empty";
@@ -80,13 +78,11 @@ export function DealerProductSheet({
       >
         {product && variant ? (
           <>
-            <div className="relative h-56 bg-[#FAF8F3] sm:h-64">
-              <CatalogImage
-                src={catalogFallbackImage(product.categoryName, hero)}
-                fallbackSrc={catalogFallbackImage(product.categoryName, null)}
-                alt={product.name}
-                className="object-contain p-6"
-                sizes="(min-width: 640px) 32rem, 100vw"
+            <div className="shrink-0 bg-[#FAF8F3] px-5 pt-5">
+              <ProductGallery
+                items={product.media.map((m) => ({ id: m.id, url: m.url, alt: null, kind: m.kind }))}
+                fallbackUrl={catalogFallbackImage(product.categoryName, null)}
+                fallbackAlt={product.name}
               />
             </div>
 

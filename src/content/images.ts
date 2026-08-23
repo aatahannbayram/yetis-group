@@ -56,7 +56,7 @@ export type ImageAsset = {
 export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   hero: {
     id: "hero",
-    src: "/scenes/capabilities-2.jpg",
+    src: "/scenes/capabilities-2.webp",
     alt: "Ahşap masada beyaz peynir, yoğurt, kaşar, zeytin ve ekmek",
     topic: "Çözümler bandı: süt ürünleri still life",
     usedAt: "home.capabilities",

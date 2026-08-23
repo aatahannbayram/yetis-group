@@ -183,7 +183,7 @@ export default async function StoreHomePage() {
             note: "Bu hafta dilimli olgun kaşarı B2B kataloğa alıyoruz. Fiyat ve stok onaylı hesabınızda açılır.",
             href: "/urunler",
             ctaLabel: "Kataloğu aç",
-            imageUrl: "/scenes/promo-market-aisle.jpg",
+            imageUrl: "/scenes/promo-market-aisle.webp",
           },
           {
             id: "fallback-beyaz",
@@ -191,7 +191,7 @@ export default async function StoreHomePage() {
             note: "Taze teneke beyaz peynir partileri soğuk depoya indi. Lot ve SKT bayi panelinde görünür.",
             href: "/urunler",
             ctaLabel: "Stoku gör",
-            imageUrl: "/scenes/promo-beyaz-counter.jpg",
+            imageUrl: "/scenes/promo-beyaz-counter.webp",
           },
           ...published,
         ].slice(0, 2);

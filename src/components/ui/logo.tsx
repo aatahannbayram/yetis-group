@@ -53,9 +53,9 @@ export function BrandMark({
     <Image
       src="/brand/symbol.png"
       alt="Yetiş Grup"
-      width={2250}
-      height={2197}
-      style={{ width: size, height: size }}
+      width={size}
+      height={size}
+      sizes={`${size}px`}
       className={cn("object-contain", className)}
       priority
     />

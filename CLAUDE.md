@@ -312,6 +312,14 @@ Zod ile `lib/env.ts` içinde doğrulanır. Örnek gruplar:
 - Kaynak kod, commit, domain isimleri: **English**
 - Kullanıcıya görünen metin: **Türkçe** (`lib/i18n`)
 
+---
+
+## Son oturum notları (2026-08-23)
+
+- Bayi + panel UX: floating shell, thin AppIcon, bildirim sheet, dark mode, home modül kartları.
+- Performans: `/bayi/loading.tsx` ve `/panel/loading.tsx` eklendi; büyük sahne JPG’leri sıkıştırıldı (~1MB → ~200–350KB); mümkün yerde `.webp`; kullanılmayan `_siparis/_sevkiyat` PNG silindi.
+- Claude proje kuralları bu dosyada (`CLAUDE.md`). Yerel izinler `.claude/` altında kalır (gitignore).
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know

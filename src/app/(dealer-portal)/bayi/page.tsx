@@ -10,9 +10,26 @@ import {
   resolveDealerProfile,
   resolveLifecycle,
 } from "@/features/dealer/dealerProfiles";
-import { DealerHomeModules } from "@/components/dealer/dealer-home-modules";
+import dynamic from "next/dynamic";
 import { getOrCreateCart } from "@/infra/db/cart";
 import { listPublishedAnnouncements } from "@/infra/db/campaigns";
+
+const DealerHomeModules = dynamic(
+  () =>
+    import("@/components/dealer/dealer-home-modules").then((m) => m.DealerHomeModules),
+  {
+    loading: () => (
+      <div className="space-y-5" aria-busy="true" aria-label="Yükleniyor">
+        <div className="h-[11.5rem] animate-pulse rounded-[1.35rem] bg-[var(--surface-3)] sm:h-[13rem]" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="h-28 animate-pulse rounded-2xl bg-[var(--surface-3)]" />
+          <div className="h-28 animate-pulse rounded-2xl bg-[var(--surface-3)]" />
+          <div className="h-28 animate-pulse rounded-2xl bg-[var(--surface-3)]" />
+        </div>
+      </div>
+    ),
+  },
+);
 
 const TYPE_LABEL: Record<string, string> = {
   BAYI: "Market / Şarküteri",
@@ -61,13 +78,14 @@ export default async function BayiHomePage() {
   });
   const modules = composeHomeModules(profile, lifecycle);
   const balanceKurus = calculateBalance(dealer.ledgerEntries);
-  const announcements = await listPublishedAnnouncements();
-
-  const currentCart = await getOrCreateCart({
-    userId: impId && staff ? null : session.user.id,
-    dealerId,
-    createGuest: Boolean(impId && staff),
-  });
+  const [announcements, currentCart] = await Promise.all([
+    listPublishedAnnouncements(),
+    getOrCreateCart({
+      userId: impId && staff ? null : session.user.id,
+      dealerId,
+      createGuest: Boolean(impId && staff),
+    }),
+  ]);
 
   const lastSummary = lastCart
     ? lastCart.lines

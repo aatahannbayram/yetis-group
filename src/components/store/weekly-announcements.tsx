@@ -4,6 +4,7 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { SiteAnnouncement } from "@/domain/campaigns/live";
 import { PillCta } from "@/components/store/pill-cta";
 import { ScrollReveal } from "@/components/store/scroll-reveal";
+import { SceneImage } from "@/components/store/scene-image";
 import { cn } from "@/lib/utils";
 
 function Cover({ src, alt, className }: { src: string | null; alt: string; className?: string }) {
@@ -81,9 +82,20 @@ export function WeeklyAnnouncements({
 
   return (
     <section className="relative overflow-hidden bg-[#0f1f17] text-white" aria-labelledby="weekly-news-title">
+      <SceneImage
+        id="weekly-news-bg"
+        fill
+        quality={60}
+        className="opacity-70"
+        sizes="100vw"
+      />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(48,163,105,0.22),transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(10,20,15,0.88)_0%,rgba(10,20,15,0.72)_45%,rgba(10,20,15,0.94)_100%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,rgba(48,163,105,0.28),transparent_55%)]"
       />
       <div className="relative mkt-pad">
         <ScrollReveal>

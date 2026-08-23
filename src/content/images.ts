@@ -39,8 +39,7 @@ export type ImageSlotId =
   | "support-team"
   | "story-field"
   | "products-hero"
-  | "products-cta"
-  | "weekly-news-bg";
+  | "products-cta";
 
 export type ImageAsset = {
   id: ImageSlotId;
@@ -393,16 +392,6 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
     usedAt: "products.cta",
     aspect: "16/10",
     placeholderLabel: "29 · Katalog CTA",
-    isPlaceholder: false,
-  },
-  "weekly-news-bg": {
-    id: "weekly-news-bg",
-    src: "/scenes/weekly-news-bg.jpg",
-    alt: "Peynir olgunlaştırma mahzeni",
-    topic: "Haftalık duyurular arka planı",
-    usedAt: "home.weekly-news-bg",
-    aspect: "21/9",
-    placeholderLabel: "30 · Duyuru arka plan",
     isPlaceholder: false,
   },
 };

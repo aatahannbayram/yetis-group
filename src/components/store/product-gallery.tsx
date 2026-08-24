@@ -64,7 +64,7 @@ export function ProductGallery({
       <div
         className={cn(
           "group/stage relative w-full overflow-hidden rounded-[1.5rem] bg-[#FAF8F3]",
-          !stageClassName && "aspect-[4/5] max-h-[26rem] sm:aspect-square sm:max-h-[28rem]",
+          !stageClassName && "aspect-[4/5] sm:aspect-square",
           stageClassName,
         )}
       >
@@ -74,7 +74,7 @@ export function ProductGallery({
           <video
             src={current.url}
             controls
-            className={cn("relative z-10 size-full object-contain p-5 md:p-10", imageClassName)}
+            className={cn("relative z-10 size-full object-cover", imageClassName)}
           />
         ) : (
           <CatalogImage
@@ -82,7 +82,7 @@ export function ProductGallery({
             fallbackSrc={fallbackUrl === current.url ? null : fallbackUrl}
             alt={alt}
             className={cn(
-              "object-contain p-6 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]",
+              "object-cover motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out motion-safe:group-hover/stage:scale-[1.03]",
               imageClassName,
             )}
             sizes="(min-width: 1024px) 40vw, 92vw"

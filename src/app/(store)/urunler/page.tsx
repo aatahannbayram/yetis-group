@@ -4,7 +4,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { ArrowUpRight } from "lucide-react";
 import { auth } from "@/infra/auth/server";
-import { getProductsWithPricing } from "@/infra/db/pricing";
+import { getStoreCatalogProducts } from "@/infra/db/store-catalog";
 import { listCategories } from "@/infra/db/categories";
 import { getUserDealerId } from "@/infra/db/users";
 import { ProductGrid } from "@/components/store/product-grid";
@@ -38,7 +38,7 @@ export default async function ProductsPage({
   const session = await auth.api.getSession({ headers: await headers() });
   const dealerId = session?.user.id ? await getUserDealerId(session.user.id) : null;
   const [products, categories, announcements] = await Promise.all([
-    getProductsWithPricing(session?.user.id, kategori),
+    getStoreCatalogProducts(kategori),
     listCategories(),
     listPublishedAnnouncements(),
   ]);
@@ -103,19 +103,8 @@ export default async function ProductsPage({
                 activeCategory={kategori}
                 categories={rootCategories}
                 products={products.map((product) => ({
-                  id: product.id,
-                  variantId: product.variantId,
-                  sku: product.sku,
-                  slug: product.slug,
-                  name: product.name,
-                  category: product.category,
+                  ...product,
                   imageUrl: catalogFallbackImage(product.category, product.imageUrl),
-                  unitLabel: product.unitLabel,
-                  packagingType: product.packagingType,
-                  packSize: product.packSize,
-                  kgPerUnit: product.kgPerUnit.toString(),
-                  cins: product.cins,
-                  vatRateBasisPoints: product.vatRateBasisPoints,
                 }))}
               />
             </Suspense>

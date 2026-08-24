@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import { auth } from "@/infra/auth/server";
-import { getProductBySlugWithPricing, getProductsWithPricing } from "@/infra/db/pricing";
-import { getProductBySlug } from "@/infra/db/products";
+import { getProductBySlug, defaultVariant } from "@/infra/db/products";
+import { getRelatedStoreProducts } from "@/infra/db/store-catalog";
+import { packLabel } from "@/lib/format/packaging";
 import { getUserDealerId } from "@/infra/db/users";
 import { ProductCard } from "@/components/store/product-card";
 import { ProductGallery } from "@/components/store/product-gallery";
@@ -50,17 +51,16 @@ export default async function ProductDetailPage({
   const session = await auth.api.getSession({ headers: await headers() });
   const dealerId = session?.user.id ? await getUserDealerId(session.user.id) : null;
   const isDealer = dealerId !== null;
-  const product = await getProductBySlugWithPricing(slug, session?.user.id);
+  const product = await getProductBySlug(slug);
 
   if (!product) notFound();
 
-  const [allProducts, recipes] = await Promise.all([
-    getProductsWithPricing(session?.user.id),
+  const defaultSku = defaultVariant(product)?.sku ?? product.slug;
+
+  const [related, recipes] = await Promise.all([
+    getRelatedStoreProducts(product.primaryCategory.slug, product.id),
     listRecipesForProduct(product.id),
   ]);
-  const related = allProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 3);
 
   return (
     <Canvas>
@@ -68,10 +68,10 @@ export default async function ProductDetailPage({
         name={product.name}
         description={product.description}
         image={product.imageUrl}
-        sku={product.sku}
+        sku={defaultSku}
         brand={product.producer.name}
         path={`/urunler/${product.slug}`}
-        category={product.category}
+        category={product.primaryCategory.name}
       />
       <JsonLdScript
         data={breadcrumbJsonLd([
@@ -81,7 +81,7 @@ export default async function ProductDetailPage({
         ])}
       />
       <ViewItemTracker
-        itemId={product.sku}
+        itemId={defaultSku}
         itemName={product.name}
       />
       <Slab>
@@ -101,10 +101,10 @@ export default async function ProductDetailPage({
               </Link>
               <span aria-hidden>/</span>
               <Link
-                href={`/urunler?kategori=${product.categorySlug ?? ""}`}
+                href={`/urunler?kategori=${product.primaryCategory.slug}`}
                 className="hover:text-mkt-ink"
               >
-                {product.category}
+                {product.primaryCategory.name}
               </Link>
             </nav>
           </div>
@@ -118,7 +118,7 @@ export default async function ProductDetailPage({
                   alt: m.alt,
                   kind: m.kind,
                 }))}
-                fallbackUrl={catalogFallbackImage(product.category, product.imageUrl)}
+                fallbackUrl={catalogFallbackImage(product.primaryCategory.name, product.imageUrl)}
                 fallbackAlt={product.name}
                 region={product.producer?.region}
               />
@@ -127,7 +127,7 @@ export default async function ProductDetailPage({
             <Reveal delay={100}>
               <div className="lg:sticky lg:top-28 lg:pb-4">
                 <span className="mkt-pill mkt-label inline-flex bg-[#FAF8F3] px-3 py-1.5 text-mkt-ink-muted">
-                  {product.category}
+                  {product.primaryCategory.name}
                 </span>
                 <h1 className="mkt-display mt-4 text-balance text-[clamp(2rem,4.6vw,3.15rem)] text-mkt-ink">
                   {product.name}
@@ -138,7 +138,7 @@ export default async function ProductDetailPage({
                   isDealer={isDealer}
                   cinsler={product.variants.map((v) => ({
                     id: v.id,
-                    packLabel: v.packLabel,
+                    packLabel: packLabel(v.packSize, v.packagingType),
                     packagingType: v.packagingType,
                     packSize: v.packSize,
                     unitFactor: v.unitFactor.toString(),
@@ -189,26 +189,15 @@ export default async function ProductDetailPage({
           {related.length > 0 ? (
             <div className="mt-16 border-t border-[color:var(--mkt-border)] pt-12">
               <h2 className="text-[1.25rem] font-medium tracking-[-0.015em] text-mkt-ink">
-                {product.category} kategorisinden diğerleri
+                {product.primaryCategory.name} kategorisinden diğerleri
               </h2>
               <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-8">
                 {related.map((p, index) => (
                   <Reveal key={p.id} delay={(index % 3) * 60}>
                     <ProductCard
                       product={{
-                        id: p.id,
-                        variantId: p.variantId,
-                        sku: p.sku,
-                        slug: p.slug,
-                        name: p.name,
-                        category: p.category,
-                        imageUrl: p.imageUrl,
-                        unitLabel: p.unitLabel,
-                        packagingType: p.packagingType,
-                        packSize: p.packSize,
-                        kgPerUnit: p.kgPerUnit.toString(),
-                        cins: p.cins,
-                        vatRateBasisPoints: p.vatRateBasisPoints,
+                        ...p,
+                        imageUrl: catalogFallbackImage(p.category, p.imageUrl),
                       }}
                     />
                   </Reveal>

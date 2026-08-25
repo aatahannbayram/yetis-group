@@ -276,3 +276,37 @@ export async function listActiveVariantsForPicker() {
     },
   });
 }
+
+/** Tüm aktif varyantlar + liste override fiyatları (Excel dışa aktarım). */
+export async function listVariantsForPriceExport() {
+  const [variants, lists, items] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: { isActive: true, product: { active: true } },
+      orderBy: [{ product: { name: "asc" } }, { sku: "asc" }],
+      select: {
+        id: true,
+        sku: true,
+        packSize: true,
+        packagingType: true,
+        pricePerUnitKurus: true,
+        product: { select: { name: true } },
+      },
+    }),
+    prisma.priceList.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.priceListItem.findMany({
+      select: { priceListId: true, variantId: true, priceKurus: true },
+    }),
+  ]);
+
+  const priceByKey = new Map(
+    items.map((i) => [`${i.priceListId}:${i.variantId}`, i.priceKurus] as const),
+  );
+
+  return {
+    lists,
+    variants,
+    getListPriceKurus(priceListId: string, variantId: string): number | null {
+      return priceByKey.get(`${priceListId}:${variantId}`) ?? null;
+    },
+  };
+}

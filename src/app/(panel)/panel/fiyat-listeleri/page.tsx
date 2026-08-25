@@ -1,5 +1,6 @@
 import { PageHeader } from "@/components/ui/page-header";
 import { PillButton, StatCard } from "@/components/admin/stat-card";
+import { PriceExcelToolbar } from "@/components/admin/price-excel-toolbar";
 import { PriceListsManager } from "@/components/admin/price-lists-manager";
 import { getPriceListsWithItems, listActiveVariantsForPicker } from "@/infra/db/pricing";
 import { packLabel } from "@/lib/format/packaging";
@@ -19,9 +20,12 @@ export default async function AdminPriceListsPage() {
         count={priceLists.length}
         description="Bayi / müşteri gruplarına özel fiyatlar. Listeler bayi kaydına atanır."
         primaryAction={
-          <PillButton href="/panel/bayiler" variant="secondary">
-            Bayi/Müşteriler
-          </PillButton>
+          <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
+            <PriceExcelToolbar />
+            <PillButton href="/panel/bayiler" variant="secondary">
+              Bayi/Müşteriler
+            </PillButton>
+          </div>
         }
       />
 

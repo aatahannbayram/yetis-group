@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "demo:passwords": "tsx scripts/set-demo-passwords.ts"
+    "demo:passwords": "tsx scripts/set-demo-passwords.ts",
+    "import:yetis-list": "tsx scripts/import-yetis-product-list.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

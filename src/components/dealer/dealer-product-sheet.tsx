@@ -30,6 +30,22 @@ function maxOrderableQty(stockKg: number, unitFactor: string) {
   return Math.max(0, Math.floor(stockKg / factor));
 }
 
+function CertificateChips({ labels }: { labels: string[] }) {
+  if (labels.length === 0) return null;
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {labels.map((label) => (
+        <li
+          key={label}
+          className="rounded-md border border-[var(--panel-border)] bg-[var(--panel-surface)] px-2 py-0.5 text-[10px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase"
+        >
+          {label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function DealerProductSheet({
   product,
   variant,
@@ -74,114 +90,115 @@ export function DealerProductSheet({
     <Sheet open={open} onOpenChange={(next) => !next && onClose()}>
       <SheetContent
         side="right"
-        className="w-full gap-0 overflow-y-auto p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl data-[side=right]:lg:max-w-3xl"
+        className="flex h-full max-h-[100dvh] w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md data-[side=right]:md:max-w-lg data-[side=right]:lg:max-w-xl"
       >
         {product && variant ? (
           <>
-            <div className="grid gap-5 px-6 pt-6 sm:grid-cols-[minmax(15rem,18.5rem)_minmax(0,1fr)] sm:items-stretch">
-              <div className="h-full min-h-[16rem] overflow-hidden rounded-2xl bg-[#EFEAE0]">
-                <ProductGallery
-                  items={product.media.map((m) => ({ id: m.id, url: m.url, alt: null, kind: m.kind }))}
-                  fallbackUrl={catalogFallbackImage(product.categoryName, null)}
-                  fallbackAlt={product.name}
-                  className="h-full"
-                  stageClassName="aspect-auto h-full min-h-[16rem] max-h-none sm:aspect-auto sm:max-h-none rounded-2xl"
-                  imageClassName="object-cover p-0"
-                />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="border-b border-[var(--panel-border)] px-4 pt-4 pb-4 sm:px-5 md:grid md:grid-cols-[10.5rem_minmax(0,1fr)] md:items-start md:gap-4 lg:grid-cols-[11.5rem_minmax(0,1fr)]">
+                <div className="mx-auto w-full max-w-[13rem] overflow-hidden rounded-xl bg-[#EFEAE0] md:mx-0 md:max-w-none">
+                  <ProductGallery
+                    items={product.media.map((m) => ({
+                      id: m.id,
+                      url: m.url,
+                      alt: null,
+                      kind: m.kind,
+                    }))}
+                    fallbackUrl={catalogFallbackImage(product.categoryName, product.imageUrl)}
+                    fallbackAlt={product.name}
+                    stageClassName="aspect-[4/3] max-h-[11rem] w-full rounded-xl sm:max-h-[12rem] md:aspect-square md:max-h-[10.5rem]"
+                    imageClassName="object-cover p-0"
+                  />
+                </div>
+
+                <SheetHeader className="mt-4 min-w-0 space-y-2 p-0 text-left md:mt-0 md:pr-8">
+                  <p className="text-[10px] font-semibold tracking-wider text-[var(--panel-ink-muted)] uppercase">
+                    {product.categoryName}
+                  </p>
+                  <SheetTitle className="text-base leading-snug font-semibold tracking-tight text-[var(--panel-ink)] sm:text-lg">
+                    {product.name}
+                  </SheetTitle>
+                  <SheetDescription className="text-xs leading-relaxed text-[var(--panel-ink-muted)]">
+                    {packLabel(variant.packSize, variant.packagingType)}
+                    {" · "}
+                    <span className="font-mono tabular-nums">{variant.sku}</span>
+                  </SheetDescription>
+                  <CertificateChips labels={product.certificates} />
+                </SheetHeader>
               </div>
 
-              <SheetHeader className="min-w-0 p-0 text-left">
-                <p className="text-[11px] font-medium tracking-wide text-[var(--panel-ink-muted)] uppercase">
-                  {product.categoryName}
-                </p>
-                <SheetTitle className="text-2xl font-semibold tracking-tight text-[var(--panel-ink)]">
-                  {product.name}
-                </SheetTitle>
-                <SheetDescription className="text-[var(--panel-ink-muted)]">
-                  {packLabel(variant.packSize, variant.packagingType)}
-                  {" · "}
-                  {variant.sku}
-                </SheetDescription>
-                {product.certificates.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {product.certificates.map((label) => (
-                      <span
-                        key={label}
-                        className="rounded-full bg-[var(--primary-subtle)] px-2.5 py-1 text-[11px] font-medium text-[var(--primary-text)]"
-                      >
-                        {label}
-                      </span>
-                    ))}
+              <div className="space-y-5 px-4 py-4 sm:px-5">
+                {lead || body ? (
+                  <div className="space-y-2">
+                    {lead ? (
+                      <p className="text-sm leading-relaxed text-[var(--panel-ink)]">{lead}</p>
+                    ) : null}
+                    {body ? (
+                      <p className="text-xs leading-relaxed text-[var(--panel-ink-muted)]">{body}</p>
+                    ) : null}
                   </div>
                 ) : null}
-                {lead ? (
-                  <p className="pt-3 text-[15px] leading-relaxed text-[var(--panel-ink)]">{lead}</p>
-                ) : null}
-                {body ? (
-                  <p className="text-sm leading-relaxed text-[var(--panel-ink-muted)]">{body}</p>
-                ) : null}
+
                 {product.attributeValues.length > 0 ? (
-                  <div className="pt-3">
-                    <DealerProductAttributes values={product.attributeValues} />
+                  <DealerProductAttributes values={product.attributeValues} compact />
+                ) : null}
+
+                <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  <Fact
+                    icon={<Snowflake className="size-3.5" aria-hidden />}
+                    title="Soğuk zincir"
+                    body={
+                      product.requiresColdChain
+                        ? "Sevkiyat soğuk araçla yapılır."
+                        : "Soğuk zincir zorunlu değil."
+                    }
+                  />
+                  <Fact
+                    icon={<CalendarClock className="size-3.5" aria-hidden />}
+                    title="Saklama"
+                    body={storageBits[0] ?? "Saklama bilgisi yok."}
+                  />
+                  <Fact
+                    icon={<MapPin className="size-3.5" aria-hidden />}
+                    title={product.producer.name}
+                    body={
+                      [product.producer.region, product.producer.story].filter(Boolean).join(" ") ||
+                      "Üretici hikâyesi yok."
+                    }
+                  />
+                </dl>
+
+                {product.variants.length > 1 ? (
+                  <div>
+                    <p className="text-[11px] font-semibold tracking-wide text-[var(--panel-ink-muted)] uppercase">
+                      Cins
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {product.variants.map((opt) => (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => onSelectVariant(opt.id)}
+                          className={cn(
+                            "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                            opt.id === variant.id
+                              ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)] text-[var(--primary-text)]"
+                              : "border-[var(--panel-border)] text-[var(--panel-ink-muted)] hover:border-[var(--primary-solid)]/40",
+                          )}
+                        >
+                          {packLabel(opt.packSize, opt.packagingType)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
-              </SheetHeader>
+              </div>
             </div>
 
-            <div className="space-y-6 px-6 py-6">
-              <dl className="grid gap-3 sm:grid-cols-3">
-                <Fact
-                  icon={<Snowflake className="size-4" aria-hidden />}
-                  title="Soğuk zincir"
-                  body={
-                    product.requiresColdChain
-                      ? "Sevkiyat soğuk araçla yapılır."
-                      : "Soğuk zincir zorunlu değil."
-                  }
-                />
-                <Fact
-                  icon={<CalendarClock className="size-4" aria-hidden />}
-                  title="Saklama"
-                  body={storageBits[0] ?? "Saklama bilgisi yok."}
-                />
-                <Fact
-                  icon={<MapPin className="size-4" aria-hidden />}
-                  title={product.producer.name}
-                  body={
-                    [product.producer.region, product.producer.story].filter(Boolean).join(" ") ||
-                    "Üretici hikâyesi yok."
-                  }
-                />
-              </dl>
-
-              {product.variants.length > 1 ? (
-                <div>
-                  <p className="text-xs font-medium text-[var(--panel-ink)]">Cins</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {product.variants.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onClick={() => onSelectVariant(opt.id)}
-                        className={cn(
-                          "rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                          opt.id === variant.id
-                            ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)] text-[var(--primary-text)]"
-                            : "border-[var(--panel-border)] text-[var(--panel-ink-muted)] hover:border-[var(--primary-solid)]/40",
-                        )}
-                      >
-                        {packLabel(opt.packSize, opt.packagingType)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="sticky bottom-0 mt-auto space-y-3 border-t border-[var(--panel-border)] bg-[var(--panel-surface)] px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-                <div>
-                  <p className="text-xl font-semibold tabular-nums text-[var(--panel-ink)]">
+            <div className="shrink-0 space-y-2.5 border-t border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-lg font-semibold tabular-nums text-[var(--panel-ink)]">
                     {formatMoney(variant.unitPrice)}
                     <span className="ml-1 text-xs font-medium text-[var(--panel-ink-muted)]">
                       / {salesUnitLabel(variant.packagingType)}
@@ -202,7 +219,7 @@ export function DealerProductSheet({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full items-center gap-2 sm:w-auto sm:justify-end">
                   <QtyInput
                     value={amount}
                     min={variant.moq}
@@ -211,7 +228,7 @@ export function DealerProductSheet({
                     ariaLabel={salesUnitLabel(variant.packagingType)}
                     onCommit={onQty}
                   />
-                  <span className="hidden text-xs font-medium text-[var(--panel-ink-muted)] sm:inline">
+                  <span className="hidden shrink-0 text-xs font-medium text-[var(--panel-ink-muted)] sm:inline">
                     {salesUnitLabel(variant.packagingType)}
                   </span>
                   <button
@@ -219,7 +236,7 @@ export function DealerProductSheet({
                     disabled={pending || insufficientForMoq || outOfStock}
                     onClick={onAdd}
                     className={cn(
-                      "inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-semibold disabled:pointer-events-none",
+                      "inline-flex h-10 flex-1 items-center justify-center rounded-md px-4 text-sm font-semibold disabled:pointer-events-none sm:flex-none",
                       outOfStock || insufficientForMoq
                         ? "bg-[var(--surface-3)] text-[var(--panel-ink-muted)] ring-1 ring-[var(--panel-border)]"
                         : "bg-[var(--primary-solid)] text-white hover:bg-[var(--primary-hover)] dark:text-[#06231a]",
@@ -256,14 +273,14 @@ function Fact({
   body: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--panel-border)] bg-[var(--surface-3)] px-3.5 py-3">
+    <div className="rounded-lg border border-[var(--panel-border)] bg-[var(--panel-surface)] px-3 py-2.5">
       <div className="flex items-center gap-2">
-        <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--panel-surface)] text-[var(--primary-text)]">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--surface-3)] text-[var(--primary-text)]">
           {icon}
         </div>
-        <dt className="text-xs font-semibold text-[var(--panel-ink)]">{title}</dt>
+        <dt className="text-[11px] font-semibold text-[var(--panel-ink)]">{title}</dt>
       </div>
-      <dd className="mt-2 text-[13px] leading-snug text-[var(--panel-ink-muted)]">
+      <dd className="mt-1.5 line-clamp-3 text-[12px] leading-snug text-[var(--panel-ink-muted)]">
         {body}
       </dd>
     </div>

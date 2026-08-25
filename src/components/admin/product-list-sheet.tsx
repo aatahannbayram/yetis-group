@@ -871,8 +871,8 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
     <article
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white",
-        "shadow-sm transition-[transform,box-shadow,border-color] duration-200",
-        "hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-md",
+        "shadow-sm transition-[box-shadow,border-color] duration-200 ease-out",
+        "hover:border-stone-300 hover:shadow-md",
         "dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700",
       )}
     >
@@ -893,7 +893,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
             src={cover}
             fallbackSrc={categorySrc === cover ? null : categorySrc}
             alt={product.name}
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.02] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
           />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
@@ -907,7 +907,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         <div className="flex flex-1 flex-col gap-2 p-3.5">
           <div className="min-w-0">
             <h3
-              className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.01em] text-stone-900 dark:text-zinc-50"
+              className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.01em] text-stone-900 transition-colors duration-200 group-hover:text-[#1B5E3A] dark:text-zinc-50 dark:group-hover:text-emerald-400"
               title={product.name}
             >
               {product.name}
@@ -925,7 +925,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
             </p>
           </div>
 
-          <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+          <div className="mt-auto pt-1">
             <div
               className="min-w-0"
               onClick={(e) => e.stopPropagation()}
@@ -943,9 +943,6 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
                 <p className="text-base font-semibold text-stone-400">—</p>
               )}
             </div>
-            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-500 transition-colors group-hover:bg-[#1B5E3A] group-hover:text-white dark:bg-zinc-800">
-              <ArrowUpRight className="size-3.5" aria-hidden />
-            </span>
           </div>
         </div>
       </div>

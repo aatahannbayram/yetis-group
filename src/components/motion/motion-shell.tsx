@@ -65,7 +65,7 @@ export function PageEnter({
     <motion.div
       key={pathname}
       className={className}
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 1, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={fadeUpTransition}
     >

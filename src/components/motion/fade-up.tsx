@@ -39,8 +39,7 @@ export function FadeUp({
       className={className}
       variants={variants}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.15 }}
+      animate="visible"
       transition={{ ...fadeUpTransition, delay }}
     >
       {children}
@@ -63,8 +62,7 @@ export function Stagger({
       className={className}
       variants={staggerContainer}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.12 }}
+      animate="visible"
     >
       {children}
     </motion.div>

@@ -48,8 +48,6 @@ import {
 import { DensityToggle, type Density } from "@/components/ui/density-toggle";
 import { ViewSwitcher, type ViewMode } from "@/components/ui/view-switcher";
 import { cn } from "@/lib/utils";
-import { Stagger, StaggerItem } from "@/components/motion/fade-up";
-import { HoverLift } from "@/components/motion/hover-lift";
 import { ProductExcelToolbar } from "@/components/admin/product-excel-toolbar";
 
 const kgFormatter = new Intl.NumberFormat("tr-TR", {
@@ -413,12 +411,11 @@ export function ProductListSheet({
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((product) => (
-                <HoverLift key={product.id}>
-                  <ProductCard
-                    product={product}
-                    onOpen={() => openDetail(product.id)}
-                  />
-                </HoverLift>
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onOpen={() => openDetail(product.id)}
+                />
               ))}
             </div>
           )}

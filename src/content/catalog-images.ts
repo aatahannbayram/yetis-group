@@ -1,42 +1,41 @@
 /** Category still-life when a SKU has no product photo. */
 
-const KATALOG_PLACEHOLDER = "/products/katalog-placeholder.jpg";
-
 const BY_CATEGORY: Record<string, string> = {
-  "beyaz peynir": KATALOG_PLACEHOLDER,
-  "kaşar peyniri": KATALOG_PLACEHOLDER,
-  kaşar: KATALOG_PLACEHOLDER,
+  "beyaz peynir": "/products/beyaz-peynir.jpg",
+  "kaşar peyniri": "/products/kasar.jpg",
+  kaşar: "/products/kasar.jpg",
   kasar: "/products/kasar.jpg",
-  "eski kaşar": KATALOG_PLACEHOLDER,
-  "taze kaşar": KATALOG_PLACEHOLDER,
+  "eski kaşar": "/products/kasar.jpg",
+  "taze kaşar": "/products/kasar.jpg",
   lor: "/products/lor.jpg",
   "lor peyniri": "/products/lor.jpg",
   tulum: "/products/tulum.jpg",
-  "tulum peyniri": KATALOG_PLACEHOLDER,
+  "tulum peyniri": "/products/tulum.jpg",
   yoğurt: "/products/yogurt.jpg",
   yogurt: "/products/yogurt.jpg",
   tereyağı: "/products/tereyagi.jpg",
   tereyagi: "/products/tereyagi.jpg",
-  "tereyağı & yoğurt": KATALOG_PLACEHOLDER,
+  "tereyağı & yoğurt": "/products/tereyagi.jpg",
   süt: "/products/sut.jpg",
   sut: "/products/sut.jpg",
-  peynir: KATALOG_PLACEHOLDER,
-  "tel / dil / örgü peyniri": KATALOG_PLACEHOLDER,
-  "otlu / özel peynirler": KATALOG_PLACEHOLDER,
-  "helva & tahin": KATALOG_PLACEHOLDER,
-  helva: KATALOG_PLACEHOLDER,
-  tahin: KATALOG_PLACEHOLDER,
-  "zeytin & zeytinyağı": KATALOG_PLACEHOLDER,
-  zeytin: KATALOG_PLACEHOLDER,
-  zeytinyağı: KATALOG_PLACEHOLDER,
-  "siyah zeytin": KATALOG_PLACEHOLDER,
-  "yeşil zeytin": KATALOG_PLACEHOLDER,
-  şarküteri: KATALOG_PLACEHOLDER,
-  "sucuk & pastırma": KATALOG_PLACEHOLDER,
-  "sosis & salam & jambon": KATALOG_PLACEHOLDER,
+  peynir: "/products/beyaz-peynir.jpg",
+  "tel / dil / örgü peyniri": "/products/kasar.jpg",
+  "otlu / özel peynirler": "/products/beyaz-peynir.jpg",
+  "helva & tahin": "/products/beyaz-peynir.jpg",
+  helva: "/products/beyaz-peynir.jpg",
+  tahin: "/products/beyaz-peynir.jpg",
+  "zeytin & zeytinyağı": "/products/beyaz-peynir.jpg",
+  zeytin: "/products/beyaz-peynir.jpg",
+  zeytinyağı: "/products/beyaz-peynir.jpg",
+  "siyah zeytin": "/products/beyaz-peynir.jpg",
+  "yeşil zeytin": "/products/beyaz-peynir.jpg",
+  şarküteri: "/products/katalog-placeholder.jpg",
+  "sucuk & pastırma": "/products/katalog-placeholder.jpg",
+  "sosis & salam & jambon": "/products/katalog-placeholder.jpg",
 };
 
-const FALLBACK = KATALOG_PLACEHOLDER;
+/** Genel katalog varsayılanı: peynir still-life (sucuk görseli değil). */
+const FALLBACK = "/products/beyaz-peynir.jpg";
 
 export function catalogFallbackImage(category: string, imageUrl: string | null): string {
   if (imageUrl?.trim()) return imageUrl.trim();
@@ -50,4 +49,5 @@ export function catalogFallbackImage(category: string, imageUrl: string | null):
   return (partial ? BY_CATEGORY[partial] : FALLBACK) ?? FALLBACK;
 }
 
-export { KATALOG_PLACEHOLDER };
+/** Yalnızca şarküteri / sucuk kategorileri için geçici placeholder. */
+export const SUCUK_PLACEHOLDER = "/products/katalog-placeholder.jpg";

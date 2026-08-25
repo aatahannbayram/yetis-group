@@ -4,7 +4,7 @@ import { listStoreCatalogFilters } from "@/infra/db/store-catalog-filters";
 import { listPublishedAnnouncements } from "@/infra/db/campaigns";
 import { ProductGrid } from "@/components/store/product-grid";
 import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
-import { catalogFallbackImage, KATALOG_PLACEHOLDER } from "@/content/catalog-images";
+import { catalogFallbackImage } from "@/content/catalog-images";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
@@ -48,7 +48,7 @@ async function CatalogProductsInner({ kategori }: { kategori?: string }) {
           <div className="mx-auto mt-6 max-w-md text-center">
             <div className="relative mx-auto aspect-[4/3] overflow-hidden rounded-[1.25rem] border border-[color:var(--mkt-border)] bg-mkt-card-muted">
               <Image
-                src={KATALOG_PLACEHOLDER}
+                src="/products/beyaz-peynir.jpg"
                 alt="Yetiş Grup peynir kataloğu"
                 fill
                 className="object-cover"

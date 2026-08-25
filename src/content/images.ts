@@ -156,8 +156,8 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "cat-beyaz": {
     id: "cat-beyaz",
-    src: "/products/katalog-placeholder.jpg",
-    alt: "Teneke beyaz peynir ürün görseli",
+    src: "/products/beyaz-peynir.jpg",
+    alt: "Beyaz peynir, ahşap tahtada",
     topic: "Katalog vitrini: beyaz peynir",
     usedAt: "home.catalog-beyaz",
     aspect: "3/4",
@@ -166,8 +166,8 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "cat-kasar": {
     id: "cat-kasar",
-    src: "/products/katalog-placeholder.jpg",
-    alt: "Kaşar peynir ürün görseli",
+    src: "/products/kasar.jpg",
+    alt: "Kaşar peyniri",
     topic: "Katalog vitrini: kaşar",
     usedAt: "home.catalog-kasar",
     aspect: "3/4",
@@ -176,8 +176,8 @@ export const IMAGE_MANIFEST: Record<ImageSlotId, ImageAsset> = {
   },
   "cat-tulum": {
     id: "cat-tulum",
-    src: "/products/katalog-placeholder.jpg",
-    alt: "Tulum peynir ürün görseli",
+    src: "/products/tulum.jpg",
+    alt: "Tulum peyniri, kırsal üretim",
     topic: "Katalog vitrini: tulum",
     usedAt: "home.catalog-tulum",
     aspect: "3/4",

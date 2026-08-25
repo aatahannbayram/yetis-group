@@ -93,7 +93,9 @@ export function ProductGrid({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="mkt-body mt-10">Sonuç bulunamadı.</p>
+        <div className="mt-10 flex flex-col items-center gap-4 text-center">
+          <p className="mkt-body">Sonuç bulunamadı.</p>
+        </div>
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
           {filtered.map((product) => (

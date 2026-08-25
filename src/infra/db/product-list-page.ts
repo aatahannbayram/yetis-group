@@ -73,12 +73,11 @@ function activeProductWhere(extra?: Prisma.ProductWhereInput): Prisma.ProductWhe
 }
 
 function buildWhere(input: ProductListQuery, extra?: Prisma.ProductWhereInput): Prisma.ProductWhereInput {
+  const categoryExtra = input.categorySlug
+    ? storeCategoryWhere(input.categorySlug)
+    : categoryNameWhere(input.categoryName);
   return activeProductWhere({
-    AND: [
-      cursorWhere(decodeProductCursor(input.cursor)),
-      searchWhere(input.q),
-      extra ?? {},
-    ],
+    AND: [cursorWhere(decodeProductCursor(input.cursor)), searchWhere(input.q), categoryExtra, extra ?? {}],
   });
 }
 
@@ -143,6 +142,7 @@ const adminListSelect = {
       packagingType: true,
       baseUnit: true,
       unitFactor: true,
+      moq: true,
       vatRateBasisPoints: true,
       pricePerUnitKurus: true,
     },
@@ -180,7 +180,7 @@ export async function getStoreCatalogProductsPage(
   input: ProductListQuery = {},
 ): Promise<ProductListPage<ProductListItem>> {
   const limit = resolveLimit(input.limit);
-  const where = buildWhere(input, storeCategoryWhere(input.categorySlug));
+  const where = buildWhere(input);
 
   const [rows, totalCount] = await Promise.all([
     prisma.product.findMany({
@@ -207,7 +207,7 @@ export async function getAdminProductsPage(
   input: ProductListQuery = {},
 ): Promise<ProductListPage<ProductRow>> {
   const limit = resolveLimit(input.limit);
-  const where = buildWhere(input, categoryNameWhere(input.categoryName));
+  const where = buildWhere(input);
 
   const [rows, totalCount, stockByProduct] = await Promise.all([
     prisma.product.findMany({
@@ -235,6 +235,7 @@ export async function getAdminProductsPage(
       packagingType: v.packagingType,
       baseUnit: v.baseUnit,
       unitFactor: v.unitFactor.toString(),
+      moq: v.moq ?? 1,
       vatRateBasisPoints: v.vatRateBasisPoints,
       pricePerUnitKurus: v.pricePerUnitKurus,
     })),
@@ -250,7 +251,7 @@ export async function getDealerOrderProductsPage(
   input: ProductListQuery = {},
 ): Promise<ProductListPage<DealerOrderListProduct>> {
   const limit = resolveLimit(input.limit);
-  const where = buildWhere(input, categoryNameWhere(input.categoryName));
+  const where = buildWhere(input);
 
   const [rows, totalCount, overrides, stockByVariant] = await Promise.all([
     prisma.product.findMany({
@@ -269,14 +270,19 @@ export async function getDealerOrderProductsPage(
   return { items, nextCursor, totalCount };
 }
 
-export async function countActiveProducts() {
+export async function countActiveProducts(input: Pick<ProductListQuery, "categorySlug" | "categoryName" | "q"> = {}) {
   return prisma.product.count({
-    where: activeProductWhere(),
+    where: buildWhere(input),
   });
 }
 
-export async function countActiveVariants() {
+export async function countActiveVariants(
+  input: Pick<ProductListQuery, "categorySlug" | "categoryName" | "q"> = {},
+) {
   return prisma.productVariant.count({
-    where: { isActive: true, product: { active: true } },
+    where: {
+      isActive: true,
+      product: buildWhere(input),
+    },
   });
 }

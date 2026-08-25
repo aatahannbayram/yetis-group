@@ -89,6 +89,7 @@ export type ProductRowVariant = {
   packagingType: string;
   baseUnit: string;
   unitFactor: string;
+  moq: number;
   vatRateBasisPoints: number;
   pricePerUnitKurus: number;
 };

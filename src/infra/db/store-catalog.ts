@@ -1,5 +1,7 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/infra/db/client";
 import { packLabel } from "@/lib/format/packaging";
+import { STORE_CATALOG_TAG } from "@/lib/cache/store-catalog";
 import type { ProductListItem } from "@/components/store/product-card";
 
 const catalogSelect = {
@@ -40,11 +42,14 @@ type CatalogRow = {
   }>;
 };
 
+/** Ana veya alt kategori slug'ına göre filtre (import sonrası alt kategori primary olabilir). */
 function categoryFilter(categorySlug: string) {
   return {
     OR: [
       { primaryCategory: { slug: categorySlug } },
+      { primaryCategory: { parent: { slug: categorySlug } } },
       { categories: { some: { category: { slug: categorySlug } } } },
+      { categories: { some: { category: { parent: { slug: categorySlug } } } } },
     ],
   };
 }
@@ -76,8 +81,7 @@ function mapCatalogRow(product: CatalogRow): ProductListItem | null {
   };
 }
 
-/** Lightweight catalog rows for the public store (no pricing, stock, media, or attributes). */
-export async function getStoreCatalogProducts(categorySlug?: string) {
+async function queryStoreCatalogProducts(categorySlug?: string) {
   const rows = await prisma.product.findMany({
     where: {
       active: true,
@@ -91,6 +95,16 @@ export async function getStoreCatalogProducts(categorySlug?: string) {
     const item = mapCatalogRow(row);
     return item ? [item] : [];
   });
+}
+
+/** Lightweight catalog rows for the public store (no pricing, stock, media, or attributes). */
+export async function getStoreCatalogProducts(categorySlug?: string) {
+  const cached = unstable_cache(
+    () => queryStoreCatalogProducts(categorySlug),
+    ["store-catalog", categorySlug ?? "all"],
+    { revalidate: 120, tags: [STORE_CATALOG_TAG] },
+  );
+  return cached();
 }
 
 /** Related products for PDP without loading the full catalog. */
@@ -115,3 +129,5 @@ export async function getRelatedStoreProducts(
     return item ? [item] : [];
   });
 }
+
+export { catalogSelect };

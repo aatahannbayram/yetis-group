@@ -427,6 +427,7 @@ model ProductCategory {
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@unique([productId, categoryId])
+  @@index([categoryId])
   @@map("product_category")
 }
 
@@ -436,7 +437,7 @@ enum BaseUnit {
   KG
 }
 
-model Product {
+  model Product {
   id                String   @id @default(cuid())
   name              String
   slug              String   @unique
@@ -462,6 +463,8 @@ model Product {
   postLinks       ContentPostProduct[]
   recipeLinks     RecipeProduct[]
 
+  @@index([active])
+  @@index([primaryCategoryId])
   @@map("product")
 }
 
@@ -490,6 +493,7 @@ model ProductVariant {
   shipments      Shipment[]
   orderLines     OrderLine[]
 
+  @@index([productId, isActive, sortOrder])
   @@map("product_variant")
 }
 

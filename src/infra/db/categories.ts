@@ -1,5 +1,7 @@
 import { prisma } from "@/infra/db/client";
 import { slugifyTr } from "@/domain/catalog/slug";
+import { unstable_cache } from "next/cache";
+import { STORE_CATALOG_TAG } from "@/lib/cache/store-catalog";
 
 export async function listCategories() {
   return prisma.category.findMany({
@@ -13,6 +15,20 @@ export async function listCategories() {
       _count: { select: { primaryProducts: true, productLinks: true } },
     },
   });
+}
+
+/** Store katalog chip'leri: yalnızca kök kategoriler, cache'li. */
+export async function listStoreRootCategories() {
+  return unstable_cache(
+    () =>
+      prisma.category.findMany({
+        where: { active: true, parentId: null },
+        orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+        select: { slug: true, name: true },
+      }),
+    ["store-root-categories"],
+    { revalidate: 300, tags: [STORE_CATALOG_TAG] },
+  )();
 }
 
 export async function listCategoryTreeAdmin() {

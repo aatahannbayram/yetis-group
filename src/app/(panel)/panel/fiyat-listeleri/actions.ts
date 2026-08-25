@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStoreCatalog } from "@/lib/cache/store-catalog";
 import { headers } from "next/headers";
 import {
   createPriceList,
@@ -119,6 +120,7 @@ export async function importPricesExcelAction(
 
     revalidatePath("/panel/fiyat-listeleri");
     revalidatePath("/panel/urunler");
+    revalidateStoreCatalog();
     revalidatePath("/urunler");
     revalidatePath("/bayi/siparis");
 
@@ -137,6 +139,7 @@ export async function updatePriceListItemAction(
   await upsertPriceListItem(priceListId, variantId, priceKurus);
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -163,6 +166,7 @@ export async function fillAllPriceListsAction() {
   const result = await fillAllPriceListsFromCatalog();
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
   revalidatePath("/bayi/siparis");
   return result;
@@ -178,6 +182,7 @@ export async function addVariantToPriceListAction(formData: FormData) {
   await upsertPriceListItem(priceListId, variantId, Math.round(priceTl * 100));
   revalidatePath("/panel/fiyat-listeleri");
   revalidatePath("/panel/urunler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
   return { ok: true as const };
 }

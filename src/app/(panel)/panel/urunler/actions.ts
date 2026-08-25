@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStoreCatalog } from "@/lib/cache/store-catalog";
 import { headers } from "next/headers";
 import { updateVariantBasePrice } from "@/infra/db/pricing";
 import { addStockMovement, createLot } from "@/infra/db/inventory";
@@ -42,6 +43,7 @@ export async function updateVariantPriceAction(variantId: string, priceKurus: nu
   await requireStaff();
   await updateVariantBasePrice(variantId, priceKurus);
   revalidatePath("/panel/urunler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
   revalidatePath("/panel/fiyat-listeleri");
 }
@@ -91,6 +93,7 @@ export async function createProductAction(formData: FormData) {
   }
 
   revalidatePath("/panel/urunler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
   revalidatePath("/panel/b2b/katalog");
 }
@@ -126,6 +129,7 @@ export async function createVariantAction(formData: FormData) {
   }
   revalidatePath("/panel/urunler");
   revalidatePath("/panel/fiyat-listeleri");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -146,6 +150,7 @@ export async function updateVariantPackagingAction(
   }
   revalidatePath("/panel/urunler");
   revalidatePath("/panel/fiyat-listeleri");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -158,6 +163,7 @@ export async function deactivateVariantAction(variantId: string, slug?: string) 
   }
   revalidatePath("/panel/urunler");
   revalidatePath("/panel/fiyat-listeleri");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -170,6 +176,7 @@ export async function updateGroupPriceAction(
   await upsertPriceListItem(priceListId, variantId, priceKurus);
   revalidatePath("/panel/urunler");
   revalidatePath("/panel/fiyat-listeleri");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -477,7 +484,8 @@ export async function importProductsExcelAction(
     result.errors = [...parseErrors, ...result.errors];
 
     revalidatePath("/panel/urunler");
-    revalidatePath("/urunler");
+    revalidateStoreCatalog();
+  revalidatePath("/urunler");
     revalidatePath("/panel/b2b/katalog");
 
     return {

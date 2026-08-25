@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { revalidateStoreCatalog } from "@/lib/cache/store-catalog";
 import { headers } from "next/headers";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
@@ -20,6 +21,7 @@ export async function createCategoryAction(formData: FormData) {
   if (!name) throw new Error("Kategori adı gerekli");
   await createCategory({ name, parentId });
   revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -30,6 +32,7 @@ export async function toggleCategoryAction(formData: FormData) {
   if (!id) throw new Error("id gerekli");
   await updateCategory(id, { active: !active });
   revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -40,6 +43,7 @@ export async function updateCategoryAction(id: string, name: string) {
   if (!trimmed) throw new Error("Kategori adı gerekli");
   await updateCategory(id, { name: trimmed });
   revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }
 
@@ -48,5 +52,6 @@ export async function deleteCategoryAction(id: string) {
   if (!id) throw new Error("id gerekli");
   await deleteCategory(id);
   revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
   revalidatePath("/urunler");
 }

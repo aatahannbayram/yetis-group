@@ -36,6 +36,7 @@ const dealerOrderListSelect = {
   name: true,
   slug: true,
   imageUrl: true,
+  requiresColdChain: true,
   primaryCategory: { select: { name: true, slug: true } },
   variants: {
     where: { isActive: true },

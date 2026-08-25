@@ -23,6 +23,7 @@ import {
   updateVariantPackaging,
 } from "@/infra/db/products";
 import { prisma } from "@/infra/db/client";
+import { getAdminProductsPage, type ProductListQuery } from "@/infra/db/product-list-page";
 import { upsertPriceListItem } from "@/infra/db/pricing";
 import {
   buildProductsExcel,
@@ -502,4 +503,8 @@ export async function importProductsExcelAction(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "İçe aktarım başarısız" };
   }
+}
+
+export async function loadAdminProductsPageAction(input: ProductListQuery = {}) {
+  return getAdminProductsPage(input);
 }

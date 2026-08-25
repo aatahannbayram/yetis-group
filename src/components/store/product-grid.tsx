@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
@@ -10,38 +10,57 @@ import { HoverLift } from "@/components/motion/hover-lift";
 import { CatalogCategoryFilter } from "@/components/store/catalog-category-filter";
 import type { CatalogFilterGroup } from "@/domain/catalog/filter-groups";
 import { findFilterGroup } from "@/domain/catalog/filter-groups";
+import { loadStoreCatalogPageAction } from "@/app/(store)/urunler/actions";
+import { ProductLoadMore } from "@/components/ui/product-load-more";
 
 export function ProductGrid({
-  products,
+  initialProducts,
+  initialNextCursor,
+  catalogTotalCount,
   filterGroups,
-  totalCount,
   activeCategory,
 }: {
-  products: ProductListItem[];
+  initialProducts: ProductListItem[];
+  initialNextCursor: string | null;
+  catalogTotalCount: number;
   filterGroups: CatalogFilterGroup[];
-  totalCount: number;
   activeCategory?: string;
 }) {
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query.trim());
+  const [products, setProducts] = useState(initialProducts);
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
+  const [totalCount, setTotalCount] = useState(catalogTotalCount);
+  const [loadingMore, startLoadMore] = useTransition();
+  const [searching, startSearch] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLocaleLowerCase("tr-TR");
-    if (!q) return products;
-    return products.filter(
-      (p) =>
-        p.name.toLocaleLowerCase("tr-TR").includes(q) ||
-        p.category.toLocaleLowerCase("tr-TR").includes(q) ||
-        p.sku.toLocaleLowerCase("tr-TR").includes(q) ||
-        (p.cins ?? []).some(
-          (c) =>
-            c.packLabel.toLocaleLowerCase("tr-TR").includes(q) ||
-            c.packagingType.toLocaleLowerCase("tr-TR").includes(q),
-        ),
-    );
-  }, [products, query]);
+  useEffect(() => {
+    setProducts(initialProducts);
+    setNextCursor(initialNextCursor);
+    setTotalCount(catalogTotalCount);
+    setQuery("");
+  }, [initialProducts, initialNextCursor, catalogTotalCount, activeCategory]);
+
+  useEffect(() => {
+    if (!deferredQuery) return;
+    startSearch(async () => {
+      const page = await loadStoreCatalogPageAction({
+        q: deferredQuery,
+        categorySlug: activeCategory,
+      });
+      setProducts(page.items);
+      setNextCursor(page.nextCursor);
+      setTotalCount(page.totalCount);
+    });
+  }, [deferredQuery, activeCategory]);
+
+  const displayProducts = useMemo(() => {
+    if (deferredQuery) return products;
+    return products;
+  }, [products, deferredQuery]);
 
   const activeLabel = useMemo(() => {
     if (!activeCategory) return null;
@@ -58,11 +77,25 @@ export function ProductGrid({
     router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore) return;
+    startLoadMore(async () => {
+      const page = await loadStoreCatalogPageAction({
+        cursor: nextCursor,
+        q: deferredQuery || undefined,
+        categorySlug: activeCategory,
+      });
+      setProducts((prev) => [...prev, ...page.items]);
+      setNextCursor(page.nextCursor);
+      setTotalCount(page.totalCount);
+    });
+  }, [nextCursor, loadingMore, deferredQuery, activeCategory]);
+
   return (
     <div>
       <CatalogCategoryFilter
         groups={filterGroups}
-        totalCount={totalCount}
+        totalCount={catalogTotalCount}
         activeCategory={activeCategory}
         onSelect={setCategory}
       />
@@ -83,17 +116,19 @@ export function ProductGrid({
 
       {activeLabel ? (
         <p className="mkt-label mt-4 text-mkt-ink-muted">
-          {filtered.length} ürün · {activeLabel}
+          {displayProducts.length} ürün · {activeLabel}
           {" · "}
           <Link href="/urunler" className="text-mkt-green-text hover:underline">
             Filtreyi temizle
           </Link>
         </p>
       ) : (
-        <p className="mkt-label mt-4 text-mkt-ink-muted">{filtered.length} ürün listeleniyor</p>
+        <p className="mkt-label mt-4 text-mkt-ink-muted">
+          {searching ? "Aranıyor…" : `${displayProducts.length} ürün listeleniyor`}
+        </p>
       )}
 
-      {filtered.length === 0 ? (
+      {displayProducts.length === 0 ? (
         <div className="mt-10 flex flex-col items-center gap-4 text-center">
           <p className="mkt-body">Sonuç bulunamadı.</p>
           {query ? (
@@ -107,13 +142,23 @@ export function ProductGrid({
           ) : null}
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((product) => (
-            <HoverLift key={product.id} className="h-full">
-              <ProductCard product={product} />
-            </HoverLift>
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+            {displayProducts.map((product) => (
+              <HoverLift key={product.id} className="h-full">
+                <ProductCard product={product} />
+              </HoverLift>
+            ))}
+          </div>
+          <ProductLoadMore
+            loadedCount={displayProducts.length}
+            totalCount={totalCount}
+            hasMore={Boolean(nextCursor)}
+            loading={loadingMore}
+            onLoadMore={loadMore}
+            className="[&_p]:text-mkt-ink-muted [&_button]:border-[color:var(--mkt-border)] [&_button]:bg-white"
+          />
+        </>
       )}
     </div>
   );

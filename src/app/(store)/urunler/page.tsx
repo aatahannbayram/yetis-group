@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { getStoreCatalogProducts } from "@/infra/db/store-catalog";
+import { getStoreCatalogProductsPage } from "@/infra/db/product-list-page";
 import { SiteHeader } from "@/components/store/site-header";
 import { SiteFooter } from "@/components/store/site-footer";
 import { Canvas, Slab } from "@/components/store/slab";
@@ -23,8 +23,8 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 async function CatalogJsonLd({ kategori }: { kategori?: string }) {
-  const products = await getStoreCatalogProducts(kategori);
-  const listItems = products.slice(0, 40).map((p) => ({
+  const page = await getStoreCatalogProductsPage({ categorySlug: kategori, limit: 40 });
+  const listItems = page.items.map((p) => ({
     name: p.name,
     path: `/urunler/${p.slug}`,
     image: catalogFallbackImage(p.category, p.imageUrl),

@@ -2,6 +2,8 @@
 
 import {
   useCallback,
+  useDeferredValue,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -44,11 +46,13 @@ import {
   updateVariantPriceAction,
   updateProductDescriptionAction,
   uploadProductImageAction,
+  loadAdminProductsPageAction,
 } from "@/app/(panel)/panel/urunler/actions";
 import { DensityToggle, type Density } from "@/components/ui/density-toggle";
 import { ViewSwitcher, type ViewMode } from "@/components/ui/view-switcher";
 import { cn } from "@/lib/utils";
 import { ProductExcelToolbar } from "@/components/admin/product-excel-toolbar";
+import { ProductLoadMore } from "@/components/ui/product-load-more";
 
 const kgFormatter = new Intl.NumberFormat("tr-TR", {
   minimumFractionDigits: 0,
@@ -108,12 +112,16 @@ function stockTone(kg: number): "ok" | "low" | "empty" {
 }
 
 export function ProductListSheet({
-  products,
+  initialProducts,
+  initialNextCursor,
+  totalProductCount,
   categories,
   producers,
   packagingOptions,
 }: {
-  products: ProductRow[];
+  initialProducts: ProductRow[];
+  initialNextCursor: string | null;
+  totalProductCount: number;
   categories: { id: string; name: string }[];
   producers: { id: string; name: string }[];
   packagingOptions: PackagingOption[];
@@ -126,7 +134,34 @@ export function ProductListSheet({
   const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [fullScreen, setFullScreen] = useState(false);
   const [isCreating, startCreateTransition] = useTransition();
+  const [products, setProducts] = useState(initialProducts);
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
+  const [loadingMore, startLoadMore] = useTransition();
+  const [filtering, startFilter] = useTransition();
+  const deferredSearch = useDeferredValue(search);
   const selected = products.find((p) => p.id === selectedId) ?? null;
+
+  useEffect(() => {
+    setProducts(initialProducts);
+    setNextCursor(initialNextCursor);
+  }, [initialProducts, initialNextCursor]);
+
+  useEffect(() => {
+    const q = deferredSearch.trim();
+    if (!q && !categoryFilter) {
+      setProducts(initialProducts);
+      setNextCursor(initialNextCursor);
+      return;
+    }
+    startFilter(async () => {
+      const page = await loadAdminProductsPageAction({
+        q: q || undefined,
+        categoryName: categoryFilter ?? undefined,
+      });
+      setProducts(page.items);
+      setNextCursor(page.nextCursor);
+    });
+  }, [deferredSearch, categoryFilter, initialProducts, initialNextCursor]);
 
   function openCreate() {
     setSelectedId(null);
@@ -158,38 +193,26 @@ export function ProductListSheet({
     setFullScreen(false);
   }
 
-  const categoryCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const product of products) {
-      counts.set(product.categoryName, (counts.get(product.categoryName) ?? 0) + 1);
-    }
-    return counts;
-  }, [products]);
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore) return;
+    startLoadMore(async () => {
+      const page = await loadAdminProductsPageAction({
+        cursor: nextCursor,
+        q: deferredSearch.trim() || undefined,
+        categoryName: categoryFilter ?? undefined,
+      });
+      setProducts((prev) => [...prev, ...page.items]);
+      setNextCursor(page.nextCursor);
+    });
+  }, [nextCursor, loadingMore, deferredSearch, categoryFilter]);
+
+  const categoryNames = useMemo(
+    () => categories.map((c) => c.name).sort((a, b) => a.localeCompare(b, "tr")),
+    [categories],
+  );
 
   const hasActiveFilters = Boolean(categoryFilter || search.trim());
-
-  const categoryNames = useMemo(() => {
-    return Array.from(categoryCounts.keys()).sort((a, b) => a.localeCompare(b, "tr"));
-  }, [categoryCounts]);
-
-  const filtered = useMemo(() => {
-    let rows = products;
-    if (categoryFilter) {
-      rows = rows.filter((p) => p.categoryName === categoryFilter);
-    }
-    const q = search.trim().toLocaleLowerCase("tr-TR");
-    if (!q) return rows;
-    return rows.filter((row) => {
-      if (row.name.toLocaleLowerCase("tr-TR").includes(q)) return true;
-      if (row.categoryName.toLocaleLowerCase("tr-TR").includes(q)) return true;
-      return row.variants.some((v) => {
-        const sku = v.sku.toLocaleLowerCase("tr-TR");
-        const pack = (v.packSize ?? "").toLocaleLowerCase("tr-TR");
-        const type = v.packagingType.toLocaleLowerCase("tr-TR");
-        return sku.includes(q) || pack.includes(q) || type.includes(q);
-      });
-    });
-  }, [products, search, categoryFilter]);
+  const filtered = products;
 
   const getRowId = useCallback((r: ProductRow) => r.id, []);
   const globalFilterFn = useCallback(() => true, []);
@@ -346,7 +369,7 @@ export function ProductListSheet({
           <div className="flex gap-1.5 overflow-x-auto px-0.5 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <FilterChip
               label="Tümü"
-              count={products.length}
+              count={totalProductCount}
               active={!categoryFilter}
               onClick={() => setCategoryFilter(null)}
             />
@@ -354,7 +377,6 @@ export function ProductListSheet({
               <FilterChip
                 key={name}
                 label={name}
-                count={categoryCounts.get(name) ?? 0}
                 active={categoryFilter === name}
                 onClick={() => setCategoryFilter(name)}
               />
@@ -363,23 +385,25 @@ export function ProductListSheet({
         </div>
 
         <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
-          <p>
+          <p className="flex items-center gap-1.5">
             {hasActiveFilters ? (
               <>
                 <span className="font-medium tabular-nums text-[var(--text-primary)]">
                   {filtered.length}
                 </span>
                 {" / "}
-                {products.length} ürün
+                {totalProductCount} ürün
               </>
             ) : (
               <>
                 <span className="font-medium tabular-nums text-[var(--text-primary)]">
                   {products.length}
                 </span>
-                {" ürün"}
+                {" / "}
+                {totalProductCount} ürün
               </>
             )}
+            {filtering ? <Loader2 className="size-3 animate-spin" aria-hidden /> : null}
           </p>
           {categoryFilter ? (
             <p className="truncate">
@@ -419,8 +443,17 @@ export function ProductListSheet({
               ))}
             </div>
           )}
+          <ProductLoadMore
+            loadedCount={filtered.length}
+            totalCount={totalProductCount}
+            hasMore={Boolean(nextCursor)}
+            loading={loadingMore}
+            onLoadMore={loadMore}
+            className="bg-[var(--surface-2)]"
+          />
         </div>
       ) : (
+        <>
         <DataTable
           data={filtered}
           columns={columns}
@@ -428,6 +461,8 @@ export function ProductListSheet({
           storageKey="panel-products"
           search=""
           globalFilterFn={globalFilterFn}
+          initialPageSize={32}
+          pageSizeOptions={[32, 64, 100]}
           onRowOpen={(row) => openDetail(row.id)}
           emptyTitle={
             categoryFilter || search.trim()
@@ -462,6 +497,14 @@ export function ProductListSheet({
             )
           }
         />
+        <ProductLoadMore
+          loadedCount={filtered.length}
+          totalCount={totalProductCount}
+          hasMore={Boolean(nextCursor)}
+          loading={loadingMore}
+          onLoadMore={loadMore}
+        />
+        </>
       )}
 
       <Sheet open={mode !== "closed"} onOpenChange={(open) => !open && close()}>

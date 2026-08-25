@@ -21,27 +21,14 @@ import type {
 } from "@/infra/db/dealer-catalog";
 import { useDealerCart } from "@/components/dealer/dealer-cart-context";
 import { DealerProductSheet } from "@/components/dealer/dealer-product-sheet";
-import { fetchDealerProductDetailAction } from "@/app/(dealer-portal)/bayi/siparis/actions";
+import { fetchDealerProductDetailAction, loadDealerOrderPageAction } from "@/app/(dealer-portal)/bayi/siparis/actions";
+import { ProductLoadMore } from "@/components/ui/product-load-more";
 import { formatMoney } from "@/lib/format/money";
 import { stockAvailabilityLabel, stockTone } from "@/lib/format/stock";
 import { cn } from "@/lib/utils";
-import { packLabel, packagingTypeLabel, salesUnitLabel } from "@/lib/format/packaging";
+import { packLabel, salesUnitLabel } from "@/lib/format/packaging";
 import { formatKg } from "@/lib/format/weight";
 import { kg } from "@/domain/weight";
-
-type SearchableProduct = DealerOrderListProduct & { searchText: string };
-
-function buildSearchText(product: DealerOrderListProduct): string {
-  const parts = [product.name, product.categoryName];
-  for (const v of product.variants) {
-    parts.push(
-      v.sku,
-      packLabel(v.packSize, v.packagingType),
-      packagingTypeLabel(v.packagingType),
-    );
-  }
-  return parts.join(" ").toLocaleLowerCase("tr-TR");
-}
 
 function stockLabel(stockKg: number) {
   const tone = stockTone(stockKg);
@@ -63,23 +50,30 @@ function resolveVariant(
 }
 
 export function DealerOrderWorkspace({
-  products,
+  initialProducts,
+  initialNextCursor,
+  totalProductCount,
   initialProductSlug,
   initialCinsId,
 }: {
-  products: DealerOrderListProduct[];
+  initialProducts: DealerOrderListProduct[];
+  initialNextCursor: string | null;
+  totalProductCount: number;
   initialProductSlug?: string | null;
   initialCinsId?: string | null;
 }) {
   const { addVariant, isPending, lastError } = useDealerCart();
+  const [products, setProducts] = useState(initialProducts);
+  const [nextCursor, setNextCursor] = useState(initialNextCursor);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [category, setCategory] = useState<string | null>(null);
-  const [, startFilterTransition] = useTransition();
+  const [loadingMore, startLoadMore] = useTransition();
+  const [filtering, startFilter] = useTransition();
 
   const [selected, setSelected] = useState<Record<string, string>>(() => {
     if (initialProductSlug && initialCinsId) {
-      const match = products.find((p) => p.slug === initialProductSlug);
+      const match = initialProducts.find((p) => p.slug === initialProductSlug);
       if (match?.variants.some((v) => v.id === initialCinsId)) {
         return { [match.id]: initialCinsId };
       }
@@ -89,42 +83,44 @@ export function DealerOrderWorkspace({
   const [qty, setQty] = useState<Record<string, number>>({});
   const [detailId, setDetailId] = useState<string | null>(() => {
     if (!initialProductSlug) return null;
-    return products.find((p) => p.slug === initialProductSlug)?.id ?? null;
+    return initialProducts.find((p) => p.slug === initialProductSlug)?.id ?? null;
   });
   const [detailProduct, setDetailProduct] = useState<DealerCatalogProduct | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const detailCache = useRef(new Map<string, DealerCatalogProduct>());
   const [message, setMessage] = useState<string | null>(null);
 
-  const isSearchPending = search !== deferredSearch;
+  useEffect(() => {
+    setProducts(initialProducts);
+    setNextCursor(initialNextCursor);
+  }, [initialProducts, initialNextCursor]);
 
-  const categoryCounts = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const p of products) {
-      map.set(p.categoryName, (map.get(p.categoryName) ?? 0) + 1);
+  useEffect(() => {
+    const q = deferredSearch.trim();
+    if (!q && !category) {
+      setProducts(initialProducts);
+      setNextCursor(initialNextCursor);
+      return;
     }
-    return map;
-  }, [products]);
-
-  const categories = useMemo(
-    () => Array.from(categoryCounts.keys()).sort((a, b) => a.localeCompare(b, "tr")),
-    [categoryCounts],
-  );
-
-  const searchableProducts = useMemo(
-    (): SearchableProduct[] =>
-      products.map((p) => ({ ...p, searchText: buildSearchText(p) })),
-    [products],
-  );
-
-  const filtered = useMemo(() => {
-    const q = deferredSearch.trim().toLocaleLowerCase("tr-TR");
-    return searchableProducts.filter((p) => {
-      if (category && p.categoryName !== category) return false;
-      if (!q) return true;
-      return p.searchText.includes(q);
+    startFilter(async () => {
+      const page = await loadDealerOrderPageAction({
+        q: q || undefined,
+        categoryName: category ?? undefined,
+      });
+      setProducts(page.items);
+      setNextCursor(page.nextCursor);
     });
-  }, [searchableProducts, deferredSearch, category]);
+  }, [deferredSearch, category, initialProducts, initialNextCursor]);
+
+  const isSearchPending = search !== deferredSearch || filtering;
+
+  const categories = useMemo(() => {
+    const set = new Set(initialProducts.map((p) => p.categoryName));
+    for (const p of products) set.add(p.categoryName);
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
+  }, [initialProducts, products]);
+
+  const filtered = products;
 
   const hasActiveFilters = Boolean(category || search.trim());
 
@@ -164,8 +160,21 @@ export function DealerOrderWorkspace({
   }, []);
 
   const setCategoryFilter = useCallback((next: string | null) => {
-    startFilterTransition(() => setCategory(next));
+    setCategory(next);
   }, []);
+
+  const loadMore = useCallback(() => {
+    if (!nextCursor || loadingMore) return;
+    startLoadMore(async () => {
+      const page = await loadDealerOrderPageAction({
+        cursor: nextCursor,
+        q: deferredSearch.trim() || undefined,
+        categoryName: category ?? undefined,
+      });
+      setProducts((prev) => [...prev, ...page.items]);
+      setNextCursor(page.nextCursor);
+    });
+  }, [nextCursor, loadingMore, deferredSearch, category]);
 
   const handleSelectVariant = useCallback((productId: string, variantId: string) => {
     setSelected((s) => ({ ...s, [productId]: variantId }));
@@ -272,7 +281,7 @@ export function DealerOrderWorkspace({
             <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <FilterChip
                 label="Tümü"
-                count={products.length}
+                count={totalProductCount}
                 active={!category}
                 onClick={() => setCategoryFilter(null)}
               />
@@ -280,7 +289,6 @@ export function DealerOrderWorkspace({
                 <FilterChip
                   key={c}
                   label={c}
-                  count={categoryCounts.get(c) ?? 0}
                   active={category === c}
                   onClick={() => setCategoryFilter(c)}
                 />
@@ -295,14 +303,14 @@ export function DealerOrderWorkspace({
                   <span className="font-medium tabular-nums text-[var(--panel-ink)]">
                     {filtered.length}
                   </span>
-                  <span>/ {products.length} ürün</span>
+                  <span>/ {totalProductCount} ürün</span>
                 </>
               ) : (
                 <>
                   <span className="font-medium tabular-nums text-[var(--panel-ink)]">
                     {products.length}
                   </span>
-                  <span>ürün</span>
+                  <span>/ {totalProductCount} ürün</span>
                 </>
               )}
               {isSearchPending ? (
@@ -345,6 +353,7 @@ export function DealerOrderWorkspace({
             ) : null}
           </div>
         ) : (
+          <>
           <ul className="divide-y divide-[var(--panel-border)] overflow-hidden rounded-xl border border-[var(--panel-border)] bg-[var(--surface-2)]">
             {filtered.map((product) => (
               <OrderProductRow
@@ -360,6 +369,14 @@ export function DealerOrderWorkspace({
               />
             ))}
           </ul>
+          <ProductLoadMore
+            loadedCount={filtered.length}
+            totalCount={totalProductCount}
+            hasMore={Boolean(nextCursor)}
+            loading={loadingMore}
+            onLoadMore={loadMore}
+          />
+          </>
         )}
       </div>
 

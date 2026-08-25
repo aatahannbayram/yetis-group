@@ -57,8 +57,56 @@ export type DealerOrderListProduct = {
   imageUrl: string | null;
   categoryName: string;
   categorySlug: string;
+  requiresColdChain: boolean;
   variants: DealerCatalogVariant[];
 };
+
+export function mapListProduct(
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    imageUrl: string | null;
+    requiresColdChain?: boolean;
+    primaryCategory: { name: string; slug: string };
+    variants: Array<{
+      id: string;
+      sku: string;
+      packagingType: string;
+      packSize: string | null;
+      unitFactor: { toString(): string };
+      moq: number | null;
+      vatRateBasisPoints: number;
+      pricePerUnitKurus: number;
+    }>;
+  },
+  overrides: Map<string, number>,
+  stockByVariant: Map<string, Kg>,
+): DealerOrderListProduct {
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    imageUrl: product.imageUrl,
+    categoryName: product.primaryCategory.name,
+    categorySlug: product.primaryCategory.slug,
+    requiresColdChain: product.requiresColdChain ?? false,
+    variants: mapVariantRows(product, overrides, stockByVariant),
+  };
+}
+
+export async function priceOverridesForDealer(dealerId: string) {
+  const dealer = await prisma.dealer.findUnique({
+    where: { id: dealerId },
+    select: { priceListId: true },
+  });
+  if (!dealer?.priceListId) return new Map<string, number>();
+  const items = await prisma.priceListItem.findMany({
+    where: { priceListId: dealer.priceListId },
+    select: { variantId: true, priceKurus: true },
+  });
+  return new Map(items.map((i) => [i.variantId, i.priceKurus]));
+}
 
 function mapVariantRows(
   product: {
@@ -140,35 +188,6 @@ function mapFullProduct(
     attributeValues,
     variants,
   };
-}
-
-function mapListProduct(
-  product: Awaited<ReturnType<typeof getProductsForDealerOrderList>>[number],
-  overrides: Map<string, number>,
-  stockByVariant: Map<string, Kg>,
-): DealerOrderListProduct {
-  return {
-    id: product.id,
-    name: product.name,
-    slug: product.slug,
-    imageUrl: product.imageUrl,
-    categoryName: product.primaryCategory.name,
-    categorySlug: product.primaryCategory.slug,
-    variants: mapVariantRows(product, overrides, stockByVariant),
-  };
-}
-
-async function priceOverridesForDealer(dealerId: string) {
-  const dealer = await prisma.dealer.findUnique({
-    where: { id: dealerId },
-    select: { priceListId: true },
-  });
-  if (!dealer?.priceListId) return new Map<string, number>();
-  const items = await prisma.priceListItem.findMany({
-    where: { priceListId: dealer.priceListId },
-    select: { variantId: true, priceKurus: true },
-  });
-  return new Map(items.map((i) => [i.variantId, i.priceKurus]));
 }
 
 /** Active catalog with every variant, dealer list price, and shippable stock kg. */

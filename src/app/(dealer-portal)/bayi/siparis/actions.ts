@@ -14,6 +14,7 @@ import { resolveDealerContext } from "@/features/dealer/actions";
 import { packLabel } from "@/lib/format/packaging";
 import { getDealerCatalogProductById } from "@/infra/db/dealer-catalog";
 import type { DealerCatalogProduct } from "@/infra/db/dealer-catalog";
+import { getDealerOrderProductsPage, type ProductListQuery } from "@/infra/db/product-list-page";
 
 export type DealerCartLineView = {
   id: string;
@@ -82,6 +83,12 @@ export async function fetchDealerProductDetailAction(
   const ctx = await resolveDealerContext();
   if (!ctx) return null;
   return getDealerCatalogProductById(ctx.dealerId, productId);
+}
+
+export async function loadDealerOrderPageAction(input: ProductListQuery = {}) {
+  const ctx = await resolveDealerContext();
+  if (!ctx) return { items: [], nextCursor: null, totalCount: 0 };
+  return getDealerOrderProductsPage(ctx.dealerId, input);
 }
 
 export async function dealerAddToCartAction(

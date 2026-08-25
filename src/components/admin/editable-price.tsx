@@ -24,7 +24,7 @@ export function EditablePrice({
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="tabular-nums text-body-sm font-medium text-neutral-900 hover:text-brand-700 hover:underline"
+        className="tabular-nums text-body-sm font-medium text-[var(--text-primary)] hover:text-[var(--primary-text)] hover:underline"
       >
         {formatMoney(money(priceKurus))}
       </button>

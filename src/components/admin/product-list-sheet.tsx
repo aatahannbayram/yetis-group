@@ -210,10 +210,10 @@ export function ProductListSheet({
         cell: ({ row }) => {
           return (
             <div className="min-w-0 max-w-[280px]">
-              <p className="truncate font-medium text-stone-900 dark:text-zinc-50" title={row.original.name}>
+              <p className="truncate font-medium text-[var(--text-primary)]" title={row.original.name}>
                 {row.original.name}
               </p>
-              <p className="truncate text-xs text-stone-500">
+              <p className="truncate text-xs text-[var(--text-muted)]">
                 {row.original.variants.length
                   ? cinsLine(
                       row.original.variants.map((v) => ({
@@ -232,7 +232,7 @@ export function ProductListSheet({
         accessorKey: "categoryName",
         header: "Kategori",
         cell: ({ getValue }) => (
-          <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
+          <span className="rounded-full bg-[var(--surface-3)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">
             {String(getValue())}
           </span>
         ),
@@ -269,7 +269,7 @@ export function ProductListSheet({
         cell: ({ row }) => (
           <Link
             href={`/panel/urunler/${row.original.slug}`}
-            className="inline-flex size-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 hover:text-[#1B5E3A]"
+            className="inline-flex size-8 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-3)] hover:text-[var(--primary-text)]"
             title="Detay"
             aria-label={`${row.original.name} detay`}
             onClick={(e) => e.stopPropagation()}
@@ -284,21 +284,21 @@ export function ProductListSheet({
 
   return (
     <div
-      className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+      className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm"
       data-density={density}
     >
-      <div className="space-y-3 border-b border-stone-100 px-3 py-3 sm:px-4 dark:border-zinc-800">
+      <div className="space-y-3 border-b border-[var(--border)] px-3 py-3 sm:px-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative min-w-0 flex-1 lg:max-w-md">
             <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-400"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--text-muted)]"
               aria-hidden
             />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Ürün, SKU veya kategori ara…"
-              className="h-9 rounded-xl border-stone-200 bg-white pl-9 text-sm shadow-none dark:border-zinc-700 dark:bg-zinc-900"
+              className="h-9 rounded-xl pl-9 text-sm shadow-none"
               aria-label="Ürün, SKU veya kategori ara"
             />
           </div>
@@ -309,7 +309,7 @@ export function ProductListSheet({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-8 gap-1 text-stone-500"
+                className="h-8 gap-1 text-[var(--text-muted)]"
                 onClick={() => {
                   setCategoryFilter(null);
                   setSearch("");
@@ -336,11 +336,11 @@ export function ProductListSheet({
 
         <div className="relative">
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-white to-transparent dark:from-zinc-900"
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-[var(--surface)] to-transparent"
             aria-hidden
           />
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent dark:from-zinc-900"
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[var(--surface)] to-transparent"
             aria-hidden
           />
           <div className="flex gap-1.5 overflow-x-auto px-0.5 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -362,11 +362,11 @@ export function ProductListSheet({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 text-xs text-stone-500 dark:text-zinc-400">
+        <div className="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
           <p>
             {hasActiveFilters ? (
               <>
-                <span className="font-medium tabular-nums text-stone-700 dark:text-zinc-200">
+                <span className="font-medium tabular-nums text-[var(--text-primary)]">
                   {filtered.length}
                 </span>
                 {" / "}
@@ -374,7 +374,7 @@ export function ProductListSheet({
               </>
             ) : (
               <>
-                <span className="font-medium tabular-nums text-stone-700 dark:text-zinc-200">
+                <span className="font-medium tabular-nums text-[var(--text-primary)]">
                   {products.length}
                 </span>
                 {" ürün"}
@@ -383,14 +383,14 @@ export function ProductListSheet({
           </p>
           {categoryFilter ? (
             <p className="truncate">
-              Kategori: <span className="font-medium text-stone-700 dark:text-zinc-200">{categoryFilter}</span>
+              Kategori: <span className="font-medium text-[var(--text-primary)]">{categoryFilter}</span>
             </p>
           ) : null}
         </div>
       </div>
 
       {viewMode === "cards" ? (
-        <div className="bg-stone-50/60 p-3 sm:p-4 dark:bg-zinc-950/40">
+        <div className="bg-[var(--surface-2)] p-3 sm:p-4">
           {filtered.length === 0 ? (
             categoryFilter || search.trim() ? (
               <FilterEmptyState
@@ -709,14 +709,14 @@ export function ProductListSheet({
               <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-5">
                 <div className="flex flex-wrap gap-2">
                   <StockBadge kg={selected.stockKg} />
-                  <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--surface-3)] px-2.5 py-1 text-xs text-[var(--text-secondary)]">
                     <Boxes className="size-3" />
                     {selected.variants.length} cins
                   </span>
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">Açıklama</p>
+                  <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Açıklama</p>
                   <EditableTextarea
                     value={selected.description}
                     placeholder="Ürün açıklaması eklenmemiş. Mağazada gösterilecek metni yazmak için tıklayın"
@@ -727,18 +727,18 @@ export function ProductListSheet({
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-medium text-stone-500">Cinsler / fiyat</p>
+                  <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Cinsler / fiyat</p>
                   <div className="space-y-2">
                     {selected.variants.map((v) => (
                       <div
                         key={v.id}
-                        className="flex items-center justify-between rounded-xl border border-stone-200 px-3 py-2.5 dark:border-zinc-800"
+                        className="flex items-center justify-between rounded-xl border border-[var(--border)] px-3 py-2.5"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-stone-800 dark:text-zinc-100">
+                          <p className="text-sm font-medium text-[var(--text-primary)]">
                             {packLabel(v.packSize, v.packagingType)}
                           </p>
-                          <p className="truncate font-mono text-[11px] text-stone-400">{v.sku}</p>
+                          <p className="truncate font-mono text-[11px] text-[var(--text-muted)]">{v.sku}</p>
                         </div>
                         <EditablePrice
                           priceKurus={v.pricePerUnitKurus}
@@ -751,12 +751,12 @@ export function ProductListSheet({
 
                 {selected.media.length > 0 ? (
                   <div>
-                    <p className="mb-1.5 text-xs font-medium text-stone-500">Görseller</p>
+                    <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Görseller</p>
                     <div className="flex flex-wrap gap-2">
                       {selected.media.map((m) => (
                         <div
                           key={m.id}
-                          className="relative size-16 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800"
+                          className="relative size-16 overflow-hidden rounded-xl bg-[var(--surface-3)]"
                         >
                           <CatalogImage src={m.url} alt={m.alt ?? ""} className="object-cover" sizes="64px" />
                         </div>
@@ -801,8 +801,8 @@ function FilterChip({
       className={cn(
         "inline-flex max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
         active
-          ? "border-[#1B5E3A] bg-[#1B5E3A] text-white shadow-sm"
-          : "border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800",
+          ? "border-[var(--primary-solid)] bg-[var(--primary-solid)] text-white shadow-sm"
+          : "border-[var(--border)] bg-[var(--surface)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)]",
       )}
     >
       <span className="truncate">{label}</span>
@@ -810,7 +810,7 @@ function FilterChip({
         <span
           className={cn(
             "shrink-0 rounded px-1 py-px text-[10px] tabular-nums",
-            active ? "bg-white/15 text-white" : "bg-stone-100 text-stone-500 dark:bg-zinc-800 dark:text-zinc-400",
+            active ? "bg-white/15 text-white" : "bg-[var(--surface-3)] text-[var(--text-muted)]",
           )}
         >
           {count}
@@ -828,7 +828,7 @@ function StockBadge({ kg }: { kg: number }) {
         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
         tone === "ok" && "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300",
         tone === "low" && "bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300",
-        tone === "empty" && "bg-stone-100 text-stone-500 dark:bg-zinc-800 dark:text-zinc-400",
+        tone === "empty" && "bg-[var(--surface-3)] text-[var(--text-muted)]",
       )}
     >
       {formatStockKg(kg)}
@@ -855,7 +855,7 @@ function ProductThumb({
   return (
     <div
       style={{ width: size, height: size }}
-      className={cn("relative shrink-0 overflow-hidden rounded-xl bg-stone-100 dark:bg-zinc-800", className)}
+      className={cn("relative shrink-0 overflow-hidden rounded-xl bg-[var(--surface-3)]", className)}
     >
       <CatalogImage src={src} alt="" className="object-cover" sizes={`${size}px`} />
     </div>
@@ -870,10 +870,9 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
   return (
     <article
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border border-stone-200/90 bg-white",
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]",
         "shadow-sm transition-[box-shadow,border-color] duration-200 ease-out",
-        "hover:border-stone-300 hover:shadow-md",
-        "dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700",
+        "hover:border-[var(--border-strong)] hover:shadow-md",
       )}
     >
       <div
@@ -888,7 +887,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         }}
         className="block w-full cursor-pointer text-left"
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-stone-100 dark:bg-zinc-800">
+        <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface-3)]">
           <CatalogImage
             src={cover}
             fallbackSrc={categorySrc === cover ? null : categorySrc}
@@ -897,7 +896,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
             sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
           />
           <div className="absolute inset-x-0 top-0 flex items-start justify-between p-2.5">
-            <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-stone-700 shadow-sm backdrop-blur-sm dark:bg-zinc-900/90 dark:text-zinc-200">
+            <span className="rounded-full bg-[var(--surface)]/90 px-2 py-0.5 text-[11px] font-medium text-[var(--text-secondary)] shadow-sm backdrop-blur-sm">
               {product.categoryName}
             </span>
             <StockBadge kg={product.stockKg} />
@@ -907,12 +906,12 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
         <div className="flex flex-1 flex-col gap-2 p-3.5">
           <div className="min-w-0">
             <h3
-              className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.01em] text-stone-900 transition-colors duration-200 group-hover:text-[#1B5E3A] dark:text-zinc-50 dark:group-hover:text-emerald-400"
+              className="line-clamp-2 text-[15px] leading-snug font-semibold tracking-[-0.01em] text-[var(--text-primary)] transition-colors duration-200 group-hover:text-[var(--primary-text)]"
               title={product.name}
             >
               {product.name}
             </h3>
-            <p className="mt-1 truncate text-xs text-stone-500">
+            <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
               {product.variants.length
                 ? cinsLine(
                     product.variants.map((v) => ({
@@ -931,7 +930,7 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
             >
-              <p className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">
+              <p className="text-[10px] font-medium tracking-wide text-[var(--text-muted)] uppercase">
                 Baz fiyat
               </p>
               {variant ? (
@@ -940,20 +939,20 @@ function ProductCard({ product, onOpen }: { product: ProductRow; onOpen: () => v
                   onSave={(kurus) => updateVariantPriceAction(variant.id, kurus)}
                 />
               ) : (
-                <p className="text-base font-semibold text-stone-400">—</p>
+                <p className="text-base font-semibold text-[var(--text-muted)]">—</p>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 border-t border-stone-100 px-3 py-2 dark:border-zinc-800">
-        <p className="truncate font-mono text-[11px] text-stone-400">
+      <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
+        <p className="truncate font-mono text-[11px] text-[var(--text-muted)]">
           {variant?.sku ?? "SKU yok"}
         </p>
         <Link
           href={`/panel/urunler/${product.slug}`}
-          className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-medium text-stone-500 hover:bg-stone-50 hover:text-[#1B5E3A] dark:hover:bg-zinc-800"
+          className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--primary-text)]"
           onClick={(e) => e.stopPropagation()}
         >
           Düzenle
@@ -1054,7 +1053,7 @@ function SheetImageUpload({ productId, slug }: { productId: string; slug: string
 
   return (
     <div>
-      <p className="mb-1.5 text-xs font-medium text-stone-500">Kapak görseli</p>
+      <p className="mb-1.5 text-xs font-medium text-[var(--text-muted)]">Kapak görseli</p>
       <input
         ref={inputRef}
         type="file"
@@ -1072,7 +1071,7 @@ function SheetImageUpload({ productId, slug }: { productId: string; slug: string
         {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <ImagePlus className="size-4" aria-hidden />}
         {isPending ? "Yükleniyor…" : "JPG / PNG yükle"}
       </Button>
-      <p className="mt-1.5 text-[11px] text-stone-400">
+      <p className="mt-1.5 text-[11px] text-[var(--text-muted)]">
         Kayıtlı kapak yoksa kartta kategori görseli görünür. Bu yükleme ürüne bağlanır.
       </p>
     </div>
@@ -1193,12 +1192,12 @@ function CreateImageDropzone() {
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-16 text-center dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400 dark:bg-zinc-800">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-[var(--surface-3)] text-[var(--text-muted)]">
         <PackageSearch className="size-6" />
       </div>
-      <p className="mt-4 text-sm font-semibold text-stone-800 dark:text-zinc-100">Katalog boş</p>
-      <p className="mt-1 max-w-xs text-sm text-stone-500">
+      <p className="mt-4 text-sm font-semibold text-[var(--text-primary)]">Katalog boş</p>
+      <p className="mt-1 max-w-xs text-sm text-[var(--text-muted)]">
         İlk ürünü ekleyin; fotoğraf, fiyat ve stok buradan yönetilir.
       </p>
       <Button
@@ -1223,12 +1222,12 @@ function FilterEmptyState({
   onClear: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 bg-white px-6 py-16 text-center dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex size-12 items-center justify-center rounded-2xl bg-stone-100 text-stone-400 dark:bg-zinc-800">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-6 py-16 text-center">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-[var(--surface-3)] text-[var(--text-muted)]">
         <PackageSearch className="size-6" />
       </div>
-      <p className="mt-4 text-sm font-semibold text-stone-800 dark:text-zinc-100">{title}</p>
-      <p className="mt-1 max-w-xs text-sm text-stone-500">{description}</p>
+      <p className="mt-4 text-sm font-semibold text-[var(--text-primary)]">{title}</p>
+      <p className="mt-1 max-w-xs text-sm text-[var(--text-muted)]">{description}</p>
       <Button type="button" variant="outline" onClick={onClear} className="mt-5 gap-1.5">
         Filtreyi temizle
       </Button>

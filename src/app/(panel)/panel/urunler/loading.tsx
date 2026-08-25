@@ -15,7 +15,7 @@ export default function AdminProductsLoading() {
           <Skeleton key={i} className="h-24 rounded-2xl" />
         ))}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 dark:border-[var(--border)] dark:bg-[var(--surface)]">
         <Skeleton className="h-10 w-full max-w-md rounded-xl" />
         <div className="mt-4 flex gap-2 overflow-hidden">
           {Array.from({ length: 6 }).map((_, i) => (

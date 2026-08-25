@@ -85,7 +85,7 @@ export async function AdminProductsSection() {
       </div>
 
       {lotCount === 0 ? (
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-[var(--text-muted)]">
           Henüz lot kaydı yok. Ürün detayına girip lot ekleyin.
         </p>
       ) : null}

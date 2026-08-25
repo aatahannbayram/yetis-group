@@ -71,6 +71,9 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
   const [expirationDate, setExpirationDate] = useState("");
   const [initialKg, setInitialKg] = useState("");
   const [isPending, startTransition] = useTransition();
+  const lotNumberId = `lotNumber-${variantId}`;
+  const expirationId = `expirationDate-${variantId}`;
+  const initialKgId = `initialKg-${variantId}`;
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -93,9 +96,9 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
       className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end"
     >
       <div className="space-y-1.5">
-        <Label htmlFor="lotNumber">Lot No</Label>
+        <Label htmlFor={lotNumberId}>Lot No</Label>
         <Input
-          id="lotNumber"
+          id={lotNumberId}
           value={lotNumber}
           onChange={(e) => setLotNumber(e.target.value)}
           placeholder="L-2026-08-01"
@@ -103,9 +106,9 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="expirationDate">SKT</Label>
+        <Label htmlFor={expirationId}>SKT</Label>
         <Input
-          id="expirationDate"
+          id={expirationId}
           type="date"
           value={expirationDate}
           onChange={(e) => setExpirationDate(e.target.value)}
@@ -113,9 +116,9 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="initialKg">Giriş Miktarı (kg)</Label>
+        <Label htmlFor={initialKgId}>Giriş Miktarı (kg)</Label>
       <Input
-        id="initialKg"
+        id={initialKgId}
         inputMode="decimal"
         value={initialKg}
         onChange={(e) => setInitialKg(e.target.value)}

@@ -18,7 +18,7 @@ import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
 import { listAttributeDefinitions, listPackagingOptions, isProductFacingAttribute } from "@/infra/db/attributes";
 import { getGroupPricesForVariants } from "@/infra/db/pricing";
-import { LotManager } from "@/components/admin/lot-manager";
+import { ProductStockTab } from "@/components/admin/product-stock-tab";
 import { ProductGallery } from "@/components/admin/product-gallery";
 import { ProductVariantPricing } from "@/components/admin/product-variant-pricing";
 import { StatCard } from "@/components/admin/stat-card";
@@ -29,7 +29,7 @@ import {
 } from "@/components/admin/product-detail-editor";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
-import { cinsLine } from "@/lib/format/packaging";
+import { cinsLine, packLabel } from "@/lib/format/packaging";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -66,14 +66,39 @@ export default async function AdminProductDetailPage({
   const variant = defaultVariant(product);
   if (!variant) notFound();
 
-  const [lots, stock, attributesRaw, groupPricing, packagingOptions] = await Promise.all([
-    getLotsForVariant(variant.id),
+  const [lotsByVariant, stock, attributesRaw, groupPricing, packagingOptions] = await Promise.all([
+    Promise.all(
+      product.variants.map(async (v) => {
+        const lots = await getLotsForVariant(v.id);
+        return [v.id, lots] as const;
+      }),
+    ),
     getProductStockSummary(product.id),
     listAttributeDefinitions(),
     getGroupPricesForVariants(product.variants.map((v) => v.id)),
     listPackagingOptions(),
   ]);
   const attributes = attributesRaw.filter((a) => isProductFacingAttribute(a.key));
+
+  const lotsByVariantId = Object.fromEntries(
+    lotsByVariant.map(([variantId, lots]) => [
+      variantId,
+      lots.map((lot) => ({
+        id: lot.id,
+        lotNumber: lot.lotNumber,
+        expirationDate: lot.expirationDate.toISOString(),
+        expired: lot.expired,
+        availableKg: lot.availableKg.toString(),
+        movements: lot.movements.map((m) => ({
+          id: m.id,
+          type: m.type as "GIRIS" | "CIKIS" | "FIRE" | "REPACK",
+          quantityKg: m.quantityKg.toString(),
+          note: m.note,
+          createdAt: m.createdAt.toISOString(),
+        })),
+      })),
+    ]),
+  );
 
   const groupPriceMap: Record<string, number | null> = {};
   for (const list of groupPricing.lists) {
@@ -84,9 +109,11 @@ export default async function AdminProductDetailPage({
 
   const valueByAttr = new Map(product.attributeValues.map((v) => [v.attributeId, v]));
   const saveDescription = updateProductDescriptionAction.bind(null, product.id, slug);
-  const expiringSoonCount = lots.filter(
-    (l) => !l.expired && (l.expirationDate.getTime() - Date.now()) / DAY_MS <= 14,
-  ).length;
+  const defaultLots = lotsByVariantId[variant.id] ?? [];
+  const expiringSoonCount = defaultLots.filter((l) => {
+    if (l.expired) return false;
+    return (new Date(l.expirationDate).getTime() - Date.now()) / DAY_MS <= 14;
+  }).length;
 
   return (
     <div className="-mx-3 -my-4 bg-stone-50 px-3 py-4 sm:-mx-4 sm:-my-5 sm:px-4 sm:py-5 md:-m-6 md:p-6 dark:bg-zinc-950">
@@ -442,27 +469,15 @@ export default async function AdminProductDetailPage({
         </TabsContent>
 
         <TabsContent value="stok">
-          <p className="mb-4 text-sm text-stone-500 dark:text-zinc-400">
-            Lotlar varyant (<code className="font-mono text-stone-700 dark:text-zinc-300">{variant.sku}</code>)
-            seviyesindedir. Süresi geçmiş lottan satış/çıkış yapılamaz; eldeki miktar fire (imha) ile düşülür.
-          </p>
-          <LotManager
-            variantId={variant.id}
+          <ProductStockTab
             slug={product.slug}
-            lots={lots.map((lot) => ({
-              id: lot.id,
-              lotNumber: lot.lotNumber,
-              expirationDate: lot.expirationDate.toISOString(),
-              expired: lot.expired,
-              availableKg: lot.availableKg.toString(),
-              movements: lot.movements.map((m) => ({
-                id: m.id,
-                type: m.type as "GIRIS" | "CIKIS" | "FIRE" | "REPACK",
-                quantityKg: m.quantityKg.toString(),
-                note: m.note,
-                createdAt: m.createdAt.toISOString(),
-              })),
+            initialVariantId={variant.id}
+            variants={product.variants.map((v) => ({
+              id: v.id,
+              sku: v.sku,
+              packLabel: packLabel(v.packSize, v.packagingType),
             }))}
+            lotsByVariantId={lotsByVariantId}
           />
         </TabsContent>
       </Tabs>

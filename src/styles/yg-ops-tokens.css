@@ -1,0 +1,129 @@
+/**
+ * Yetiş Grup Ops design system (admin /yonetim + dealer /portal).
+ * Scoped under [data-yg-ops="true"]. Do not leak into store or /panel|/bayi.
+ */
+
+[data-yg-ops="true"] {
+  /* Surfaces — dark floating panel */
+  --yg-bg: #0c0f0d;
+  --yg-bg-elevated: #121612;
+  --yg-panel: #161b17;
+  --yg-panel-2: #1b221c;
+  --yg-rail: #101410;
+  --yg-overlay: rgba(6, 8, 7, 0.72);
+
+  /* Text */
+  --yg-text: #f2f4f1;
+  --yg-text-secondary: #c5cdc4;
+  --yg-text-muted: #8b968c;
+  --yg-text-inverse: #0c0f0d;
+
+  /* Brand primary (single solid green for filled actions) */
+  --yg-primary: #30a369;
+  --yg-primary-hover: #2a9160;
+  --yg-primary-pressed: #248255;
+  --yg-primary-subtle: rgba(48, 163, 105, 0.16);
+  --yg-primary-text: #6fd49a;
+
+  /* Borders — inputs only by convention */
+  --yg-border: rgba(242, 244, 241, 0.1);
+  --yg-border-strong: rgba(242, 244, 241, 0.18);
+  --yg-focus-ring: rgba(48, 163, 105, 0.45);
+
+  /* Status */
+  --yg-success: #3dba7a;
+  --yg-success-subtle: rgba(61, 186, 122, 0.14);
+  --yg-warning: #e0a84a;
+  --yg-warning-subtle: rgba(224, 168, 74, 0.16);
+  --yg-danger: #e25a4a;
+  --yg-danger-subtle: rgba(226, 90, 74, 0.16);
+  --yg-info: #5b9fd4;
+  --yg-info-subtle: rgba(91, 159, 212, 0.16);
+
+  /* SKT / expiry */
+  --yg-skt-ok: #3dba7a;
+  --yg-skt-warn: #e0a84a;
+  --yg-skt-soon: #e8873a;
+  --yg-skt-critical: #e25a4a;
+
+  /* Order stages (admin charts / timeline) */
+  --yg-stage-draft: #8b968c;
+  --yg-stage-review: #5b9fd4;
+  --yg-stage-confirmed: #30a369;
+  --yg-stage-preparing: #e0a84a;
+  --yg-stage-shipped: #7c8ae8;
+  --yg-stage-delivered: #3dba7a;
+  --yg-stage-rejected: #e25a4a;
+  --yg-stage-cancelled: #6b746c;
+
+  /* Credit bar thresholds */
+  --yg-credit-ok: #3dba7a;
+  --yg-credit-warn: #e0a84a;
+  --yg-credit-critical: #e25a4a;
+
+  /* Blocking notice */
+  --yg-notice-warning-bg: var(--yg-warning-subtle);
+  --yg-notice-danger-bg: var(--yg-danger-subtle);
+  --yg-notice-info-bg: var(--yg-info-subtle);
+
+  /* Radius */
+  --yg-radius-sm: 8px;
+  --yg-radius-md: 12px;
+  --yg-radius-lg: 16px;
+  --yg-radius-xl: 20px;
+  --yg-radius-pill: 999px;
+
+  /* Control */
+  --yg-control-h: 40px;
+  --yg-control-h-lg: 44px;
+  --yg-row-h: 52px;
+
+  /* Typography scale (only these sizes) */
+  --yg-text-24: 24px;
+  --yg-text-20: 20px;
+  --yg-text-16: 16px;
+  --yg-text-14: 14px;
+  --yg-text-13: 13px;
+  --yg-text-12: 12px;
+
+  /* Shadows — drawers / modals / popovers only */
+  --yg-shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --yg-shadow-lg: 0 24px 56px rgba(0, 0, 0, 0.55);
+
+  /* Motion */
+  --yg-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --yg-duration: 180ms;
+  --yg-duration-slow: 280ms;
+
+  /* Shell layout */
+  --yg-rail-w: 220px;
+  --yg-rail-w-collapsed: 72px;
+  --yg-topbar-h: 56px;
+  --yg-pill-h: 44px;
+  --yg-shell-gap: 12px;
+  --yg-shell-pad: 12px;
+  --yg-drawer-w: 520px;
+
+  color: var(--yg-text);
+  background: var(--yg-bg);
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: var(--yg-text-14);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-yg-ops="true"] *,
+[data-yg-ops="true"] *::before,
+[data-yg-ops="true"] *::after {
+  box-sizing: border-box;
+}
+
+[data-yg-ops="true"] ::selection {
+  background: var(--yg-primary-subtle);
+  color: var(--yg-text);
+}
+
+[data-yg-ops="true"] :focus-visible {
+  outline: 2px solid var(--yg-focus-ring);
+  outline-offset: 2px;
+}

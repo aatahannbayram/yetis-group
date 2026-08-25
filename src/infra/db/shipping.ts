@@ -46,6 +46,7 @@ export async function getShippingOverview() {
       productName: product.name,
       productSlug: product.slug,
       categoryName: product.primaryCategory.name,
+      imageUrl: product.imageUrl,
       variantId,
       sku: variant.sku,
       packLabel: packLabel(variant.packSize, variant.packagingType),

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
-import { PackageCheck, Sparkles, TriangleAlert } from "lucide-react";
+import { Package, PackageCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { kg, sum, type Kg } from "@/domain/weight";
 import { suggestFefoShipment, InventoryError, type FefoAllocation } from "@/domain/inventory/fefo";
 import { formatDateShort } from "@/lib/format/date";
 import { lotPartyLabel, lotSktLine } from "@/lib/format/lot";
+import { catalogFallbackImage } from "@/content/catalog-images";
 
 export type ShippingLot = {
   id: string;
@@ -28,6 +30,7 @@ export type ShippingRow = {
   productName: string;
   productSlug: string;
   categoryName: string;
+  imageUrl: string | null;
   variantId: string;
   sku: string;
   packLabel: string;
@@ -107,8 +110,20 @@ function VariantCard({ row }: { row: ShippingRow }) {
     }
   }
 
+  const cover = catalogFallbackImage(row.categoryName, row.imageUrl);
+
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="relative aspect-[16/10] bg-stone-100 dark:bg-zinc-950">
+        {cover ? (
+          <Image src={cover} alt="" fill className="object-cover" sizes="(min-width: 1024px) 30vw, 50vw" />
+        ) : (
+          <div className="flex size-full items-center justify-center text-stone-400">
+            <Package className="size-8" aria-hidden />
+          </div>
+        )}
+      </div>
+      <div className="p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-semibold text-stone-900 dark:text-zinc-50">{row.productName}</p>
@@ -194,6 +209,7 @@ function VariantCard({ row }: { row: ShippingRow }) {
           </motion.div>
         ) : null}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

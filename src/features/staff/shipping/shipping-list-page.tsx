@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight, Package } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricStrip } from "@/components/ui/metric-strip";
 import { ListToolbar } from "@/components/ui/list-toolbar";
@@ -23,6 +24,7 @@ import {
 } from "@/domain/inventory/fefo";
 import { formatDateShort } from "@/lib/format/date";
 import { lotPartyLabel, lotSktLine } from "@/lib/format/lot";
+import { catalogFallbackImage } from "@/content/catalog-images";
 import { cn } from "@/lib/utils";
 import type { Density } from "@/components/ui/density-toggle";
 import type { ViewMode } from "@/components/ui/view-switcher";
@@ -30,6 +32,34 @@ import type { ViewMode } from "@/components/ui/view-switcher";
 const kgFmt = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 3 });
 function fmtKg(value: Kg) {
   return `${kgFmt.format(value.toNumber())} kg`;
+}
+
+function ProductThumb({
+  categoryName,
+  imageUrl,
+  className,
+}: {
+  categoryName: string;
+  imageUrl: string | null;
+  className?: string;
+}) {
+  const src = catalogFallbackImage(categoryName, imageUrl);
+  return (
+    <div
+      className={cn(
+        "relative size-11 shrink-0 overflow-hidden rounded-lg bg-stone-100 ring-1 ring-stone-200/80 dark:bg-zinc-800 dark:ring-zinc-700",
+        className,
+      )}
+    >
+      {src ? (
+        <Image src={src} alt="" fill className="object-cover" sizes="44px" />
+      ) : (
+        <div className="flex size-full items-center justify-center text-stone-400">
+          <Package className="size-4" aria-hidden />
+        </div>
+      )}
+    </div>
+  );
 }
 
 type VariantRow = ShippingRow & {
@@ -206,29 +236,41 @@ export function ShippingListPage({
       {
         accessorKey: "productName",
         header: "Ürün",
+        size: 340,
         minSize: 260,
         cell: ({ row }) => (
-          <div className="min-w-0 max-w-[300px]">
-            <p className="truncate font-medium text-stone-900 dark:text-zinc-50" title={row.original.productName}>
-              {row.original.productName}
-            </p>
-            <p className="truncate text-xs text-stone-500 dark:text-zinc-400">
-              {row.original.packLabel}
-              {row.original.categoryName ? (
-                <>
-                  <span className="mx-1 opacity-40">·</span>
-                  {row.original.categoryName}
-                </>
-              ) : null}
-            </p>
+          <div className="flex max-w-[22rem] items-center gap-3 py-1">
+            <div className="min-w-0 flex-1">
+              <p
+                className="truncate font-medium text-stone-900 dark:text-zinc-50"
+                title={row.original.productName}
+              >
+                {row.original.productName}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-stone-500 dark:text-zinc-400">
+                {row.original.packLabel}
+                {row.original.categoryName ? (
+                  <>
+                    <span className="mx-1 opacity-40">·</span>
+                    {row.original.categoryName}
+                  </>
+                ) : null}
+              </p>
+            </div>
+            <ProductThumb
+              categoryName={row.original.categoryName}
+              imageUrl={row.original.imageUrl}
+            />
           </div>
         ),
       },
       {
         accessorKey: "shippableKg",
         header: "Stok",
+        size: 100,
+        minSize: 88,
         cell: ({ getValue }) => (
-          <span className="block text-right font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
+          <span className="block font-semibold tabular-nums text-stone-900 dark:text-zinc-50">
             {fmtKg(kg(getValue() as number))}
           </span>
         ),
@@ -236,8 +278,10 @@ export function ShippingListPage({
       {
         accessorKey: "lotCount",
         header: "Parti",
+        size: 72,
+        minSize: 64,
         cell: ({ row }) => (
-          <span className="tabular-nums text-stone-600 dark:text-zinc-400">
+          <span className="inline-flex min-w-[1.75rem] justify-center rounded-md bg-stone-100 px-2 py-1 text-sm font-medium tabular-nums text-stone-700 dark:bg-zinc-800 dark:text-zinc-300">
             {row.original.lots.filter((l) => !l.expired).length}
           </span>
         ),
@@ -246,6 +290,8 @@ export function ShippingListPage({
         id: "nearestDays",
         accessorKey: "nearestDays",
         header: "SKT",
+        size: 128,
+        minSize: 112,
         sortingFn: (a, b) =>
           (a.original.nearestDays ?? 9999) - (b.original.nearestDays ?? 9999),
         cell: ({ row }) => {
@@ -258,13 +304,13 @@ export function ShippingListPage({
           }
           if (d == null) return <span className="text-stone-400">-</span>;
           return (
-            <div className="flex flex-col items-start gap-0.5">
+            <div className="flex flex-col items-start gap-1">
               <StatusPill
                 label={d < 0 ? "Geçmiş" : d === 0 ? "Bugün" : d === 1 ? "Yarın" : `${d} gün`}
                 tone={sktTone(d, row.original.expiredCount)}
               />
               {nearestLot && d >= 0 ? (
-                <span className="text-[11px] text-stone-500 tabular-nums">
+                <span className="pl-0.5 text-[11px] tabular-nums text-stone-500">
                   {formatDateShort(new Date(nearestLot.expirationDate))}
                 </span>
               ) : null}
@@ -275,6 +321,8 @@ export function ShippingListPage({
       {
         id: "priority",
         header: "Öncelik",
+        size: 128,
+        minSize: 112,
         cell: ({ row }) => {
           const p = priorityOf(row.original);
           return <StatusPill label={p.label} tone={p.tone} />;
@@ -283,10 +331,13 @@ export function ShippingListPage({
       {
         id: "open",
         header: "",
-        size: 40,
+        size: 44,
+        minSize: 44,
         enableSorting: false,
         cell: () => (
-          <ChevronRight className="size-4 text-stone-300 dark:text-zinc-600" aria-hidden />
+          <span className="inline-flex size-8 items-center justify-center rounded-lg bg-stone-50 text-stone-400 dark:bg-zinc-800/80 dark:text-zinc-500">
+            <ChevronRight className="size-4" aria-hidden />
+          </span>
         ),
       },
     ],
@@ -359,8 +410,8 @@ export function ShippingListPage({
           }}
         />
 
-        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="border-b border-stone-200 px-3 py-2 dark:border-zinc-800">
+        <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_1px_2px_rgb(33_28_22/0.04)] dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="border-b border-stone-200 px-3 py-2.5 dark:border-zinc-800">
             <ListToolbar
               search={search}
               onSearchChange={setSearch}
@@ -402,7 +453,7 @@ export function ShippingListPage({
                 data={filtered}
                 columns={columns}
                 getRowId={(r) => r.variantId}
-                storageKey="shipping-fefo-v2"
+                storageKey="shipping-fefo-v3"
                 search={search}
                 globalFilterFn={(row, q) =>
                   row.productName.toLocaleLowerCase("tr-TR").includes(q) ||
@@ -482,6 +533,22 @@ export function ShippingListPage({
       >
         {selected ? (
           <div className="space-y-5">
+            <div className="flex items-center gap-3 rounded-xl border border-stone-200 bg-stone-50 p-3 dark:border-zinc-800 dark:bg-zinc-950">
+              <ProductThumb
+                categoryName={selected.categoryName}
+                imageUrl={selected.imageUrl}
+                className="size-14 rounded-xl"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-stone-900 dark:text-zinc-50">
+                  {selected.productName}
+                </p>
+                <p className="mt-0.5 text-sm text-stone-500">
+                  {selected.packLabel}
+                  {selected.categoryName ? ` · ${selected.categoryName}` : ""}
+                </p>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="rounded-xl border border-stone-200 bg-stone-50 px-3 py-2.5 dark:border-zinc-800 dark:bg-zinc-950">
                 <p className="text-xs text-stone-500">Sevk edilebilir</p>

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getStoreCatalogProducts } from "@/infra/db/store-catalog";
-import { listStoreRootCategories } from "@/infra/db/categories";
+import { listStoreCatalogFilters } from "@/infra/db/store-catalog-filters";
 import { listPublishedAnnouncements } from "@/infra/db/campaigns";
 import { ProductGrid } from "@/components/store/product-grid";
 import { WeeklyAnnouncements } from "@/components/store/weekly-announcements";
@@ -34,9 +34,9 @@ function CatalogGridSkeleton() {
 }
 
 async function CatalogProductsInner({ kategori }: { kategori?: string }) {
-  const [products, categories, announcements] = await Promise.all([
+  const [products, { groups: filterGroups, total }, announcements] = await Promise.all([
     getStoreCatalogProducts(kategori),
-    listStoreRootCategories(),
+    listStoreCatalogFilters(),
     listPublishedAnnouncements(),
   ]);
 
@@ -60,7 +60,8 @@ async function CatalogProductsInner({ kategori }: { kategori?: string }) {
         ) : (
           <ProductGrid
             activeCategory={kategori}
-            categories={categories}
+            filterGroups={filterGroups}
+            totalCount={total}
             products={products.map((product) => ({
               ...product,
               imageUrl: catalogFallbackImage(product.category, product.imageUrl),

@@ -7,15 +7,19 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard, type ProductListItem } from "@/components/store/product-card";
 import { HoverLift } from "@/components/motion/hover-lift";
-import { cn } from "@/lib/utils";
+import { CatalogCategoryFilter } from "@/components/store/catalog-category-filter";
+import type { CatalogFilterGroup } from "@/domain/catalog/filter-groups";
+import { findFilterGroup } from "@/domain/catalog/filter-groups";
 
 export function ProductGrid({
   products,
-  categories,
+  filterGroups,
+  totalCount,
   activeCategory,
 }: {
   products: ProductListItem[];
-  categories: { slug: string; name: string }[];
+  filterGroups: CatalogFilterGroup[];
+  totalCount: number;
   activeCategory?: string;
 }) {
   const [query, setQuery] = useState("");
@@ -39,47 +43,31 @@ export function ProductGrid({
     );
   }, [products, query]);
 
+  const activeLabel = useMemo(() => {
+    if (!activeCategory) return null;
+    const hit = findFilterGroup(filterGroups, activeCategory);
+    if (!hit) return activeCategory;
+    return hit.activeChild?.name ?? hit.group.name;
+  }, [activeCategory, filterGroups]);
+
   function setCategory(slug: string | null) {
     const params = new URLSearchParams(searchParams.toString());
     if (slug) params.set("kategori", slug);
     else params.delete("kategori");
     const qs = params.toString();
-    router.push(qs ? `${pathname}?${qs}` : pathname);
+    router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }
 
   return (
     <div>
-      <div className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1">
-        <button
-          type="button"
-          onClick={() => setCategory(null)}
-          className={cn(
-            "mkt-pill mkt-label shrink-0 px-4 py-2",
-            !activeCategory
-              ? "bg-mkt-accent text-mkt-accent-ink"
-              : "bg-mkt-card-muted text-mkt-ink-muted",
-          )}
-        >
-          Tümü
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat.slug}
-            type="button"
-            onClick={() => setCategory(cat.slug)}
-            className={cn(
-              "mkt-pill mkt-label shrink-0 px-4 py-2",
-              activeCategory === cat.slug
-                ? "bg-mkt-accent text-mkt-accent-ink"
-                : "bg-mkt-card-muted text-mkt-ink-muted",
-            )}
-          >
-            {cat.name}
-          </button>
-        ))}
-      </div>
+      <CatalogCategoryFilter
+        groups={filterGroups}
+        totalCount={totalCount}
+        activeCategory={activeCategory}
+        onSelect={setCategory}
+      />
 
-      <div className="relative max-w-sm">
+      <div className="relative mt-5 max-w-sm">
         <Search
           className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-mkt-ink-muted"
           aria-hidden
@@ -88,13 +76,35 @@ export function ProductGrid({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Ürün veya kategori ara..."
-          className="mkt-pill h-11 border-[color:var(--mkt-border)] bg-mkt-card-muted pl-9"
+          className="mkt-pill h-11 border-[color:var(--mkt-border)] bg-white pl-9"
+          aria-label="Ürün veya kategori ara"
         />
       </div>
+
+      {activeLabel ? (
+        <p className="mkt-label mt-4 text-mkt-ink-muted">
+          {filtered.length} ürün · {activeLabel}
+          {" · "}
+          <Link href="/urunler" className="text-mkt-green-text hover:underline">
+            Filtreyi temizle
+          </Link>
+        </p>
+      ) : (
+        <p className="mkt-label mt-4 text-mkt-ink-muted">{filtered.length} ürün listeleniyor</p>
+      )}
 
       {filtered.length === 0 ? (
         <div className="mt-10 flex flex-col items-center gap-4 text-center">
           <p className="mkt-body">Sonuç bulunamadı.</p>
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              className="text-[13px] font-semibold text-mkt-green-text hover:underline"
+            >
+              Aramayı temizle
+            </button>
+          ) : null}
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
@@ -105,15 +115,6 @@ export function ProductGrid({
           ))}
         </div>
       )}
-
-      {activeCategory ? (
-        <p className="mkt-label mt-8 text-mkt-ink-muted">
-          Filtre:{" "}
-          <Link href="/urunler" className="text-mkt-green-text hover:underline">
-            temizle
-          </Link>
-        </p>
-      ) : null}
     </div>
   );
 }

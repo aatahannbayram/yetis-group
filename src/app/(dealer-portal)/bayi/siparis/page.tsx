@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
-import { getDealerCatalog } from "@/infra/db/dealer-catalog";
+import { getDealerOrderList } from "@/infra/db/dealer-catalog";
 import { DealerOrderWorkspace } from "@/components/dealer/dealer-order-workspace";
 
 export default async function BayiSiparisPage({
@@ -22,7 +22,7 @@ export default async function BayiSiparisPage({
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const products = await getDealerCatalog(dealerId);
+  const products = await getDealerOrderList(dealerId);
 
   return (
     <DealerOrderWorkspace

@@ -30,6 +30,29 @@ const adminListSelect = {
   },
 } satisfies Prisma.ProductSelect;
 
+/** Bayi sipariş listesi: detay alanları yok, hafif payload. */
+const dealerOrderListSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  imageUrl: true,
+  primaryCategory: { select: { name: true, slug: true } },
+  variants: {
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" as const },
+    select: {
+      id: true,
+      sku: true,
+      packagingType: true,
+      packSize: true,
+      unitFactor: true,
+      moq: true,
+      vatRateBasisPoints: true,
+      pricePerUnitKurus: true,
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
 const dealerCatalogSelect = {
   id: true,
   name: true,
@@ -70,6 +93,7 @@ const dealerCatalogSelect = {
 
 export type AdminListProduct = Awaited<ReturnType<typeof getProductsForAdminList>>[number];
 export type DealerCatalogRow = Awaited<ReturnType<typeof getProductsForDealerCatalog>>[number];
+export type DealerOrderListRow = Awaited<ReturnType<typeof getProductsForDealerOrderList>>[number];
 
 /** Panel ürün listesi: nitelik yok, hafif select. */
 export async function getProductsForAdminList() {
@@ -85,6 +109,22 @@ export async function getProductsForDealerCatalog() {
   return prisma.product.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
+    select: dealerCatalogSelect,
+  });
+}
+
+/** Bayi sipariş satır listesi: nitelik/medya/üretici hikâyesi yok. */
+export async function getProductsForDealerOrderList() {
+  return prisma.product.findMany({
+    where: { active: true },
+    orderBy: { name: "asc" },
+    select: dealerOrderListSelect,
+  });
+}
+
+export async function getProductForDealerCatalogDetail(productId: string) {
+  return prisma.product.findFirst({
+    where: { id: productId, active: true },
     select: dealerCatalogSelect,
   });
 }

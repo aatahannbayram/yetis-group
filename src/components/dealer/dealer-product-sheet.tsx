@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CalendarClock, MapPin, Snowflake } from "lucide-react";
+import { CalendarClock, Loader2, MapPin, Snowflake } from "lucide-react";
 import { catalogFallbackImage } from "@/content/catalog-images";
 import { ProductGallery } from "@/components/store/product-gallery";
 import type { DealerCatalogProduct, DealerCatalogVariant } from "@/infra/db/dealer-catalog";
@@ -49,6 +49,7 @@ function CertificateChips({ labels }: { labels: string[] }) {
 export function DealerProductSheet({
   product,
   variant,
+  loading = false,
   amount,
   pending,
   onClose,
@@ -60,6 +61,7 @@ export function DealerProductSheet({
 }: {
   product: DealerCatalogProduct | null;
   variant: DealerCatalogVariant | null;
+  loading?: boolean;
   amount: number;
   pending: boolean;
   onClose: () => void;
@@ -69,7 +71,7 @@ export function DealerProductSheet({
   notice?: string | null;
   error?: string | null;
 }) {
-  const open = Boolean(product && variant);
+  const open = loading || Boolean(product && variant);
   const { lead, body } = splitPdpCopy(product?.description ?? "");
   const stockKg = variant?.stockKg ?? 0;
   const tone = variant ? stockTone(stockKg) : "empty";
@@ -92,7 +94,12 @@ export function DealerProductSheet({
         side="right"
         className="flex h-full max-h-[100dvh] w-full flex-col gap-0 overflow-hidden p-0 data-[side=right]:w-full data-[side=right]:sm:max-w-md data-[side=right]:md:max-w-lg data-[side=right]:lg:max-w-xl"
       >
-        {product && variant ? (
+        {loading && !product ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-[var(--panel-ink-muted)]">
+            <Loader2 className="size-6 animate-spin text-[var(--primary-text)]" aria-hidden />
+            <p className="text-sm">Ürün detayı yükleniyor…</p>
+          </div>
+        ) : product && variant ? (
           <>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <div className="border-b border-[var(--panel-border)] px-4 pt-4 pb-4 sm:px-5 md:grid md:grid-cols-[10.5rem_minmax(0,1fr)] md:items-start md:gap-4 lg:grid-cols-[11.5rem_minmax(0,1fr)]">

@@ -12,6 +12,8 @@ import { prisma } from "@/infra/db/client";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 import { resolveDealerContext } from "@/features/dealer/actions";
 import { packLabel } from "@/lib/format/packaging";
+import { getDealerCatalogProductById } from "@/infra/db/dealer-catalog";
+import type { DealerCatalogProduct } from "@/infra/db/dealer-catalog";
 
 export type DealerCartLineView = {
   id: string;
@@ -71,6 +73,15 @@ export async function fetchDealerCartAction(): Promise<DealerCartView | null> {
   const pair = await dealerCart(false);
   if (!pair?.cart) return null;
   return toCartView(pair.cart);
+}
+
+/** Ürün detay çekmecesi: tam katalog kaydı, oturum doğrulamalı. */
+export async function fetchDealerProductDetailAction(
+  productId: string,
+): Promise<DealerCatalogProduct | null> {
+  const ctx = await resolveDealerContext();
+  if (!ctx) return null;
+  return getDealerCatalogProductById(ctx.dealerId, productId);
 }
 
 export async function dealerAddToCartAction(

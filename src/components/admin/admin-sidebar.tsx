@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -22,22 +22,18 @@ import { BrandMark, Logo } from "@/components/ui/logo";
 import { useAdminTheme } from "@/components/admin/admin-theme-context";
 import {
   PANEL_NAV_GROUPS,
+  filterNavGroupsForRole,
   type PanelNavGroup,
   type PanelNavItem,
 } from "@/components/admin/panel-nav";
 import { cn } from "@/lib/utils";
+import type { StaffRole } from "@/domain/staff/roles";
 
 const GROUP_COLLAPSE_KEY = "yetis-panel-nav-groups-v2";
 
 function isActivePath(pathname: string, href: string, exact?: boolean) {
   if (exact || href === "/panel") return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function defaultCollapsedMap() {
-  return Object.fromEntries(
-    PANEL_NAV_GROUPS.filter((g) => g.defaultCollapsed).map((g) => [g.id, true]),
-  ) as Record<string, boolean>;
 }
 
 function NavItem({
@@ -59,7 +55,7 @@ function NavItem({
       <SidebarMenuItem>
         <SidebarMenuButton
           disabled
-          tooltip={`${label} — yakında`}
+          tooltip={`${label}: yakında`}
           className="h-9 cursor-not-allowed rounded-[12px] px-2.5 text-sidebar-foreground/40 opacity-70"
           aria-disabled
         >
@@ -168,23 +164,38 @@ function NavGroup({
   );
 }
 
-export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
+export function AdminSidebar({
+  openLeadsCount,
+  staffRole = null,
+}: {
+  openLeadsCount: number;
+  staffRole?: StaffRole | null;
+}) {
   const { theme } = useAdminTheme();
   const { setOpenMobile, isMobile } = useSidebar();
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(defaultCollapsedMap);
+  const navGroups = useMemo(
+    () => filterNavGroupsForRole(PANEL_NAV_GROUPS, staffRole),
+    [staffRole],
+  );
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    const defaults = Object.fromEntries(
+      navGroups.filter((g) => g.defaultCollapsed).map((g) => [g.id, true]),
+    ) as Record<string, boolean>;
     try {
       const raw = window.localStorage.getItem(GROUP_COLLAPSE_KEY);
       if (raw) {
-        setCollapsedGroups({ ...defaultCollapsedMap(), ...(JSON.parse(raw) as Record<string, boolean>) });
+        setCollapsedGroups({ ...defaults, ...(JSON.parse(raw) as Record<string, boolean>) });
+      } else {
+        setCollapsedGroups(defaults);
       }
     } catch {
-      /* ignore */
+      setCollapsedGroups(defaults);
     }
     setHydrated(true);
-  }, []);
+  }, [navGroups]);
 
   function toggleGroup(id: string) {
     setCollapsedGroups((prev) => {
@@ -224,7 +235,7 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
           hydrated && "opacity-100 transition-opacity duration-150",
         )}
       >
-        {PANEL_NAV_GROUPS.map((group, index) => (
+        {navGroups.map((group, index) => (
           <NavGroup
             key={group.id}
             group={group}
@@ -238,7 +249,7 @@ export function AdminSidebar({ openLeadsCount }: { openLeadsCount: number }) {
 
       <SidebarFooter className="border-t border-sidebar-border p-3">
         <p className="px-1 text-[10px] leading-relaxed text-sidebar-foreground/40 group-data-[collapsible=icon]:hidden">
-          Yetiş operasyon paneli
+          {staffRole === "PLASIYER" ? "Plasiyer saha paneli" : "Yetiş operasyon paneli"}
         </p>
       </SidebarFooter>
     </Sidebar>

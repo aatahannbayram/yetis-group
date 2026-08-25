@@ -899,8 +899,9 @@ async function seedM14Content() {
 }
 
 async function seedDealerDemoData() {
+  const plasiyer = await prisma.user.findUnique({ where: { email: "plasiyer@yetisgrup.test" } });
   const admin = await prisma.user.findUnique({ where: { email: "admin@yetisgrup.test" } });
-  const salesRepId = admin?.id ?? null;
+  const salesRepId = plasiyer?.id ?? admin?.id ?? null;
 
   const priceLists = await prisma.priceList.findMany({ select: { id: true, slug: true } });
   const priceListBySlug = new Map(priceLists.map((p) => [p.slug, p.id]));

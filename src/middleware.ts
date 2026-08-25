@@ -23,7 +23,11 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/uploads") ||
     pathname.includes(".")
   ) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    if (pathname.startsWith("/panel")) {
+      res.headers.set("x-pathname", pathname);
+    }
+    return res;
   }
 
   try {

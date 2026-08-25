@@ -31,6 +31,11 @@ import {
   Bell,
   Receipt,
 } from "lucide-react";
+import {
+  canAccessPanelPath,
+  isPlasiyerRole,
+  type StaffRole,
+} from "@/domain/staff/roles";
 
 export type NavStatus = "ready" | "soon";
 
@@ -157,4 +162,24 @@ export function isReadyHref(href: string): boolean {
   return PANEL_NAV_GROUPS.some((g) =>
     g.items.some((i) => i.href === href && i.status === "ready"),
   );
+}
+
+/** Plasiyer için menüyü saha + satış odaklı hale getirir. */
+export function filterNavGroupsForRole(
+  groups: PanelNavGroup[],
+  role: StaffRole | null,
+): PanelNavGroup[] {
+  if (!isPlasiyerRole(role)) return groups;
+
+  const filtered: PanelNavGroup[] = [];
+  for (const group of groups) {
+    const items = group.items.filter((item) => canAccessPanelPath(item.href, role));
+    if (items.length === 0) continue;
+    filtered.push({
+      ...group,
+      items,
+      defaultCollapsed: group.id === "saha" ? false : group.defaultCollapsed,
+    });
+  }
+  return filtered;
 }

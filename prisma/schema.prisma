@@ -19,6 +19,15 @@ enum UserAccountType {
   DEALER
 }
 
+/// Yetiş personel alt rolü. DEALER hesaplarda null.
+enum StaffRole {
+  YONETICI
+  SATIS
+  PLASIYER
+  MUHASEBE
+  DEPO
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String
@@ -30,6 +39,8 @@ model User {
   updatedAt     DateTime @updatedAt
 
   accountType UserAccountType @default(DEALER)
+  /// STAFF alt rolü. Null + STAFF = YONETICI kabul edilir (geriye dönük).
+  staffRole   StaffRole?
   /// Legacy per-user price list; prefer Dealer.priceListId. Kept for STAFF tooling.
   priceListId String?
   priceList   PriceList?      @relation(fields: [priceListId], references: [id])

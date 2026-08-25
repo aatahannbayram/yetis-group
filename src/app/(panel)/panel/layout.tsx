@@ -1,10 +1,11 @@
 import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
-import { isStaffUser, getUserDealerId } from "@/infra/db/users";
+import { getStaffProfile, getUserDealerId } from "@/infra/db/users";
 import { getOpenLeadsCount } from "@/infra/db/leads";
 import { listDealerOptions } from "@/infra/db/dealers";
 import { listStaffNotifications, countUnreadStaff } from "@/infra/db/notifications";
+import { canAccessPanelPath } from "@/domain/staff/roles";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminShell } from "@/components/admin/admin-theme-context";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
@@ -29,14 +30,24 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     redirect("/auth");
   }
 
-  if (!(await isStaffUser(session.user.id))) {
+  const profile = await getStaffProfile(session.user.id);
+  if (!profile?.isStaff) {
     const dealerId = await getUserDealerId(session.user.id);
     redirect(dealerId ? "/bayi" : "/auth?reason=staff");
   }
 
+  const pathname = (await headers()).get("x-pathname") ?? "/panel";
+  if (!canAccessPanelPath(pathname, profile.staffRole)) {
+    redirect("/panel");
+  }
+
+  const dealerOpts = profile.isPlasiyer
+    ? { salesRepId: session.user.id }
+    : undefined;
+
   const [openLeadsCount, dealers, notifications, unreadCount] = await Promise.all([
-    getOpenLeadsCount(),
-    listDealerOptions(),
+    profile.isPlasiyer ? Promise.resolve(0) : getOpenLeadsCount(),
+    listDealerOptions(dealerOpts),
     listStaffNotifications(8),
     countUnreadStaff(),
   ]);
@@ -51,7 +62,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <TooltipProvider delayDuration={200}>
       <AdminShell>
         <SidebarProvider className="bg-[var(--canvas)]">
-          <AdminSidebar openLeadsCount={openLeadsCount} />
+          <AdminSidebar openLeadsCount={openLeadsCount} staffRole={profile.staffRole} />
           <SidebarInset className="min-w-0 overflow-hidden bg-[var(--surface)] md:peer-data-[variant=inset]:m-3 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-[var(--radius-xl)] md:peer-data-[variant=inset]:shadow-[var(--shadow-md)] md:peer-data-[variant=inset]:ring-1 md:peer-data-[variant=inset]:ring-[var(--border)]/60">
             {impersonated ? (
               <ImpersonationBanner dealerId={impersonated.id} dealerName={impersonated.unvan} />
@@ -76,7 +87,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <CommandPalette
             dealers={dealers.map((d) => ({ id: d.id, unvan: d.unvan }))}
           />
-          <AiAssistantDock pageContext="Yetiş operasyon paneli" />
+          {!profile.isPlasiyer ? (
+            <AiAssistantDock pageContext="Yetiş operasyon paneli" />
+          ) : null}
         </SidebarProvider>
         <Toaster />
       </AdminShell>

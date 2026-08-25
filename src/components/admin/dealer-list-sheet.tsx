@@ -145,10 +145,13 @@ export function DealerListSheet({
   dealers,
   priceListOptions,
   salesRepOptions,
+  fieldMode = false,
 }: {
   dealers: DealerRow[];
   priceListOptions: { id: string; name: string }[];
   salesRepOptions: { id: string; name: string; email: string }[];
+  /** Plasiyer: sadece atanmış bayiler, oluşturma yok, odak impersonation. */
+  fieldMode?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -170,6 +173,7 @@ export function DealerListSheet({
   }, []);
 
   function openCreate() {
+    if (fieldMode) return;
     setEditing(null);
     setSaveError(null);
     setMode("create");
@@ -187,6 +191,7 @@ export function DealerListSheet({
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (fieldMode) return;
     const formData = new FormData(e.currentTarget);
     setSaveError(null);
     startSaving(async () => {
@@ -346,10 +351,12 @@ export function DealerListSheet({
           onSearchChange={setSearch}
           searchPlaceholder="Ünvan, şehir, e-posta veya telefon ara…"
           trailing={
-            <Button type="button" onClick={openCreate} className="h-9 gap-1.5">
-              <Plus className="size-4" />
-              Yeni bayi/müşteri
-            </Button>
+            fieldMode ? undefined : (
+              <Button type="button" onClick={openCreate} className="h-9 gap-1.5">
+                <Plus className="size-4" />
+                Yeni bayi/müşteri
+              </Button>
+            )
           }
         />
       </div>
@@ -378,13 +385,19 @@ export function DealerListSheet({
           return hay.includes(q);
         }}
         onRowOpen={openEdit}
-        emptyTitle="Bayi/müşteri kaydı yok"
-        emptyDescription="Yeni bayi/müşteri ekleyerek listeyi oluşturun."
+        emptyTitle={fieldMode ? "Atanmış bayi yok" : "Bayi/müşteri kaydı yok"}
+        emptyDescription={
+          fieldMode
+            ? "Yönetici size bayi atadığında burada listelenir."
+            : "Yeni bayi/müşteri ekleyerek listeyi oluşturun."
+        }
         emptyAction={
-          <Button type="button" onClick={openCreate} className="gap-1.5">
-            <Plus className="size-4" />
-            Yeni bayi/müşteri
-          </Button>
+          fieldMode ? undefined : (
+            <Button type="button" onClick={openCreate} className="gap-1.5">
+              <Plus className="size-4" />
+              Yeni bayi/müşteri
+            </Button>
+          )
         }
         filterEmptyTitle="Filtre sonucu boş"
         filterEmptyDescription="Aramayı temizleyip tekrar deneyin."
@@ -394,10 +407,16 @@ export function DealerListSheet({
         <SheetContent className="w-full gap-0 border-stone-200 bg-white p-0 sm:max-w-lg dark:border-zinc-800 dark:bg-zinc-950">
           <SheetHeader className="space-y-1 border-b border-stone-200 px-5 py-4 text-left dark:border-zinc-800">
             <SheetTitle className="pr-8 text-lg font-semibold tracking-tight text-stone-900 dark:text-zinc-50">
-              {mode === "edit" ? "Bayi/müşteri düzenle" : "Yeni bayi/müşteri"}
+              {fieldMode
+                ? "Bayi detayı"
+                : mode === "edit"
+                  ? "Bayi/müşteri düzenle"
+                  : "Yeni bayi/müşteri"}
             </SheetTitle>
             <SheetDescription className="text-sm text-stone-500 dark:text-zinc-400">
-              Bayi, HORECA, zincir market ve ara toptancı kayıtları aynı formdan yönetilir.
+              {fieldMode
+                ? "Atanan bayiyi inceleyin veya bayi portalına geçin."
+                : "Bayi, HORECA, zincir market ve ara toptancı kayıtları aynı formdan yönetilir."}
             </SheetDescription>
           </SheetHeader>
 
@@ -639,36 +658,51 @@ export function DealerListSheet({
               </Section>
 
               <Section title="Atamalar">
-                <Field id="dealer-price-list" label="Fiyat listesi">
-                  <select
-                    id="dealer-price-list"
-                    name="priceListId"
-                    defaultValue={editing?.priceListId ?? ""}
-                    className={selectClassName}
-                  >
-                    <option value="">Atanmamış</option>
-                    {priceListOptions.map((pl) => (
-                      <option key={pl.id} value={pl.id}>
-                        {pl.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field id="dealer-sales-rep" label="Satış temsilcisi">
-                  <select
-                    id="dealer-sales-rep"
-                    name="salesRepId"
-                    defaultValue={editing?.salesRepId ?? ""}
-                    className={selectClassName}
-                  >
-                    <option value="">Atanmamış</option>
-                    {salesRepOptions.map((rep) => (
-                      <option key={rep.id} value={rep.id}>
-                        {rep.name} ({rep.email})
-                      </option>
-                    ))}
-                  </select>
-                </Field>
+                {fieldMode ? (
+                  <>
+                    <input type="hidden" name="priceListId" value={editing?.priceListId ?? ""} />
+                    <input type="hidden" name="salesRepId" value={editing?.salesRepId ?? ""} />
+                    <p className="text-sm text-stone-600 dark:text-zinc-400">
+                      Fiyat listesi:{" "}
+                      <span className="font-medium text-stone-900 dark:text-zinc-100">
+                        {editing?.priceListName ?? "Atanmamış"}
+                      </span>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Field id="dealer-price-list" label="Fiyat listesi">
+                      <select
+                        id="dealer-price-list"
+                        name="priceListId"
+                        defaultValue={editing?.priceListId ?? ""}
+                        className={selectClassName}
+                      >
+                        <option value="">Atanmamış</option>
+                        {priceListOptions.map((pl) => (
+                          <option key={pl.id} value={pl.id}>
+                            {pl.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field id="dealer-sales-rep" label="Satış temsilcisi">
+                      <select
+                        id="dealer-sales-rep"
+                        name="salesRepId"
+                        defaultValue={editing?.salesRepId ?? ""}
+                        className={selectClassName}
+                      >
+                        <option value="">Atanmamış</option>
+                        {salesRepOptions.map((rep) => (
+                          <option key={rep.id} value={rep.id}>
+                            {rep.name} ({rep.email})
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  </>
+                )}
                 {mode === "edit" && editing ? (
                   <Button
                     type="button"
@@ -695,17 +729,19 @@ export function DealerListSheet({
                 disabled={saving}
                 className="h-10 text-stone-600 hover:text-stone-900"
               >
-                İptal
+                {fieldMode ? "Kapat" : "İptal"}
               </Button>
-              <Button type="submit" disabled={saving} className="h-10 min-w-[6.5rem]">
-                {saving ? (
-                  <Loader2 className="size-4 animate-spin" aria-hidden />
-                ) : mode === "edit" ? (
-                  "Kaydet"
-                ) : (
-                  "Oluştur"
-                )}
-              </Button>
+              {!fieldMode ? (
+                <Button type="submit" disabled={saving} className="h-10 min-w-[6.5rem]">
+                  {saving ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                  ) : mode === "edit" ? (
+                    "Kaydet"
+                  ) : (
+                    "Oluştur"
+                  )}
+                </Button>
+              ) : null}
             </div>
           </form>
         </SheetContent>

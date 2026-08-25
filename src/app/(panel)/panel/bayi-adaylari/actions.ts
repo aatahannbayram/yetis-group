@@ -4,20 +4,31 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/infra/auth/server";
-import { isStaffUser } from "@/infra/db/users";
+import { getStaffProfile } from "@/infra/db/users";
 import { addLeadActivity, promoteLeadToDealer, transitionLeadStage } from "@/infra/db/leads";
 import { LEAD_ACTIVITY_TYPES, type LeadStage } from "@/domain/leads";
 import { assertCan } from "@/policies";
+
+async function requireFullStaff() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Yetkisiz.");
+  const profile = await getStaffProfile(session.user.id);
+  if (!profile?.isStaff) throw new Error("Yetkisiz.");
+  return { session, profile };
+}
 
 export async function addLeadActivityAction(
   leadId: string,
   type: (typeof LEAD_ACTIVITY_TYPES)[number],
   note: string,
 ) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaffUser(session.user.id))) {
-    throw new Error("Yetkisiz.");
-  }
+  const { profile } = await requireFullStaff();
+  assertCan("lead:transition", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: null,
+    dealerId: null,
+  });
   if (!note.trim()) return;
   await addLeadActivity(leadId, type, note.trim());
   revalidatePath("/panel/bayi-adaylari");
@@ -42,12 +53,10 @@ const transitionSchema = z.object({
 
 export async function transitionLeadStageAction(raw: z.infer<typeof transitionSchema>) {
   const input = transitionSchema.parse(raw);
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaffUser(session.user.id))) {
-    throw new Error("Yetkisiz.");
-  }
+  const { session, profile } = await requireFullStaff();
   assertCan("lead:transition", {
     isStaff: true,
+    staffRole: profile.staffRole,
     userId: session.user.id,
     dealerId: null,
   });
@@ -72,12 +81,10 @@ const bulkTransitionSchema = z.object({
 
 export async function bulkTransitionLeadStageAction(raw: z.infer<typeof bulkTransitionSchema>) {
   const input = bulkTransitionSchema.parse(raw);
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaffUser(session.user.id))) {
-    throw new Error("Yetkisiz.");
-  }
+  const { session, profile } = await requireFullStaff();
   assertCan("lead:transition", {
     isStaff: true,
+    staffRole: profile.staffRole,
     userId: session.user.id,
     dealerId: null,
   });
@@ -109,11 +116,13 @@ export async function bulkTransitionLeadStageAction(raw: z.infer<typeof bulkTran
 }
 
 export async function promoteLeadAction(leadId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaffUser(session.user.id))) {
-    throw new Error("Yetkisiz.");
-  }
-  assertCan("lead:promote", { isStaff: true, userId: session.user.id, dealerId: null });
+  const { session, profile } = await requireFullStaff();
+  assertCan("lead:promote", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: session.user.id,
+    dealerId: null,
+  });
   await promoteLeadToDealer(leadId, session.user.id);
   revalidatePath("/panel/bayi-adaylari");
   revalidatePath("/panel/bayiler");

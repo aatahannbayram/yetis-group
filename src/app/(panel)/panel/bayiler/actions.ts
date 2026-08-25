@@ -3,16 +3,18 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
-import { isStaffUser } from "@/infra/db/users";
-import { createDealer, updateDealer, type DealerInput } from "@/infra/db/dealers";
+import { getStaffProfile } from "@/infra/db/users";
+import { createDealer, updateDealer, getDealerById, type DealerInput } from "@/infra/db/dealers";
 import { isValidTrIban, isValidVergiNo, normalizeIban } from "@/lib/validation/tr-ids";
 import type { DealerPaymentMethod, MembershipTier } from "@/generated/prisma/client";
+import { assertCan } from "@/policies";
 
-async function requireStaff() {
+async function requireStaffSession() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session || !(await isStaffUser(session.user.id))) {
-    throw new Error("Yetkisiz");
-  }
+  if (!session) throw new Error("Yetkisiz");
+  const profile = await getStaffProfile(session.user.id);
+  if (!profile?.isStaff) throw new Error("Yetkisiz");
+  return { session, profile };
 }
 
 function readDealerInput(formData: FormData): DealerInput {
@@ -78,7 +80,13 @@ function readDealerInput(formData: FormData): DealerInput {
 }
 
 export async function createDealerAction(formData: FormData) {
-  await requireStaff();
+  const { session, profile } = await requireStaffSession();
+  assertCan("dealer:write_all", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: session.user.id,
+    dealerId: null,
+  });
   const input = readDealerInput(formData);
   if (!input.unvan) throw new Error("Ünvan gerekli");
   await createDealer(input);
@@ -90,7 +98,13 @@ export async function createDealerAction(formData: FormData) {
 export async function createDealerQuickAction(
   formData: FormData,
 ): Promise<{ id: string; unvan: string }> {
-  await requireStaff();
+  const { session, profile } = await requireStaffSession();
+  assertCan("dealer:write_all", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: session.user.id,
+    dealerId: null,
+  });
   if (!formData.get("status")) formData.set("status", "AKTIF");
   if (!formData.get("dealerType")) formData.set("dealerType", "BAYI");
   const input = readDealerInput(formData);
@@ -102,9 +116,25 @@ export async function createDealerQuickAction(
 }
 
 export async function updateDealerAction(formData: FormData) {
-  await requireStaff();
+  const { session, profile } = await requireStaffSession();
   const id = String(formData.get("id") ?? "");
   if (!id) throw new Error("Bayi bulunamadı");
+
+  if (profile.isPlasiyer) {
+    const existing = await getDealerById(id);
+    if (!existing || existing.salesRepId !== session.user.id) {
+      throw new Error("Yetkisiz");
+    }
+    throw new Error("Plasiyer bayi kaydını düzenleyemez; bayi portalına geçin.");
+  }
+
+  assertCan("dealer:write_all", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: session.user.id,
+    dealerId: null,
+  });
+
   const input = readDealerInput(formData);
   if (!input.unvan) throw new Error("Ünvan gerekli");
   await updateDealer(id, input);

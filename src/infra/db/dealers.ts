@@ -3,8 +3,9 @@ import { dealerTypeFromChannel } from "@/domain/auth/dealer-signup";
 import { LEAD_SOURCE_LABELS } from "@/domain/leads";
 import type { DealerPaymentMethod, MembershipTier } from "@/generated/prisma/client";
 
-export async function listDealers() {
+export async function listDealers(opts?: { salesRepId?: string }) {
   return prisma.dealer.findMany({
+    where: opts?.salesRepId ? { salesRepId: opts.salesRepId } : undefined,
     orderBy: { unvan: "asc" },
     include: {
       priceList: true,
@@ -62,8 +63,9 @@ export async function listSalesRepsWithAssignments() {
 }
 
 /** Lightweight list for command palette / impersonation */
-export async function listDealerOptions() {
+export async function listDealerOptions(opts?: { salesRepId?: string }) {
   return prisma.dealer.findMany({
+    where: opts?.salesRepId ? { salesRepId: opts.salesRepId } : undefined,
     orderBy: { unvan: "asc" },
     select: { id: true, unvan: true },
   });

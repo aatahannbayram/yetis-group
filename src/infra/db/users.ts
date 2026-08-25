@@ -1,8 +1,34 @@
 import { prisma } from "@/infra/db/client";
+import {
+  effectiveStaffRole,
+  isPlasiyerRole,
+  type StaffRole,
+} from "@/domain/staff/roles";
 
 export async function isStaffUser(userId: string) {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { accountType: true } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { accountType: true },
+  });
   return user?.accountType === "STAFF";
+}
+
+export async function getStaffProfile(userId: string): Promise<{
+  isStaff: boolean;
+  staffRole: StaffRole | null;
+  isPlasiyer: boolean;
+} | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { accountType: true, staffRole: true },
+  });
+  if (!user) return null;
+  const staffRole = effectiveStaffRole(user.accountType, user.staffRole);
+  return {
+    isStaff: user.accountType === "STAFF",
+    staffRole,
+    isPlasiyer: isPlasiyerRole(staffRole),
+  };
 }
 
 export async function getUsersWithPriceList() {

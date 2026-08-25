@@ -1,10 +1,11 @@
+import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
-import { getDealerCatalog } from "@/infra/db/dealer-catalog";
-import { DealerCatalogWorkspace } from "@/components/dealer/dealer-catalog-workspace";
+import { BayiCatalogSection } from "@/app/(dealer-portal)/bayi/katalog/catalog-section";
+import BayiCatalogLoading from "@/app/(dealer-portal)/bayi/katalog/loading";
 
 export default async function BayiKatalogPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -17,7 +18,9 @@ export default async function BayiKatalogPage() {
   if (impId && staff) dealerId = impId;
   if (!dealerId) redirect("/");
 
-  const products = await getDealerCatalog(dealerId);
-
-  return <DealerCatalogWorkspace products={products} />;
+  return (
+    <Suspense fallback={<BayiCatalogLoading />}>
+      <BayiCatalogSection dealerId={dealerId} />
+    </Suspense>
+  );
 }

@@ -1,6 +1,93 @@
 import { prisma } from "@/infra/db/client";
+import type { Prisma } from "@/generated/prisma";
 import { slugifyTr } from "@/domain/catalog/slug";
 import { assertValidPackagingType } from "@/infra/db/attributes";
+
+const adminListSelect = {
+  id: true,
+  slug: true,
+  name: true,
+  description: true,
+  imageUrl: true,
+  primaryCategory: { select: { name: true } },
+  variants: {
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" as const },
+    select: {
+      id: true,
+      sku: true,
+      packSize: true,
+      packagingType: true,
+      baseUnit: true,
+      unitFactor: true,
+      vatRateBasisPoints: true,
+      pricePerUnitKurus: true,
+    },
+  },
+  media: {
+    orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }],
+    select: { id: true, url: true, alt: true, isPrimary: true },
+  },
+} satisfies Prisma.ProductSelect;
+
+const dealerCatalogSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  imageUrl: true,
+  requiresColdChain: true,
+  storageCondition: true,
+  shelfLifeDays: true,
+  usageTips: true,
+  primaryCategory: { select: { name: true, slug: true } },
+  producer: { select: { name: true, region: true, story: true } },
+  media: {
+    orderBy: { sortOrder: "asc" as const },
+    select: { id: true, url: true, kind: true },
+  },
+  variants: {
+    where: { isActive: true },
+    orderBy: { sortOrder: "asc" as const },
+    select: {
+      id: true,
+      sku: true,
+      packagingType: true,
+      packSize: true,
+      unitFactor: true,
+      moq: true,
+      vatRateBasisPoints: true,
+      pricePerUnitKurus: true,
+    },
+  },
+  attributeValues: {
+    include: {
+      attribute: { select: { key: true, name: true, type: true, unit: true } },
+      selectedOptions: { include: { option: { select: { label: true } } } },
+    },
+  },
+} satisfies Prisma.ProductSelect;
+
+export type AdminListProduct = Awaited<ReturnType<typeof getProductsForAdminList>>[number];
+export type DealerCatalogRow = Awaited<ReturnType<typeof getProductsForDealerCatalog>>[number];
+
+/** Panel ürün listesi: nitelik yok, hafif select. */
+export async function getProductsForAdminList() {
+  return prisma.product.findMany({
+    where: { active: true },
+    orderBy: { name: "asc" },
+    select: adminListSelect,
+  });
+}
+
+/** Bayi katalog: fiyat/stok ayrı birleştirilir. */
+export async function getProductsForDealerCatalog() {
+  return prisma.product.findMany({
+    where: { active: true },
+    orderBy: { name: "asc" },
+    select: dealerCatalogSelect,
+  });
+}
 
 export async function getProducts(filters?: { categorySlug?: string }) {
   return prisma.product.findMany({

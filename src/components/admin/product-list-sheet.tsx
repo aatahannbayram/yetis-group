@@ -27,6 +27,7 @@ import {
   PackageSearch,
   Plus,
   Boxes,
+  Search,
   X,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -36,7 +37,6 @@ import { cinsLine, packLabel, type PackagingOption } from "@/lib/format/packagin
 import { catalogFallbackImage } from "@/content/catalog-images";
 import { CatalogImage } from "@/components/store/catalog-image";
 import { DataTable } from "@/components/ui/data-table";
-import { ListToolbar } from "@/components/ui/list-toolbar";
 import { EditablePrice } from "@/components/admin/editable-price";
 import { EditableTextarea } from "@/components/admin/editable-textarea";
 import {
@@ -45,8 +45,8 @@ import {
   updateProductDescriptionAction,
   uploadProductImageAction,
 } from "@/app/(panel)/panel/urunler/actions";
-import type { Density } from "@/components/ui/density-toggle";
-import type { ViewMode } from "@/components/ui/view-switcher";
+import { DensityToggle, type Density } from "@/components/ui/density-toggle";
+import { ViewSwitcher, type ViewMode } from "@/components/ui/view-switcher";
 import { cn } from "@/lib/utils";
 import { Stagger, StaggerItem } from "@/components/motion/fade-up";
 import { HoverLift } from "@/components/motion/hover-lift";
@@ -160,10 +160,19 @@ export function ProductListSheet({
     setFullScreen(false);
   }
 
-  const categoryNames = useMemo(() => {
-    const set = new Set(products.map((p) => p.categoryName));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "tr"));
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const product of products) {
+      counts.set(product.categoryName, (counts.get(product.categoryName) ?? 0) + 1);
+    }
+    return counts;
   }, [products]);
+
+  const hasActiveFilters = Boolean(categoryFilter || search.trim());
+
+  const categoryNames = useMemo(() => {
+    return Array.from(categoryCounts.keys()).sort((a, b) => a.localeCompare(b, "tr"));
+  }, [categoryCounts]);
 
   const filtered = useMemo(() => {
     let rows = products;
@@ -280,48 +289,106 @@ export function ProductListSheet({
       className="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
       data-density={density}
     >
-      <div className="border-b border-stone-100 px-3 py-2.5 dark:border-zinc-800">
-        <ListToolbar
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Ürün, SKU veya kategori ara…"
-          density={density}
-          onDensityChange={setDensity}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          viewModes={["cards", "table"]}
-          filters={
-            <div className="flex max-w-full gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              <FilterChip
-                label="Tümü"
-                active={!categoryFilter}
-                onClick={() => setCategoryFilter(null)}
-              />
-              {categoryNames.map((name) => (
-                <FilterChip
-                  key={name}
-                  label={name}
-                  active={categoryFilter === name}
-                  onClick={() => setCategoryFilter(name)}
-                />
-              ))}
-            </div>
-          }
-          trailing={
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <ProductExcelToolbar />
+      <div className="space-y-3 border-b border-stone-100 px-3 py-3 sm:px-4 dark:border-zinc-800">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative min-w-0 flex-1 lg:max-w-md">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-stone-400"
+              aria-hidden
+            />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Ürün, SKU veya kategori ara…"
+              className="h-9 rounded-xl border-stone-200 bg-white pl-9 text-sm shadow-none dark:border-zinc-700 dark:bg-zinc-900"
+              aria-label="Ürün, SKU veya kategori ara"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 lg:shrink-0">
+            {hasActiveFilters ? (
               <Button
                 type="button"
-                onClick={openCreate}
-                className="h-8 gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]"
+                variant="ghost"
+                size="sm"
+                className="h-8 gap-1 text-stone-500"
+                onClick={() => {
+                  setCategoryFilter(null);
+                  setSearch("");
+                }}
               >
-                <Plus className="size-4" aria-hidden />
-                Yeni ürün
+                <X className="size-3.5" aria-hidden />
+                Temizle
               </Button>
-            </div>
-          }
-          className="!static !mx-0 !border-0 !bg-transparent !p-0 !backdrop-blur-none"
-        />
+            ) : null}
+            <ViewSwitcher value={viewMode} onChange={setViewMode} modes={["cards", "table"]} />
+            <DensityToggle value={density} onChange={setDensity} />
+            <ProductExcelToolbar />
+            <Button
+              type="button"
+              onClick={openCreate}
+              className="h-8 gap-1.5 bg-[#1B5E3A] text-white hover:bg-[#164e31]"
+            >
+              <Plus className="size-4" aria-hidden />
+              <span className="hidden sm:inline">Yeni ürün</span>
+              <span className="sm:hidden">Yeni</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-white to-transparent dark:from-zinc-900"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent dark:from-zinc-900"
+            aria-hidden
+          />
+          <div className="flex gap-1.5 overflow-x-auto px-0.5 pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <FilterChip
+              label="Tümü"
+              count={products.length}
+              active={!categoryFilter}
+              onClick={() => setCategoryFilter(null)}
+            />
+            {categoryNames.map((name) => (
+              <FilterChip
+                key={name}
+                label={name}
+                count={categoryCounts.get(name) ?? 0}
+                active={categoryFilter === name}
+                onClick={() => setCategoryFilter(name)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 text-xs text-stone-500 dark:text-zinc-400">
+          <p>
+            {hasActiveFilters ? (
+              <>
+                <span className="font-medium tabular-nums text-stone-700 dark:text-zinc-200">
+                  {filtered.length}
+                </span>
+                {" / "}
+                {products.length} ürün
+              </>
+            ) : (
+              <>
+                <span className="font-medium tabular-nums text-stone-700 dark:text-zinc-200">
+                  {products.length}
+                </span>
+                {" ürün"}
+              </>
+            )}
+          </p>
+          {categoryFilter ? (
+            <p className="truncate">
+              Kategori: <span className="font-medium text-stone-700 dark:text-zinc-200">{categoryFilter}</span>
+            </p>
+          ) : null}
+        </div>
       </div>
 
       {viewMode === "cards" ? (
@@ -344,18 +411,16 @@ export function ProductListSheet({
               <EmptyState onCreate={openCreate} />
             )
           ) : (
-            <Stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filtered.map((product) => (
-                <StaggerItem key={product.id}>
-                  <HoverLift>
-                    <ProductCard
-                      product={product}
-                      onOpen={() => openDetail(product.id)}
-                    />
-                  </HoverLift>
-                </StaggerItem>
+                <HoverLift key={product.id}>
+                  <ProductCard
+                    product={product}
+                    onOpen={() => openDetail(product.id)}
+                  />
+                </HoverLift>
               ))}
-            </Stagger>
+            </div>
           )}
         </div>
       ) : (
@@ -722,10 +787,12 @@ export function ProductListSheet({
 
 function FilterChip({
   label,
+  count,
   active,
   onClick,
 }: {
   label: string;
+  count?: number;
   active: boolean;
   onClick: () => void;
 }) {
@@ -733,14 +800,25 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      title={label}
       className={cn(
-        "shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+        "inline-flex max-w-[9.5rem] shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors",
         active
-          ? "bg-[#1B5E3A] text-white"
-          : "bg-stone-100 text-stone-600 hover:bg-stone-200 dark:bg-zinc-800 dark:text-zinc-300",
+          ? "border-[#1B5E3A] bg-[#1B5E3A] text-white shadow-sm"
+          : "border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800",
       )}
     >
-      {label}
+      <span className="truncate">{label}</span>
+      {count !== undefined ? (
+        <span
+          className={cn(
+            "shrink-0 rounded px-1 py-px text-[10px] tabular-nums",
+            active ? "bg-white/15 text-white" : "bg-stone-100 text-stone-500 dark:bg-zinc-800 dark:text-zinc-400",
+          )}
+        >
+          {count}
+        </span>
+      ) : null}
     </button>
   );
 }

@@ -1,5 +1,5 @@
 import { prisma } from "@/infra/db/client";
-import { getProducts } from "@/infra/db/products";
+import { getProductsForDealerCatalog } from "@/infra/db/products";
 import { getShippableStockByVariant } from "@/infra/db/inventory";
 import { money, type Money } from "@/domain/money";
 import type { AttributeType } from "@/generated/prisma";
@@ -60,7 +60,7 @@ async function priceOverridesForDealer(dealerId: string) {
 /** Active catalog with every variant, dealer list price, and shippable stock kg. */
 export async function getDealerCatalog(dealerId: string): Promise<DealerCatalogProduct[]> {
   const [products, overrides, stockByVariant] = await Promise.all([
-    getProducts(),
+    getProductsForDealerCatalog(),
     priceOverridesForDealer(dealerId),
     getShippableStockByVariant(),
   ]);

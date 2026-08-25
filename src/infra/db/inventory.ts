@@ -268,48 +268,57 @@ export async function listVariantsForStockPicker() {
 
 /** Ürün listesi stok sütunu: yalnızca sevk edilebilir kg. */
 export async function getStockSummaryByProduct() {
-  const products = await prisma.product.findMany({
-    where: { active: true },
-    select: {
-      id: true,
-      variants: { select: { lots: { include: { movements: true } } } },
-    },
-  });
-
-  const now = new Date();
-  return new Map(
-    products.map((product) => {
-      const shippableMovements = product.variants.flatMap((v) =>
-        v.lots
-          .filter((lot) => !isLotExpired(lot.expirationDate, now))
-          .flatMap((lot) => lot.movements),
-      );
-      return [product.id, availableKgFromMovements(shippableMovements)];
-    }),
-  );
+  const rows = await queryShippableKgByProduct();
+  return new Map(rows.map((row) => [row.id, kg(row.kg)]));
 }
 
 /** Sevkiyat edilebilir (SKT geçmemiş) stok kg, varyant bazında. */
 export async function getShippableStockByVariant() {
-  const variants = await prisma.productVariant.findMany({
-    where: { isActive: true },
-    select: {
-      id: true,
-      lots: {
-        include: { movements: true },
-      },
-    },
-  });
+  const rows = await queryShippableKgByVariant();
+  return new Map(rows.map((row) => [row.id, kg(row.kg)]));
+}
 
+type ShippableKgRow = { id: string; kg: string };
+
+async function queryShippableKgByVariant(): Promise<ShippableKgRow[]> {
   const now = new Date();
-  return new Map(
-    variants.map((variant) => {
-      const shippable = variant.lots
-        .filter((lot) => !isLotExpired(lot.expirationDate, now))
-        .flatMap((lot) => lot.movements);
-      return [variant.id, availableKgFromMovements(shippable)];
-    }),
-  );
+  return prisma.$queryRaw<ShippableKgRow[]>(Prisma.sql`
+    SELECT
+      pv.id AS id,
+      COALESCE(SUM(
+        CASE
+          WHEN l."expirationDate" >= ${now} AND sm.type = 'GIRIS'::"StockMovementType" THEN sm."quantityKg"
+          WHEN l."expirationDate" >= ${now} AND sm.type IN ('CIKIS'::"StockMovementType", 'FIRE'::"StockMovementType") THEN -sm."quantityKg"
+          ELSE 0
+        END
+      ), 0)::text AS kg
+    FROM product_variant pv
+    JOIN lot l ON l."variantId" = pv.id
+    JOIN stock_movement sm ON sm."lotId" = l.id
+    WHERE pv."isActive" = true
+    GROUP BY pv.id
+  `);
+}
+
+async function queryShippableKgByProduct(): Promise<ShippableKgRow[]> {
+  const now = new Date();
+  return prisma.$queryRaw<ShippableKgRow[]>(Prisma.sql`
+    SELECT
+      p.id AS id,
+      COALESCE(SUM(
+        CASE
+          WHEN l."expirationDate" >= ${now} AND sm.type = 'GIRIS'::"StockMovementType" THEN sm."quantityKg"
+          WHEN l."expirationDate" >= ${now} AND sm.type IN ('CIKIS'::"StockMovementType", 'FIRE'::"StockMovementType") THEN -sm."quantityKg"
+          ELSE 0
+        END
+      ), 0)::text AS kg
+    FROM product p
+    JOIN product_variant pv ON pv."productId" = p.id
+    JOIN lot l ON l."variantId" = pv.id
+    JOIN stock_movement sm ON sm."lotId" = l.id
+    WHERE p.active = true
+    GROUP BY p.id
+  `);
 }
 
 export async function createLot(input: {

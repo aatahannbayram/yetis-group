@@ -1,8 +1,15 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { useRef, useTransition } from "react";
+import { ChevronDown, Download, FileSpreadsheet, Loader2, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   downloadProductsExcelTemplateAction,
   exportProductsExcelAction,
@@ -22,26 +29,22 @@ function downloadBase64(base64: string, filename: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-export function ProductExcelToolbar() {
+export function ProductExcelToolbar({ className }: { className?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   function runExport(kind: "full" | "template") {
-    setMessage(null);
-    setError(null);
     startTransition(async () => {
       const result =
         kind === "full"
           ? await exportProductsExcelAction()
           : await downloadProductsExcelTemplateAction();
       if (!result.ok) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
       downloadBase64(result.base64, result.filename, result.mime);
-      setMessage(kind === "full" ? "Excel indirildi" : "Şablon indirildi");
+      toast.success(kind === "full" ? "Excel indirildi" : "Şablon indirildi");
     });
   }
 
@@ -49,14 +52,12 @@ export function ProductExcelToolbar() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    setMessage(null);
-    setError(null);
     startTransition(async () => {
       const fd = new FormData();
       fd.set("file", file);
       const result = await importProductsExcelAction(fd);
       if (!result.ok) {
-        setError(result.error);
+        toast.error(result.error);
         return;
       }
       const parts = [
@@ -66,64 +67,56 @@ export function ProductExcelToolbar() {
         result.imagesSaved ? `${result.imagesSaved} görsel` : null,
         result.attributesSet ? `${result.attributesSet} özellik` : null,
       ].filter(Boolean);
-      setMessage(`İçe aktarım: ${parts.join(" · ")}`);
+      toast.success(`İçe aktarım: ${parts.join(" · ")}`);
       if (result.errors.length || result.warnings.length) {
         const detail = [...result.errors, ...result.warnings].slice(0, 5).join(" | ");
-        setError(detail || null);
+        toast.warning(detail);
       }
     });
   }
 
   return (
-    <div className="flex flex-col items-stretch gap-1.5 sm:items-end">
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5"
-          disabled={pending}
-          onClick={() => runExport("template")}
-        >
-          {pending ? <Loader2 className="size-3.5 animate-spin" /> : <FileSpreadsheet className="size-3.5" />}
-          Şablon
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5"
-          disabled={pending}
-          onClick={() => runExport("full")}
-        >
-          {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Download className="size-3.5" />}
-          Excel indir
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5"
-          disabled={pending}
-          onClick={() => inputRef.current?.click()}
-        >
-          {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Upload className="size-3.5" />}
-          Excel yükle
-        </Button>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-          className="hidden"
-          onChange={onFileChange}
-        />
-      </div>
-      {message ? (
-        <p className="max-w-md text-right text-xs text-[#1B5E3A] dark:text-emerald-400">{message}</p>
-      ) : null}
-      {error ? (
-        <p className="max-w-md text-right text-xs text-amber-700 dark:text-amber-400">{error}</p>
-      ) : null}
+    <div className={className}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5"
+            disabled={pending}
+          >
+            {pending ? (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
+            ) : (
+              <FileSpreadsheet className="size-3.5" aria-hidden />
+            )}
+            Excel
+            <ChevronDown className="size-3 opacity-60" aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[11rem]">
+          <DropdownMenuItem disabled={pending} onClick={() => runExport("template")}>
+            <FileSpreadsheet className="size-3.5" aria-hidden />
+            Şablon indir
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={pending} onClick={() => runExport("full")}>
+            <Download className="size-3.5" aria-hidden />
+            Excel indir
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={pending} onClick={() => inputRef.current?.click()}>
+            <Upload className="size-3.5" aria-hidden />
+            Excel yükle
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        className="hidden"
+        onChange={onFileChange}
+      />
     </div>
   );
 }

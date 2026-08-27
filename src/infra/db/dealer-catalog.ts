@@ -4,7 +4,7 @@ import {
   getProductsForDealerOrderList,
   getProductForDealerCatalogDetail,
 } from "@/infra/db/products";
-import { getShippableStockByVariant } from "@/infra/db/inventory";
+import { getShippableStockByVariant, getShippableStockForVariantIds } from "@/infra/db/inventory";
 import { money, type Money } from "@/domain/money";
 import type { Kg } from "@/domain/weight";
 import type { AttributeType } from "@/generated/prisma";
@@ -224,12 +224,12 @@ export async function getDealerCatalogProductById(
   dealerId: string,
   productId: string,
 ): Promise<DealerCatalogProduct | null> {
-  const [product, overrides, stockByVariant] = await Promise.all([
+  const [product, overrides] = await Promise.all([
     getProductForDealerCatalogDetail(productId),
     priceOverridesForDealer(dealerId),
-    getShippableStockByVariant(),
   ]);
   if (!product) return null;
+  const stockByVariant = await getShippableStockForVariantIds(product.variants.map((v) => v.id));
   const mapped = mapFullProduct(product, overrides, stockByVariant);
   return mapped.variants.length > 0 ? mapped : null;
 }

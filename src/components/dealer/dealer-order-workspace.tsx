@@ -154,6 +154,7 @@ export function DealerOrderWorkspace({
       setDetailProduct(cached);
       return;
     }
+    setDetailProduct(null);
     setDetailLoading(true);
     try {
       const full = await fetchDealerProductDetailAction(productId);

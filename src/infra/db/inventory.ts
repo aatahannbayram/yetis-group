@@ -1,6 +1,6 @@
 import { prisma } from "@/infra/db/client";
 import { Prisma } from "@/generated/prisma";
-import { add, kg, zeroKg } from "@/domain/weight";
+import { add, kg, zeroKg, type Kg } from "@/domain/weight";
 import { isLotExpired, type LotSummary } from "@/domain/inventory/fefo";
 import { packLabel } from "@/lib/format/packaging";
 import {
@@ -278,9 +278,16 @@ export async function getShippableStockByVariant() {
   return new Map(rows.map((row) => [row.id, kg(row.kg)]));
 }
 
+/** Tek ürün detayı için: yalnızca verilen varyant kimlikleri, tüm katalog taranmaz. */
+export async function getShippableStockForVariantIds(variantIds: string[]) {
+  if (variantIds.length === 0) return new Map<string, Kg>();
+  const rows = await queryShippableKgByVariant(variantIds);
+  return new Map(rows.map((row) => [row.id, kg(row.kg)]));
+}
+
 type ShippableKgRow = { id: string; kg: string };
 
-async function queryShippableKgByVariant(): Promise<ShippableKgRow[]> {
+async function queryShippableKgByVariant(variantIds?: string[]): Promise<ShippableKgRow[]> {
   const now = new Date();
   return prisma.$queryRaw<ShippableKgRow[]>(Prisma.sql`
     SELECT
@@ -296,6 +303,7 @@ async function queryShippableKgByVariant(): Promise<ShippableKgRow[]> {
     JOIN lot l ON l."variantId" = pv.id
     JOIN stock_movement sm ON sm."lotId" = l.id
     WHERE pv."isActive" = true
+    ${variantIds ? Prisma.sql`AND pv.id IN (${Prisma.join(variantIds)})` : Prisma.empty}
     GROUP BY pv.id
   `);
 }

@@ -53,6 +53,28 @@ export async function updateCategoryAction(id: string, name: string) {
   revalidatePath("/urunler");
 }
 
+export async function updateCategoryDetailsAction(input: {
+  id: string;
+  name: string;
+  slug: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+}) {
+  await requireStaff();
+  const name = input.name.trim();
+  if (!input.id) throw new Error("id gerekli");
+  if (!name) throw new Error("Kategori adı gerekli");
+  await updateCategory(input.id, {
+    name,
+    slug: input.slug,
+    metaTitle: input.metaTitle,
+    metaDescription: input.metaDescription,
+  });
+  revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
+  revalidatePath("/urunler");
+}
+
 export async function getCategoryProductsAction(categoryId: string) {
   await requireStaff();
   if (!categoryId) throw new Error("id gerekli");

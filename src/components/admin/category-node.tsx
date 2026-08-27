@@ -4,16 +4,17 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Check, ChevronRight, GripVertical, Pencil, Trash2, X } from "lucide-react";
+import { ChevronRight, GripVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { catalogFallbackImage } from "@/content/catalog-images";
+import { CatalogImage } from "@/components/store/catalog-image";
 import { useCategoryDrag } from "@/components/admin/category-tree";
+import { CategoryEditSheet } from "@/components/admin/category-edit-sheet";
 import {
   deleteCategoryAction,
   getCategoryProductsAction,
   toggleCategoryAction,
-  updateCategoryAction,
 } from "@/app/(panel)/panel/kategoriler/actions";
 
 export type CatRow = {
@@ -23,6 +24,8 @@ export type CatRow = {
   active: boolean;
   parentId: string | null;
   sortOrder: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
   _count: { primaryProducts: number; productLinks: number };
 };
 
@@ -31,6 +34,7 @@ type CategoryProduct = {
   name: string;
   slug: string;
   active: boolean;
+  imageUrl: string | null;
   isPrimary: boolean;
 };
 
@@ -46,8 +50,7 @@ export function CategoryNode({
   const children = all
     .filter((c) => c.parentId === category.id)
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "tr"));
-  const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(category.name);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -74,23 +77,6 @@ export function CategoryNode({
         .catch(() => toast.error("Ürünler yüklenemedi"))
         .finally(() => setLoadingProducts(false));
     }
-  }
-
-  function saveName() {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      toast.error("Kategori adı gerekli");
-      return;
-    }
-    startTransition(async () => {
-      try {
-        await updateCategoryAction(category.id, trimmed);
-        toast.success("Kategori güncellendi");
-        setEditing(false);
-      } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Güncellenemedi");
-      }
-    });
   }
 
   function toggleActive() {
@@ -163,84 +149,49 @@ export function CategoryNode({
           </button>
 
           <div className="min-w-0 flex-1">
-          {editing ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") saveName();
-                  if (e.key === "Escape") {
-                    setName(category.name);
-                    setEditing(false);
-                  }
-                }}
-                className="h-8 max-w-xs"
-                autoFocus
-              />
-              <Button size="icon-sm" variant="ghost" disabled={isPending} onClick={saveName} aria-label="Kaydet">
-                <Check className="size-3.5" />
-              </Button>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                disabled={isPending}
-                onClick={() => {
-                  setName(category.name);
-                  setEditing(false);
-                }}
-                aria-label="Vazgeç"
-              >
-                <X className="size-3.5" />
-              </Button>
-            </div>
-          ) : (
-            <>
-              <p className="truncate text-body-sm font-medium text-foreground">{category.name}</p>
-              <p className="text-caption text-muted-foreground">
-                /{category.slug} · {category._count.primaryProducts} birincil ·{" "}
-                {category._count.productLinks} bağlantı
-                {!category.active ? " · pasif" : ""}
-              </p>
-            </>
-          )}
+            <p className="truncate text-body-sm font-medium text-foreground">{category.name}</p>
+            <p className="text-caption text-muted-foreground">
+              /{category.slug} · {category._count.primaryProducts} birincil ·{" "}
+              {category._count.productLinks} bağlantı
+              {!category.active ? " · pasif" : ""}
+            </p>
           </div>
         </div>
 
-        {!editing ? (
-          confirmingDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-caption text-muted-foreground">Emin misiniz?</span>
-              <Button size="sm" variant="destructive" disabled={isPending} onClick={confirmDelete}>
-                Evet, sil
-              </Button>
-              <Button size="sm" variant="ghost" disabled={isPending} onClick={() => setConfirmingDelete(false)}>
-                Vazgeç
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" disabled={isPending} onClick={() => setEditing(true)} className="gap-1.5">
-                <Pencil className="size-3.5" />
-                Düzenle
-              </Button>
-              <Button variant="outline" size="sm" disabled={isPending} onClick={toggleActive}>
-                {category.active ? "Pasifleştir" : "Aktifleştir"}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                disabled={isPending}
-                onClick={() => setConfirmingDelete(true)}
-                className="text-[var(--danger-text)] hover:bg-[var(--danger-subtle)] hover:text-[var(--danger-text)]"
-                aria-label="Kategoriyi sil"
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </div>
-          )
-        ) : null}
+        {confirmingDelete ? (
+          <div className="flex items-center gap-2">
+            <span className="text-caption text-muted-foreground">Emin misiniz?</span>
+            <Button size="sm" variant="destructive" disabled={isPending} onClick={confirmDelete}>
+              Evet, sil
+            </Button>
+            <Button size="sm" variant="ghost" disabled={isPending} onClick={() => setConfirmingDelete(false)}>
+              Vazgeç
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" disabled={isPending} onClick={() => setEditSheetOpen(true)} className="gap-1.5">
+              <Pencil className="size-3.5" />
+              Düzenle
+            </Button>
+            <Button variant="outline" size="sm" disabled={isPending} onClick={toggleActive}>
+              {category.active ? "Pasifleştir" : "Aktifleştir"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={isPending}
+              onClick={() => setConfirmingDelete(true)}
+              className="text-[var(--danger-text)] hover:bg-[var(--danger-subtle)] hover:text-[var(--danger-text)]"
+              aria-label="Kategoriyi sil"
+            >
+              <Trash2 className="size-3.5" />
+            </Button>
+          </div>
+        )}
       </div>
+
+      <CategoryEditSheet category={category} open={editSheetOpen} onOpenChange={setEditSheetOpen} />
 
       {expanded ? (
         <div
@@ -259,7 +210,15 @@ export function CategoryNode({
                     href={`/panel/urunler/${p.slug}`}
                     className="flex items-center justify-between gap-2 rounded-md px-3 py-1.5 hover:bg-muted"
                   >
-                    <span className="flex min-w-0 items-center gap-2">
+                    <span className="flex min-w-0 items-center gap-2.5">
+                      <span className="relative size-7 shrink-0 overflow-hidden rounded-md bg-muted">
+                        <CatalogImage
+                          src={catalogFallbackImage(category.name, p.imageUrl)}
+                          alt={p.name}
+                          className="object-cover"
+                          sizes="28px"
+                        />
+                      </span>
                       <span
                         className={cn(
                           "size-1.5 shrink-0 rounded-full",

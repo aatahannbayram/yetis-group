@@ -46,12 +46,12 @@ export async function getCategoryProducts(categoryId: string) {
   const [primary, linked] = await Promise.all([
     prisma.product.findMany({
       where: { primaryCategoryId: categoryId },
-      select: { id: true, name: true, slug: true, active: true },
+      select: { id: true, name: true, slug: true, active: true, imageUrl: true },
       orderBy: { name: "asc" },
     }),
     prisma.product.findMany({
       where: { categories: { some: { categoryId } }, primaryCategoryId: { not: categoryId } },
-      select: { id: true, name: true, slug: true, active: true },
+      select: { id: true, name: true, slug: true, active: true, imageUrl: true },
       orderBy: { name: "asc" },
     }),
   ]);
@@ -94,8 +94,25 @@ export async function createCategory(input: {
 
 export async function updateCategory(
   id: string,
-  input: { name?: string; active?: boolean; sortOrder?: number; parentId?: string | null },
+  input: {
+    name?: string;
+    active?: boolean;
+    sortOrder?: number;
+    parentId?: string | null;
+    slug?: string;
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+  },
 ) {
+  let slug: string | undefined;
+  if (input.slug !== undefined) {
+    const base = slugifyTr(input.slug) || slugifyTr(input.name ?? "");
+    if (!base) throw new Error("Geçerli bir URL gerekli");
+    const existing = await prisma.category.findUnique({ where: { slug: base }, select: { id: true } });
+    if (existing && existing.id !== id) throw new Error(`«/${base}» başka bir kategoride kullanılıyor`);
+    slug = base;
+  }
+
   return prisma.category.update({
     where: { id },
     data: {
@@ -103,6 +120,11 @@ export async function updateCategory(
       ...(input.active !== undefined ? { active: input.active } : {}),
       ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
       ...(input.parentId !== undefined ? { parentId: input.parentId || null } : {}),
+      ...(slug !== undefined ? { slug } : {}),
+      ...(input.metaTitle !== undefined ? { metaTitle: input.metaTitle?.trim() || null } : {}),
+      ...(input.metaDescription !== undefined
+        ? { metaDescription: input.metaDescription?.trim() || null }
+        : {}),
     },
   });
 }

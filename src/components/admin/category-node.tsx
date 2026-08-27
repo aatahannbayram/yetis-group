@@ -65,17 +65,26 @@ export function CategoryNode({
   const [expanded, setExpanded] = useState(false);
   const [products, setProducts] = useState<CategoryProduct[] | null>(null);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState(false);
+
+  function loadProducts() {
+    setLoadingProducts(true);
+    setProductsError(false);
+    getCategoryProductsAction(category.id)
+      .then(setProducts)
+      .catch(() => {
+        setProductsError(true);
+        toast.error("Ürünler yüklenemedi");
+      })
+      .finally(() => setLoadingProducts(false));
+  }
 
   function toggleExpanded() {
     if (productCount === 0) return;
     const next = !expanded;
     setExpanded(next);
-    if (next && products === null) {
-      setLoadingProducts(true);
-      getCategoryProductsAction(category.id)
-        .then(setProducts)
-        .catch(() => toast.error("Ürünler yüklenemedi"))
-        .finally(() => setLoadingProducts(false));
+    if (next && products === null && !loadingProducts) {
+      loadProducts();
     }
   }
 
@@ -200,6 +209,13 @@ export function CategoryNode({
         >
           {loadingProducts ? (
             <p className="px-3 py-1.5 text-caption text-muted-foreground">Yükleniyor…</p>
+          ) : productsError ? (
+            <div className="flex items-center justify-between gap-2 px-3 py-1.5">
+              <p className="text-caption text-[var(--danger-text)]">Ürünler yüklenemedi.</p>
+              <Button size="sm" variant="outline" onClick={loadProducts}>
+                Tekrar dene
+              </Button>
+            </div>
           ) : !products || products.length === 0 ? (
             <p className="px-3 py-1.5 text-caption text-muted-foreground">Bu kategoride ürün yok.</p>
           ) : (

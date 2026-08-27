@@ -58,6 +58,7 @@ export type DealerOrderListProduct = {
   categoryName: string;
   categorySlug: string;
   requiresColdChain: boolean;
+  producerName: string;
   variants: DealerCatalogVariant[];
 };
 
@@ -69,6 +70,7 @@ export function mapListProduct(
     imageUrl: string | null;
     requiresColdChain?: boolean;
     primaryCategory: { name: string; slug: string };
+    producer: { name: string };
     variants: Array<{
       id: string;
       sku: string;
@@ -91,6 +93,7 @@ export function mapListProduct(
     categoryName: product.primaryCategory.name,
     categorySlug: product.primaryCategory.slug,
     requiresColdChain: product.requiresColdChain ?? false,
+    producerName: product.producer.name,
     variants: mapVariantRows(product, overrides, stockByVariant),
   };
 }

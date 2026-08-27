@@ -48,12 +48,15 @@ export default async function ProductDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
-  const dealerId = session?.user.id ? await getUserDealerId(session.user.id) : null;
-  const isDealer = dealerId !== null;
-  const product = await getProductBySlug(slug);
+  const [product, session] = await Promise.all([
+    getProductBySlug(slug),
+    auth.api.getSession({ headers: await headers() }),
+  ]);
 
   if (!product) notFound();
+
+  const dealerId = session?.user.id ? await getUserDealerId(session.user.id) : null;
+  const isDealer = dealerId !== null;
 
   const defaultSku = defaultVariant(product)?.sku ?? product.slug;
 

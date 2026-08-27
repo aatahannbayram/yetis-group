@@ -160,6 +160,7 @@ const dealerOrderListSelect = {
   imageUrl: true,
   requiresColdChain: true,
   primaryCategory: { select: { name: true, slug: true } },
+  producer: { select: { name: true } },
   variants: {
     where: { isActive: true },
     orderBy: { sortOrder: "asc" as const },

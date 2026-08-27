@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/infra/db/client";
 import type { Prisma } from "@/generated/prisma";
 import { slugifyTr } from "@/domain/catalog/slug";
@@ -38,6 +39,7 @@ const dealerOrderListSelect = {
   imageUrl: true,
   requiresColdChain: true,
   primaryCategory: { select: { name: true, slug: true } },
+  producer: { select: { name: true } },
   variants: {
     where: { isActive: true },
     orderBy: { sortOrder: "asc" as const },
@@ -159,7 +161,7 @@ export async function getProducts(filters?: { categorySlug?: string }) {
   });
 }
 
-export async function getProductBySlug(slug: string) {
+export const getProductBySlug = cache(async (slug: string) => {
   return prisma.product.findUnique({
     where: { slug },
     include: {
@@ -175,7 +177,7 @@ export async function getProductBySlug(slug: string) {
       },
     },
   });
-}
+});
 
 export async function updateProductDescription(productId: string, description: string) {
   return prisma.product.update({

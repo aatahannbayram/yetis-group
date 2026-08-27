@@ -42,7 +42,7 @@ function maxOrderableQty(stockKg: number, unitFactor: string) {
 }
 
 function resolveVariant(
-  product: DealerOrderListProduct,
+  product: { id: string; variants: DealerCatalogVariant[] },
   selected: Record<string, string>,
 ): DealerCatalogVariant {
   const id = selected[product.id] ?? product.variants[0]?.id;
@@ -192,7 +192,7 @@ export function DealerOrderWorkspace({
   }, []);
 
   const addProduct = useCallback(
-    (product: DealerOrderListProduct) => {
+    (product: { id: string; name: string; variants: DealerCatalogVariant[] }) => {
       const v = resolveVariant(product, selected);
       const amount = qty[product.id] ?? v.moq;
       setMessage(`${product.name} sepete eklendi`);
@@ -433,11 +433,11 @@ const OrderProductRow = memo(function OrderProductRow({
   const insufficientForMoq = maxQty < variant.moq;
 
   return (
-    <li className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+    <li className="flex flex-col gap-3 p-4 transition-colors hover:bg-[var(--surface-3)]/40 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
       <button
         type="button"
         onClick={() => onOpenDetail(product.id)}
-        className="group/img relative size-16 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-3)] text-left sm:size-20"
+        className="group/img relative size-20 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-3)] text-left ring-1 ring-[var(--panel-border)] sm:size-24"
         title={`${product.name} detayını aç`}
       >
         <CatalogImage
@@ -445,7 +445,7 @@ const OrderProductRow = memo(function OrderProductRow({
           fallbackSrc={catalogFallbackImage(product.categoryName, null)}
           alt={product.name}
           className="object-cover transition-transform duration-300 group-hover/img:scale-105 motion-reduce:transition-none motion-reduce:group-hover/img:scale-100"
-          sizes="80px"
+          sizes="96px"
         />
       </button>
 
@@ -457,12 +457,14 @@ const OrderProductRow = memo(function OrderProductRow({
           <button
             type="button"
             onClick={() => onOpenDetail(product.id)}
-            className="block w-full text-left"
+            className="group/title block w-full text-left"
           >
-            <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)] transition-colors hover:text-[var(--primary-text)]">
+            <h2 className="truncate text-[15px] font-semibold text-[var(--panel-ink)] transition-colors group-hover/title:text-[var(--primary-text)]">
               {product.name}
             </h2>
-            <p className="mt-0.5 text-[11px] text-[var(--panel-ink-muted)]">Detayı gör</p>
+            <p className="mt-0.5 text-[11px] text-[var(--panel-ink-muted)] transition-colors group-hover/title:text-[var(--primary-text)]">
+              Detayı gör
+            </p>
           </button>
         </div>
 
@@ -505,7 +507,11 @@ const OrderProductRow = memo(function OrderProductRow({
           >
             {stock.text}
           </span>
-          <span>%{(variant.vatRateBasisPoints / 100).toString()} KDV</span>
+          {product.producerName ? (
+            <span className="max-w-[220px] truncate" title={product.producerName}>
+              {product.producerName}
+            </span>
+          ) : null}
         </div>
       </div>
 

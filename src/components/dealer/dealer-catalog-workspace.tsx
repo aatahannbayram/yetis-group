@@ -12,7 +12,11 @@ import {
 import { Loader2, Search, Snowflake } from "lucide-react";
 import { catalogFallbackImage } from "@/content/catalog-images";
 import { CatalogImage } from "@/components/store/catalog-image";
-import type { DealerCatalogProduct, DealerOrderListProduct } from "@/infra/db/dealer-catalog";
+import type {
+  DealerCatalogProduct,
+  DealerCatalogVariant,
+  DealerOrderListProduct,
+} from "@/infra/db/dealer-catalog";
 import { useDealerCart } from "@/components/dealer/dealer-cart-context";
 import { DealerProductSheet } from "@/components/dealer/dealer-product-sheet";
 import { fetchDealerProductDetailAction } from "@/app/(dealer-portal)/bayi/siparis/actions";
@@ -22,7 +26,10 @@ import { cn } from "@/lib/utils";
 import { packLabel } from "@/lib/format/packaging";
 import { ProductLoadMore } from "@/components/ui/product-load-more";
 
-function resolveVariant(product: DealerOrderListProduct, selected: Record<string, string>) {
+function resolveVariant(
+  product: { id: string; variants: DealerCatalogVariant[] },
+  selected: Record<string, string>,
+) {
   const id = selected[product.id] ?? product.variants[0]?.id;
   return product.variants.find((v) => v.id === id) ?? product.variants[0]!;
 }

@@ -1,13 +1,12 @@
 import { listCategoryTreeAdmin } from "@/infra/db/categories";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { CategoryNode } from "@/components/admin/category-node";
+import { CategoryTree } from "@/components/admin/category-tree";
 import { createCategoryAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default async function AdminCategoriesPage() {
   const categories = await listCategoryTreeAdmin();
-  const roots = categories.filter((c) => !c.parentId);
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -48,13 +47,7 @@ export default async function AdminCategoriesPage() {
       </form>
 
       <div className="mt-6 space-y-1 rounded-3xl border border-border bg-card p-4">
-        {roots.length === 0 ? (
-          <p className="p-4 text-body-sm text-muted-foreground">Henüz kategori yok.</p>
-        ) : (
-          roots.map((root) => (
-            <CategoryNode key={root.id} category={root} all={categories} depth={0} />
-          ))
-        )}
+        <CategoryTree categories={categories} />
       </div>
     </div>
   );

@@ -107,6 +107,34 @@ export async function updateCategory(
   });
 }
 
+/** Sürükle-bırak: kategoriyi taşı ve yeni üst kategori altındaki sırayı uygula. */
+export async function moveCategory(input: {
+  id: string;
+  parentId: string | null;
+  orderedSiblingIds: string[];
+}) {
+  if (input.parentId) {
+    let cursor: string | null = input.parentId;
+    while (cursor) {
+      if (cursor === input.id) {
+        throw new Error("Bir kategori kendi alt kategorisinin altına taşınamaz");
+      }
+      const parent: { parentId: string | null } | null = await prisma.category.findUnique({
+        where: { id: cursor },
+        select: { parentId: true },
+      });
+      cursor = parent?.parentId ?? null;
+    }
+  }
+
+  return prisma.$transaction([
+    prisma.category.update({ where: { id: input.id }, data: { parentId: input.parentId } }),
+    ...input.orderedSiblingIds.map((sid, index) =>
+      prisma.category.update({ where: { id: sid }, data: { sortOrder: index } }),
+    ),
+  ]);
+}
+
 export async function deleteCategory(id: string) {
   const category = await prisma.category.findUniqueOrThrow({
     where: { id },

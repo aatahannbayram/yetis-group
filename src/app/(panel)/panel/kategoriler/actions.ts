@@ -9,6 +9,7 @@ import {
   createCategory,
   deleteCategory,
   getCategoryProducts,
+  moveCategory,
   updateCategory,
 } from "@/infra/db/categories";
 
@@ -56,6 +57,19 @@ export async function getCategoryProductsAction(categoryId: string) {
   await requireStaff();
   if (!categoryId) throw new Error("id gerekli");
   return getCategoryProducts(categoryId);
+}
+
+export async function moveCategoryAction(input: {
+  id: string;
+  parentId: string | null;
+  orderedSiblingIds: string[];
+}) {
+  await requireStaff();
+  if (!input.id) throw new Error("id gerekli");
+  await moveCategory(input);
+  revalidatePath("/panel/kategoriler");
+  revalidateStoreCatalog();
+  revalidatePath("/urunler");
 }
 
 export async function deleteCategoryAction(id: string) {

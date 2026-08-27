@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Check, ChevronRight, Pencil, Trash2, X } from "lucide-react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { Check, ChevronRight, GripVertical, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useCategoryDrag } from "@/components/admin/category-tree";
 import {
   deleteCategoryAction,
   getCategoryProductsAction,
@@ -14,12 +16,13 @@ import {
   updateCategoryAction,
 } from "@/app/(panel)/panel/kategoriler/actions";
 
-type CatRow = {
+export type CatRow = {
   id: string;
   name: string;
   slug: string;
   active: boolean;
   parentId: string | null;
+  sortOrder: number;
   _count: { primaryProducts: number; productLinks: number };
 };
 
@@ -40,11 +43,20 @@ export function CategoryNode({
   all: CatRow[];
   depth: number;
 }) {
-  const children = all.filter((c) => c.parentId === category.id);
+  const children = all
+    .filter((c) => c.parentId === category.id)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "tr"));
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(category.name);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const { activeId, overId, zone } = useCategoryDrag();
+  const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
+    id: category.id,
+  });
+  const { setNodeRef: setDropRef } = useDroppable({ id: category.id });
+  const isDropTarget = overId === category.id && activeId !== category.id;
 
   const productCount = category._count.primaryProducts + category._count.productLinks;
   const [expanded, setExpanded] = useState(false);
@@ -110,10 +122,30 @@ export function CategoryNode({
   return (
     <div className={depth > 0 ? "border-l border-border/60" : undefined} style={{ marginLeft: depth > 0 ? 10 : 0 }}>
       <div
-        className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 hover:bg-muted/50"
+        ref={(node) => {
+          setDragRef(node);
+          setDropRef(node);
+        }}
+        className={cn(
+          "flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 transition-[opacity,box-shadow] hover:bg-muted/50",
+          isDragging && "opacity-40",
+          isDropTarget && zone === "into" && "bg-[var(--primary-subtle)] ring-2 ring-[var(--primary-solid)]/50",
+          isDropTarget && zone === "before" && "shadow-[inset_0_2px_0_0_var(--primary-solid)]",
+          isDropTarget && zone === "after" && "shadow-[inset_0_-2px_0_0_var(--primary-solid)]",
+        )}
         style={{ paddingLeft: `${12 + (depth > 0 ? 10 : 0)}px` }}
       >
         <div className="flex min-w-0 flex-1 items-start gap-1.5">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            aria-label="Sürükle"
+            className="mt-0.5 flex size-5 shrink-0 cursor-grab touch-none items-center justify-center rounded-md text-muted-foreground/50 transition-colors hover:bg-muted hover:text-muted-foreground active:cursor-grabbing"
+          >
+            <GripVertical className="size-3.5" />
+          </button>
+
           <button
             type="button"
             onClick={toggleExpanded}

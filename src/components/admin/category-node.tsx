@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Check, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   deleteCategoryAction,
+  getCategoryProductsAction,
   toggleCategoryAction,
   updateCategoryAction,
 } from "@/app/(panel)/panel/kategoriler/actions";
@@ -18,6 +21,14 @@ type CatRow = {
   active: boolean;
   parentId: string | null;
   _count: { primaryProducts: number; productLinks: number };
+};
+
+type CategoryProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  active: boolean;
+  isPrimary: boolean;
 };
 
 export function CategoryNode({
@@ -34,6 +45,24 @@ export function CategoryNode({
   const [name, setName] = useState(category.name);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const productCount = category._count.primaryProducts + category._count.productLinks;
+  const [expanded, setExpanded] = useState(false);
+  const [products, setProducts] = useState<CategoryProduct[] | null>(null);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  function toggleExpanded() {
+    if (productCount === 0) return;
+    const next = !expanded;
+    setExpanded(next);
+    if (next && products === null) {
+      setLoadingProducts(true);
+      getCategoryProductsAction(category.id)
+        .then(setProducts)
+        .catch(() => toast.error("Ürünler yüklenemedi"))
+        .finally(() => setLoadingProducts(false));
+    }
+  }
 
   function saveName() {
     const trimmed = name.trim();
@@ -79,12 +108,29 @@ export function CategoryNode({
   }
 
   return (
-    <div>
+    <div className={depth > 0 ? "border-l border-border/60" : undefined} style={{ marginLeft: depth > 0 ? 10 : 0 }}>
       <div
         className="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 hover:bg-muted/50"
-        style={{ paddingLeft: `${12 + depth * 20}px` }}
+        style={{ paddingLeft: `${12 + (depth > 0 ? 10 : 0)}px` }}
       >
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-start gap-1.5">
+          <button
+            type="button"
+            onClick={toggleExpanded}
+            disabled={productCount === 0}
+            aria-label={expanded ? "Ürünleri gizle" : "Ürünleri göster"}
+            aria-expanded={expanded}
+            className={cn(
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md transition-colors",
+              productCount > 0
+                ? "text-muted-foreground hover:bg-muted hover:text-foreground"
+                : "text-muted-foreground/30",
+            )}
+          >
+            <ChevronRight className={cn("size-3.5 transition-transform", expanded && "rotate-90")} />
+          </button>
+
+          <div className="min-w-0 flex-1">
           {editing ? (
             <div className="flex items-center gap-2">
               <Input
@@ -126,6 +172,7 @@ export function CategoryNode({
               </p>
             </>
           )}
+          </div>
         </div>
 
         {!editing ? (
@@ -162,6 +209,45 @@ export function CategoryNode({
           )
         ) : null}
       </div>
+
+      {expanded ? (
+        <div
+          className="mb-1.5 rounded-lg bg-muted/40 py-1.5"
+          style={{ marginLeft: `${37 + depth * 10}px` }}
+        >
+          {loadingProducts ? (
+            <p className="px-3 py-1.5 text-caption text-muted-foreground">Yükleniyor…</p>
+          ) : !products || products.length === 0 ? (
+            <p className="px-3 py-1.5 text-caption text-muted-foreground">Bu kategoride ürün yok.</p>
+          ) : (
+            <ul>
+              {products.map((p) => (
+                <li key={p.id}>
+                  <Link
+                    href={`/panel/urunler/${p.slug}`}
+                    className="flex items-center justify-between gap-2 rounded-md px-3 py-1.5 hover:bg-muted"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        className={cn(
+                          "size-1.5 shrink-0 rounded-full",
+                          p.active ? "bg-[var(--primary-solid)]" : "bg-muted-foreground/40",
+                        )}
+                        aria-hidden
+                      />
+                      <span className="truncate text-body-sm text-foreground">{p.name}</span>
+                    </span>
+                    <span className="shrink-0 text-caption text-muted-foreground">
+                      {p.isPrimary ? "birincil" : "bağlantı"}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
+
       {children.map((child) => (
         <CategoryNode key={child.id} category={child} all={all} depth={depth + 1} />
       ))}

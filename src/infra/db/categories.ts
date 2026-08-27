@@ -41,6 +41,26 @@ export async function listCategoryTreeAdmin() {
   });
 }
 
+/** Kategori paneli: bu kategoriye birincil veya ikincil bağlı tüm ürünler. */
+export async function getCategoryProducts(categoryId: string) {
+  const [primary, linked] = await Promise.all([
+    prisma.product.findMany({
+      where: { primaryCategoryId: categoryId },
+      select: { id: true, name: true, slug: true, active: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.product.findMany({
+      where: { categories: { some: { categoryId } }, primaryCategoryId: { not: categoryId } },
+      select: { id: true, name: true, slug: true, active: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+  return [
+    ...primary.map((p) => ({ ...p, isPrimary: true as const })),
+    ...linked.map((p) => ({ ...p, isPrimary: false as const })),
+  ];
+}
+
 export async function getCategoryBySlug(slug: string) {
   return prisma.category.findUnique({
     where: { slug },

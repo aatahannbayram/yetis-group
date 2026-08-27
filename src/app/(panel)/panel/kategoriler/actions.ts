@@ -5,7 +5,12 @@ import { revalidateStoreCatalog } from "@/lib/cache/store-catalog";
 import { headers } from "next/headers";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
-import { createCategory, deleteCategory, updateCategory } from "@/infra/db/categories";
+import {
+  createCategory,
+  deleteCategory,
+  getCategoryProducts,
+  updateCategory,
+} from "@/infra/db/categories";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -45,6 +50,12 @@ export async function updateCategoryAction(id: string, name: string) {
   revalidatePath("/panel/kategoriler");
   revalidateStoreCatalog();
   revalidatePath("/urunler");
+}
+
+export async function getCategoryProductsAction(categoryId: string) {
+  await requireStaff();
+  if (!categoryId) throw new Error("id gerekli");
+  return getCategoryProducts(categoryId);
 }
 
 export async function deleteCategoryAction(id: string) {

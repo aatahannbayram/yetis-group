@@ -120,6 +120,17 @@ export async function createDealer(input: DealerInput) {
   });
 }
 
+export async function deleteDealer(id: string) {
+  const [orderCount, ledgerCount] = await Promise.all([
+    prisma.order.count({ where: { dealerId: id } }),
+    prisma.ledgerEntry.count({ where: { dealerId: id } }),
+  ]);
+  if (orderCount > 0 || ledgerCount > 0) {
+    throw new Error("Bu bayinin sipariş veya cari hareketi var; silinemez, pasif/bloke edin.");
+  }
+  return prisma.dealer.delete({ where: { id } });
+}
+
 export type DealerContactInfoInput = {
   email?: string | null;
   phone?: string | null;

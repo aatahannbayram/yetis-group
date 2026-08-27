@@ -24,7 +24,11 @@ import {
 import { DataTable } from "@/components/ui/data-table";
 import { ListToolbar } from "@/components/ui/list-toolbar";
 import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
-import { createDealerAction, updateDealerAction } from "@/app/(panel)/panel/bayiler/actions";
+import {
+  createDealerAction,
+  updateDealerAction,
+  deleteDealerAction,
+} from "@/app/(panel)/panel/bayiler/actions";
 import { startImpersonation } from "@/components/workspace/impersonation-banner";
 import { cn } from "@/lib/utils";
 
@@ -165,6 +169,8 @@ export function DealerListSheet({
   const [editing, setEditing] = useState<DealerRow | null>(() => openDealer);
   const [saving, startSaving] = useTransition();
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, startDeleting] = useTransition();
 
   useEffect(() => {
     if (openId) router.replace("/panel/bayiler", { scroll: false });
@@ -187,6 +193,23 @@ export function DealerListSheet({
     setMode("closed");
     setEditing(null);
     setSaveError(null);
+    setConfirmingDelete(false);
+  }
+
+  function handleDelete() {
+    if (!editing) return;
+    setSaveError(null);
+    startDeleting(async () => {
+      try {
+        const fd = new FormData();
+        fd.set("id", editing.id);
+        await deleteDealerAction(fd);
+        close();
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : "Silinemedi");
+        setConfirmingDelete(false);
+      }
+    });
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -717,6 +740,41 @@ export function DealerListSheet({
             </div>
 
             <div className="sticky bottom-0 z-10 flex items-center justify-end gap-2 border-t border-stone-200 bg-white px-5 py-3.5 dark:border-zinc-800 dark:bg-zinc-950">
+              {mode === "edit" && editing && !fieldMode ? (
+                confirmingDelete ? (
+                  <div className="mr-auto flex items-center gap-2">
+                    <span className="text-sm text-stone-600 dark:text-zinc-400">Emin misiniz?</span>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      disabled={deleting}
+                      onClick={handleDelete}
+                    >
+                      {deleting ? <Loader2 className="size-3.5 animate-spin" aria-hidden /> : "Evet, sil"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={deleting}
+                      onClick={() => setConfirmingDelete(false)}
+                    >
+                      Vazgeç
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => setConfirmingDelete(true)}
+                    className="mr-auto h-10 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40"
+                  >
+                    Sil
+                  </Button>
+                )
+              ) : null}
               {saveError ? (
                 <p className="mr-auto text-sm text-red-600 dark:text-red-400" role="status">
                   {saveError}
@@ -726,13 +784,13 @@ export function DealerListSheet({
                 type="button"
                 variant="ghost"
                 onClick={close}
-                disabled={saving}
+                disabled={saving || deleting}
                 className="h-10 text-stone-600 hover:text-stone-900"
               >
                 {fieldMode ? "Kapat" : "İptal"}
               </Button>
-              {!fieldMode ? (
-                <Button type="submit" disabled={saving} className="h-10 min-w-[6.5rem]">
+              {!fieldMode && !confirmingDelete ? (
+                <Button type="submit" disabled={saving || deleting} className="h-10 min-w-[6.5rem]">
                   {saving ? (
                     <Loader2 className="size-4 animate-spin" aria-hidden />
                   ) : mode === "edit" ? (

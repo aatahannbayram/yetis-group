@@ -4,7 +4,13 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
 import { getStaffProfile } from "@/infra/db/users";
-import { createDealer, updateDealer, getDealerById, type DealerInput } from "@/infra/db/dealers";
+import {
+  createDealer,
+  updateDealer,
+  deleteDealer,
+  getDealerById,
+  type DealerInput,
+} from "@/infra/db/dealers";
 import { isValidTrIban, isValidVergiNo, normalizeIban } from "@/lib/validation/tr-ids";
 import type { DealerPaymentMethod, MembershipTier } from "@/generated/prisma/client";
 import { assertCan } from "@/policies";
@@ -138,6 +144,23 @@ export async function updateDealerAction(formData: FormData) {
   const input = readDealerInput(formData);
   if (!input.unvan) throw new Error("Ünvan gerekli");
   await updateDealer(id, input);
+  revalidatePath("/panel/bayiler");
+  revalidatePath("/panel/siparisler");
+}
+
+export async function deleteDealerAction(formData: FormData) {
+  const { session, profile } = await requireStaffSession();
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Bayi bulunamadı");
+
+  assertCan("dealer:write_all", {
+    isStaff: true,
+    staffRole: profile.staffRole,
+    userId: session.user.id,
+    dealerId: null,
+  });
+
+  await deleteDealer(id);
   revalidatePath("/panel/bayiler");
   revalidatePath("/panel/siparisler");
 }

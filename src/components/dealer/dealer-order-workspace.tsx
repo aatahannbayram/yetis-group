@@ -124,6 +124,30 @@ export function DealerOrderWorkspace({
 
   const hasActiveFilters = Boolean(category || search.trim());
 
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateCategoryScrollEdges = useCallback(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+
+  useEffect(() => {
+    updateCategoryScrollEdges();
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateCategoryScrollEdges, { passive: true });
+    const ro = new ResizeObserver(updateCategoryScrollEdges);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", updateCategoryScrollEdges);
+      ro.disconnect();
+    };
+  }, [updateCategoryScrollEdges, categories]);
+
   const loadDetail = useCallback(async (productId: string) => {
     const cached = detailCache.current.get(productId);
     if (cached) {
@@ -270,15 +294,22 @@ export function DealerOrderWorkspace({
           </div>
 
           <div className="relative">
+            {canScrollLeft ? (
+              <div
+                className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-[var(--panel-canvas)] to-transparent"
+                aria-hidden
+              />
+            ) : null}
+            {canScrollRight ? (
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[var(--panel-canvas)] to-transparent"
+                aria-hidden
+              />
+            ) : null}
             <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-[var(--panel-canvas)] to-transparent"
-              aria-hidden
-            />
-            <div
-              className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-[var(--panel-canvas)] to-transparent"
-              aria-hidden
-            />
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              ref={categoryScrollRef}
+              className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
               <FilterChip
                 label="Tümü"
                 count={totalProductCount}

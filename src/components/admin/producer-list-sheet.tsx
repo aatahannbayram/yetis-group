@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import Link from "next/link";
-import { Plus, Trash2, Boxes, CircleAlert } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, Trash2, Boxes, CircleAlert, ImagePlus, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -16,7 +18,170 @@ import {
   createProducerAction,
   updateProducerAction,
   deleteProducerAction,
+  uploadProducerImageAction,
 } from "@/app/(panel)/panel/ureticiler/actions";
+
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/pjpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+  "image/gif",
+];
+
+function isAcceptedImageFile(file: File): boolean {
+  if (ACCEPTED_IMAGE_TYPES.includes(file.type.toLowerCase())) return true;
+  return /\.(jpe?g|png|webp|avif|gif)$/i.test(file.name);
+}
+
+function ProducerImageUpload({
+  producerId,
+  imageUrl,
+  onChange,
+}: {
+  producerId: string;
+  imageUrl: string | null;
+  onChange: (url: string | null) => void;
+}) {
+  const [dragActive, setDragActive] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
+
+  function uploadFile(file: File) {
+    if (!isAcceptedImageFile(file)) {
+      setError("Desteklenmeyen dosya türü (JPG, PNG, WEBP, AVIF, GIF)");
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
+        formData.set("id", producerId);
+        formData.set("file", file);
+        const url = await uploadProducerImageAction(formData);
+        onChange(url);
+        toast.success("Görsel yüklendi");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Yükleme başarısız oldu");
+      }
+    });
+  }
+
+  if (imageUrl) {
+    return (
+      <div className="group relative aspect-video w-full overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface-2)]">
+        <Image
+          src={imageUrl}
+          alt=""
+          fill
+          unoptimized
+          className="object-cover"
+          sizes="400px"
+        />
+        <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Değiştir
+          </Button>
+          <Button
+            type="button"
+            size="icon-sm"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => onChange(null)}
+            aria-label="Görseli kaldır"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+          className="sr-only"
+          onChange={(e) => {
+            if (e.target.files?.[0]) uploadFile(e.target.files[0]);
+            e.target.value = "";
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "relative flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed p-5 text-center transition-colors",
+          dragActive
+            ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)]"
+            : "border-[var(--border-strong)] bg-[var(--surface-2)] hover:border-[var(--primary-solid)]/50",
+        )}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          dragCounter.current += 1;
+          setDragActive(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          dragCounter.current -= 1;
+          if (dragCounter.current <= 0) setDragActive(false);
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragActive(false);
+          dragCounter.current = 0;
+          if (e.dataTransfer.files?.[0]) uploadFile(e.dataTransfer.files[0]);
+        }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_IMAGE_TYPES.join(",")}
+          className="sr-only"
+          onChange={(e) => {
+            if (e.target.files?.[0]) uploadFile(e.target.files[0]);
+            e.target.value = "";
+          }}
+        />
+        {isPending ? (
+          <>
+            <Loader2 className="size-5 animate-spin text-[var(--primary-text)]" aria-hidden />
+            <p className="text-caption font-medium text-[var(--text-primary)]">Yükleniyor…</p>
+          </>
+        ) : (
+          <>
+            <ImagePlus className="size-5 text-[var(--primary-text)]" aria-hidden />
+            <p className="text-caption font-medium text-[var(--text-primary)]">
+              Görseli buraya sürükleyip bırakın
+            </p>
+            <p className="text-caption text-[var(--text-muted)]">
+              veya{" "}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="font-medium text-[var(--primary-text)] underline-offset-2 hover:underline"
+              >
+                bilgisayardan seçin
+              </button>
+            </p>
+          </>
+        )}
+      </div>
+      {error ? <p className="mt-1.5 text-caption text-[var(--danger-text)]">{error}</p> : null}
+    </div>
+  );
+}
 
 export type ProducerRow = {
   id: string;
@@ -41,6 +206,7 @@ function ProducerForm({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [imageUrl, setImageUrl] = useState(producer?.imageUrl ?? "");
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -118,13 +284,27 @@ function ProducerForm({
       </div>
 
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-[var(--text-muted)]">Görsel URL (opsiyonel)</label>
-        <Input
-          name="imageUrl"
-          defaultValue={producer?.imageUrl ?? ""}
-          placeholder="https://…"
-          className={fieldClass}
-        />
+        <label className="text-xs font-medium text-[var(--text-muted)]">Görsel</label>
+        <input type="hidden" name="imageUrl" value={imageUrl} />
+        {producer ? (
+          <ProducerImageUpload
+            producerId={producer.id}
+            imageUrl={imageUrl || null}
+            onChange={(url) => setImageUrl(url ?? "")}
+          />
+        ) : (
+          <>
+            <Input
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://…"
+              className={fieldClass}
+            />
+            <p className="text-caption text-[var(--text-muted)]">
+              Sürükle-bırak yükleme için önce üreticiyi oluşturun.
+            </p>
+          </>
+        )}
       </div>
 
       <div className="space-y-1.5">

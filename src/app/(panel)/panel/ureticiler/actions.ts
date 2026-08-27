@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/infra/auth/server";
 import { isStaffUser } from "@/infra/db/users";
 import { createProducer, updateProducer, deleteProducer } from "@/infra/db/producers";
+import { saveUploadedImage } from "@/infra/storage/local";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -41,6 +42,21 @@ export async function updateProducerAction(formData: FormData) {
   await updateProducer(id, fields);
   revalidatePath("/panel/ureticiler");
   revalidatePath("/panel/urunler");
+}
+
+export async function uploadProducerImageAction(formData: FormData) {
+  await requireStaff();
+  const id = String(formData.get("id") ?? "");
+  const file = formData.get("file");
+  if (!id) throw new Error("Üretici bulunamadı");
+  if (!(file instanceof File)) throw new Error("Dosya gerekli");
+
+  const url = await saveUploadedImage(file, `producer-${id}`);
+  await updateProducer(id, { imageUrl: url });
+
+  revalidatePath("/panel/ureticiler");
+  revalidatePath("/panel/urunler");
+  return url;
 }
 
 export async function deleteProducerAction(formData: FormData) {

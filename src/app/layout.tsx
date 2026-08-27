@@ -83,8 +83,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="tr" className={cn("h-full", "antialiased", "font-sans", inter.variable)}>
-      <body className="min-h-full flex flex-col bg-canvas text-neutral-900">
+    <html
+      lang="tr"
+      className={cn("h-full", "antialiased", "font-sans", inter.variable)}
+      suppressHydrationWarning
+    >
+      {/* Extensions (e.g. Grammarly) inject body attrs before hydrate; ignore those mismatches. */}
+      <body
+        className="min-h-full flex flex-col bg-canvas text-neutral-900"
+        suppressHydrationWarning
+      >
         <ChunkErrorReload />
         {children}
       </body>

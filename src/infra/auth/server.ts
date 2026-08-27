@@ -9,8 +9,14 @@ function authTrustedOrigins(baseURL: string): string[] {
     const url = new URL(baseURL);
     if (url.hostname.startsWith("www.")) {
       origins.add(`${url.protocol}//${url.hostname.slice(4)}`);
-    } else if (url.hostname.includes(".")) {
+    } else if (url.hostname.includes(".") && url.hostname !== "localhost") {
       origins.add(`${url.protocol}//www.${url.hostname}`);
+    }
+    // Localhost ↔ 127.0.0.1 (tarayıcı / Glass bazen biri veya diğeri)
+    if (url.hostname === "localhost") {
+      origins.add(`${url.protocol}//127.0.0.1${url.port ? `:${url.port}` : ""}`);
+    } else if (url.hostname === "127.0.0.1") {
+      origins.add(`${url.protocol}//localhost${url.port ? `:${url.port}` : ""}`);
     }
   } catch {
     // BETTER_AUTH_URL is already validated as a URL in env.

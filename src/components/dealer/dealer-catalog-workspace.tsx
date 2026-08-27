@@ -202,7 +202,7 @@ export function DealerCatalogWorkspace({
                         src={catalogFallbackImage(product.categoryName, product.imageUrl)}
                         fallbackSrc={catalogFallbackImage(product.categoryName, null)}
                         alt={product.name}
-                        className="object-contain p-4 transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
                         sizes="(min-width: 1024px) 22vw, (min-width: 640px) 30vw, 45vw"
                       />
                       {product.requiresColdChain ? (

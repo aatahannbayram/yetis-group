@@ -101,7 +101,10 @@ export function ProductGallery({
             type="button"
             className="absolute inset-0 z-20 cursor-zoom-in"
             aria-label="Görseli büyüt"
-            onClick={() => setLightbox(true)}
+            onClick={() => {
+              setLightbox(true);
+              setFullscreen(true);
+            }}
           >
             <span className="absolute right-4 bottom-4 flex size-12 items-center justify-center rounded-full bg-white/92 text-mkt-ink shadow-[0_8px_24px_rgba(33,28,22,0.12)] ring-1 ring-black/5">
               <ZoomIn className="size-5" aria-hidden />
@@ -111,7 +114,10 @@ export function ProductGallery({
           <button
             type="button"
             aria-label="Görseli büyüt"
-            onClick={() => setLightbox(true)}
+            onClick={() => {
+              setLightbox(true);
+              setFullscreen(true);
+            }}
             className="absolute right-4 bottom-4 z-30 flex size-12 items-center justify-center rounded-full bg-white/92 text-mkt-ink shadow-[0_8px_24px_rgba(33,28,22,0.12)] ring-1 ring-black/5 transition-colors hover:bg-white"
           >
             <ZoomIn className="size-5" aria-hidden />

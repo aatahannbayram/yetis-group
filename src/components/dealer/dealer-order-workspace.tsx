@@ -10,7 +10,8 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Loader2, Plus, Search, X } from "lucide-react";
+import { FlaskConical, Loader2, Plus, Search, X } from "lucide-react";
+import Link from "next/link";
 import { catalogFallbackImage } from "@/content/catalog-images";
 import { CatalogImage } from "@/components/store/catalog-image";
 import { QtyInput } from "@/components/ui/qty-input";
@@ -581,6 +582,14 @@ const OrderProductRow = memo(function OrderProductRow({
               {!insufficientForMoq ? <Plus className="size-3.5" aria-hidden /> : null}
               {insufficientForMoq ? "Stok yetersiz" : "Ekle"}
             </button>
+            <Link
+              href={`/bayi/numune?variantId=${variant.id}`}
+              title="Numune iste"
+              className="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-[var(--panel-ink-muted)] ring-1 ring-[var(--panel-border)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--panel-ink)]"
+            >
+              <FlaskConical className="size-3.5" aria-hidden />
+              Numune iste
+            </Link>
           </div>
           {!insufficientForMoq ? (
             <p className="text-[11px] text-[var(--panel-ink-muted)]">

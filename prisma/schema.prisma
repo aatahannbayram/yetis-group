@@ -48,15 +48,17 @@ model User {
   dealerId String?
   dealer   Dealer? @relation(fields: [dealerId], references: [id])
 
-  sessions      Session[]
-  accounts      Account[]
-  dealerRoles   DealerUserRole[]
-  carts         Cart[]
-  salesRepOf    Dealer[]         @relation("DealerSalesRep")
-  stageAudits   LeadStageAudit[]
-  assignedLeads Lead[]           @relation("LeadAssignee")
-  leadTasks     LeadTask[]       @relation("LeadTaskAssignee")
-  assignedRoutes DeliveryRoute[] @relation("RouteAssignee")
+  sessions              Session[]
+  accounts              Account[]
+  dealerRoles           DealerUserRole[]
+  carts                 Cart[]
+  salesRepOf            Dealer[]         @relation("DealerSalesRep")
+  stageAudits           LeadStageAudit[]
+  assignedLeads         Lead[]           @relation("LeadAssignee")
+  leadTasks             LeadTask[]       @relation("LeadTaskAssignee")
+  assignedRoutes        DeliveryRoute[]  @relation("RouteAssignee")
+  sampleRequestsCreated SampleRequest[]  @relation("SampleRequestCreatedBy")
+  returnRequestsCreated ReturnRequest[]  @relation("ReturnRequestCreatedBy")
 
   @@map("user")
 }
@@ -159,11 +161,15 @@ model Dealer {
   district            String?
   deliveryAddressLine String?
   paymentMethod       DealerPaymentMethod?
+  /// Data capture only — no real e-Fatura/GİB integration exists in this codebase yet.
+  eFaturaMukellefi    Boolean              @default(false)
   iban                String?
   creditLimitKurus    Int?
   paymentTermDays     Int?
   deliveryZoneCode    String?
-  /** WGS84 coordinates for route planning (optional until geocoded). */
+  /**
+   * WGS84 coordinates for route planning (optional until geocoded).
+   */
   lat                 Decimal?             @db.Decimal(10, 7)
   lng                 Decimal?             @db.Decimal(10, 7)
   geocodedAt          DateTime?
@@ -184,6 +190,8 @@ model Dealer {
   notifications    Notification[]
   whatsappMessages WhatsAppOutboxMessage[]
   deliveryStops    DeliveryStop[]
+  sampleRequests   SampleRequest[]
+  returnRequests   ReturnRequest[]
 
   @@map("dealer")
 }
@@ -196,16 +204,19 @@ enum LedgerEntryType {
 }
 
 model LedgerEntry {
-  id          String          @id @default(cuid())
-  dealerId    String
-  dealer      Dealer          @relation(fields: [dealerId], references: [id], onDelete: Cascade)
-  type        LedgerEntryType
-  amountKurus Int
-  description String
-  reversesId  String?         @unique
-  reverses    LedgerEntry?    @relation("LedgerReversal", fields: [reversesId], references: [id])
-  reversedBy  LedgerEntry?    @relation("LedgerReversal")
-  createdAt   DateTime        @default(now())
+  id              String          @id @default(cuid())
+  dealerId        String
+  dealer          Dealer          @relation(fields: [dealerId], references: [id], onDelete: Cascade)
+  type            LedgerEntryType
+  amountKurus     Int
+  description     String
+  reversesId      String?         @unique
+  reverses        LedgerEntry?    @relation("LedgerReversal", fields: [reversesId], references: [id])
+  reversedBy      LedgerEntry?    @relation("LedgerReversal")
+  /// Drill-down from cari ekstresi to the return that generated this credit/charge.
+  returnRequestId String?
+  returnRequest   ReturnRequest?  @relation(fields: [returnRequestId], references: [id])
+  createdAt       DateTime        @default(now())
 
   @@index([dealerId, createdAt])
   @@map("ledger_entry")
@@ -448,7 +459,7 @@ enum BaseUnit {
   KG
 }
 
-  model Product {
+model Product {
   id                String   @id @default(cuid())
   name              String
   slug              String   @unique
@@ -480,29 +491,33 @@ enum BaseUnit {
 }
 
 model ProductVariant {
-  id                 String        @id @default(cuid())
+  id                 String   @id @default(cuid())
   productId          String
-  product            Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sku                String        @unique
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku                String   @unique
   barcode            String?
-  /** Option value from AttributeDefinition key `ambalaj` (e.g. TENEKE, bidon). */
-  packagingType      String        @default("KOLI")
+  /**
+   * Option value from AttributeDefinition key `ambalaj` (e.g. TENEKE, bidon).
+   */
+  packagingType      String   @default("KOLI")
   packSize           String?
-  baseUnit           BaseUnit      @default(KG)
-  unitFactor         Decimal       @db.Decimal(10, 3)
-  moq                Int           @default(1)
+  baseUnit           BaseUnit @default(KG)
+  unitFactor         Decimal  @db.Decimal(10, 3)
+  moq                Int      @default(1)
   pricePerUnitKurus  Int
-  vatRateBasisPoints Int           @default(100)
-  isActive           Boolean       @default(true)
-  sortOrder          Int           @default(0)
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  vatRateBasisPoints Int      @default(100)
+  isActive           Boolean  @default(true)
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
-  lots           Lot[]
-  priceListItems PriceListItem[]
-  cartLines      CartLine[]
-  shipments      Shipment[]
-  orderLines     OrderLine[]
+  lots               Lot[]
+  priceListItems     PriceListItem[]
+  cartLines          CartLine[]
+  shipments          Shipment[]
+  orderLines         OrderLine[]
+  sampleRequestItems SampleRequestItem[]
+  returnItems        ReturnRequestItem[]
 
   @@index([productId, isActive, sortOrder])
   @@map("product_variant")
@@ -620,10 +635,11 @@ model Lot {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  movements        StockMovement[]
-  cartLines        CartLine[]
-  allocations      ShipmentLotAllocation[]
-  orderAllocations OrderLotAllocation[]
+  movements          StockMovement[]
+  cartLines          CartLine[]
+  allocations        ShipmentLotAllocation[]
+  orderAllocations   OrderLotAllocation[]
+  sampleRequestItems SampleRequestItem[]
 
   @@unique([variantId, lotNumber])
   @@map("lot")
@@ -645,6 +661,10 @@ model StockMovement {
   quantityKg Decimal           @db.Decimal(10, 3)
   note       String?
   createdAt  DateTime          @default(now())
+
+  sampleRequestItem SampleRequestItem?
+  returnGoodItem    ReturnRequestItem? @relation("ReturnGoodMovement")
+  returnDamagedItem ReturnRequestItem? @relation("ReturnDamagedMovement")
 
   @@map("stock_movement")
 }
@@ -676,9 +696,9 @@ model Shipment {
   shippedAt   DateTime?
   deliveredAt DateTime?
 
-  allocations ShipmentLotAllocation[]
+  allocations    ShipmentLotAllocation[]
   deliveryStopId String?
-  deliveryStop   DeliveryStop? @relation(fields: [deliveryStopId], references: [id], onDelete: SetNull)
+  deliveryStop   DeliveryStop?           @relation(fields: [deliveryStopId], references: [id], onDelete: SetNull)
 
   @@index([dealerId, createdAt])
   @@index([deliveryStopId])
@@ -804,7 +824,9 @@ model PaymentSettings {
   accountHolder       String   @default("")
   iban                String   @default("")
   note                String   @default("")
-  /** Depot for route distance sorting (WGS84). */
+  /**
+   * Depot for route distance sorting (WGS84).
+   */
   depotLabel          String   @default("Yetiş Grup Depo")
   depotLat            Decimal? @db.Decimal(10, 7)
   depotLng            Decimal? @db.Decimal(10, 7)
@@ -874,27 +896,31 @@ enum OrderPaymentMethod {
 }
 
 model Order {
-  id                     String              @id @default(cuid())
-  dealerId               String
-  dealer                 Dealer              @relation(fields: [dealerId], references: [id])
-  status                 OrderStatus         @default(SUBMITTED)
-  totalKurus             Int
-  note                   String?
-  paymentMethod          OrderPaymentMethod?
-  paidAt                 DateTime?
-  /** POS slip image for KAPIDA_POS (public /uploads URL). */
-  paymentSlipUrl         String?
-  paymentSlipUploadedAt  DateTime?
-  codCollectedAt         DateTime?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
+  id                    String              @id @default(cuid())
+  dealerId              String
+  dealer                Dealer              @relation(fields: [dealerId], references: [id])
+  status                OrderStatus         @default(SUBMITTED)
+  totalKurus            Int
+  note                  String?
+  paymentMethod         OrderPaymentMethod?
+  paidAt                DateTime?
+  /**
+   * POS slip image for KAPIDA_POS (public /uploads URL).
+   */
+  paymentSlipUrl        String?
+  paymentSlipUploadedAt DateTime?
+  codCollectedAt        DateTime?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
 
-  lines          OrderLine[]
-  events         OrderEvent[]
-  shipments      Shipment[]
-  proformas      ProformaInvoice[]
-  lotAllocations OrderLotAllocation[]
-  stopLinks      DeliveryStopOrder[]
+  lines             OrderLine[]
+  events            OrderEvent[]
+  shipments         Shipment[]
+  proformas         ProformaInvoice[]
+  lotAllocations    OrderLotAllocation[]
+  stopLinks         DeliveryStopOrder[]
+  sampleConversions SampleConversion[]
+  returnRequests    ReturnRequest[]
 
   @@index([dealerId, createdAt])
   @@map("order")
@@ -914,6 +940,7 @@ model OrderLine {
 
   lotAllocations OrderLotAllocation[]
   shipments      Shipment[]
+  returnItems    ReturnRequestItem[]
 
   @@map("order_line")
 }
@@ -1135,6 +1162,10 @@ enum NotificationAudience {
 enum NotificationType {
   ORDER_CREATED
   ORDER_STATUS_CHANGED
+  SAMPLE_REQUEST_CREATED
+  SAMPLE_REQUEST_STATUS_CHANGED
+  RETURN_REQUEST_CREATED
+  RETURN_REQUEST_STATUS_CHANGED
 }
 
 model Notification {
@@ -1178,6 +1209,284 @@ model Campaign {
 
   @@index([kind, active, sortOrder])
   @@map("campaign")
+}
+
+// ---- Sample (numune) requests; no separate stock pool — fulfillment writes a FIRE
+// StockMovement against the regular Lot, per StockMovementType.FIRE's own doc-comment. ----
+
+/// Shared by Sample + Return requests: who opened the request.
+enum RequestInitiator {
+  BAYI
+  STAFF
+}
+
+enum SampleRequestStatus {
+  TALEP_EDILDI
+  INCELENIYOR
+  ONAYLANDI
+  REDDEDILDI
+  HAZIRLANIYOR
+  SEVK_EDILDI
+  TESLIM_EDILDI
+  IPTAL
+}
+
+model SampleRequest {
+  id                  String              @id @default(cuid())
+  requestNo           String              @unique
+  dealerId            String
+  dealer              Dealer              @relation(fields: [dealerId], references: [id])
+  createdByUserId     String
+  createdByUser       User                @relation("SampleRequestCreatedBy", fields: [createdByUserId], references: [id])
+  createdByRole       RequestInitiator
+  status              SampleRequestStatus @default(TALEP_EDILDI)
+  deliveryAddressLine String
+  note                String?
+  rejectReason        String?
+  /// Set when a limit rule (monthly count/value, per-product qty, 90-day repeat) was exceeded;
+  /// request still proceeds (status stays INCELENIYOR), never auto-blocked.
+  flaggedForReview    Boolean             @default(false)
+  flagReason          String?
+  cargoCompany        String?
+  trackingNo          String?
+  requestedAt         DateTime            @default(now())
+  approvedAt          DateTime?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  items  SampleRequestItem[]
+  events SampleRequestEvent[]
+
+  @@index([dealerId, createdAt])
+  @@index([status])
+  @@map("sample_request")
+}
+
+model SampleRequestItem {
+  id              String         @id @default(cuid())
+  sampleRequestId String
+  sampleRequest   SampleRequest  @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  quantity        Int
+  /// Filled by staff at fulfillment time (no cost field exists on ProductVariant).
+  unitCostKurus   Int?
+  totalCostKurus  Int?
+  /// FEFO-selected lot, set when the FIRE stock movement is written at shipment.
+  lotId           String?
+  lot             Lot?           @relation(fields: [lotId], references: [id])
+  stockMovementId String?        @unique
+  stockMovement   StockMovement? @relation(fields: [stockMovementId], references: [id])
+
+  conversions SampleConversion[]
+
+  @@index([sampleRequestId])
+  @@index([variantId])
+  @@map("sample_request_item")
+}
+
+/// Audit trail mirroring OrderEvent.
+model SampleRequestEvent {
+  id              String              @id @default(cuid())
+  sampleRequestId String
+  sampleRequest   SampleRequest       @relation(fields: [sampleRequestId], references: [id], onDelete: Cascade)
+  status          SampleRequestStatus
+  note            String?
+  actorUserId     String?
+  createdAt       DateTime            @default(now())
+
+  @@map("sample_request_event")
+}
+
+/// A sample "converted" if the same dealer ordered the same variant within the settings window.
+model SampleConversion {
+  id                  String            @id @default(cuid())
+  sampleRequestItemId String
+  sampleRequestItem   SampleRequestItem @relation(fields: [sampleRequestItemId], references: [id], onDelete: Cascade)
+  orderId             String
+  order               Order             @relation(fields: [orderId], references: [id])
+  convertedAt         DateTime          @default(now())
+  daysElapsed         Int
+
+  @@unique([sampleRequestItemId, orderId])
+  @@map("sample_conversion")
+}
+
+/// Admin-configurable limit engine; singleton row, mirrors PaymentSettings.
+model SampleLimitSettings {
+  id                             String   @id @default("singleton")
+  maxRequestsPerDealerPerMonth   Int      @default(3)
+  maxValueKurusPerDealerPerMonth Int      @default(500000)
+  maxQtyPerProduct               Int      @default(5)
+  repeatBlockDays                Int      @default(90)
+  conversionWindowDays           Int      @default(60)
+  staleFollowupDays              Int      @default(60)
+  updatedAt                      DateTime @updatedAt
+
+  @@map("sample_limit_settings")
+}
+
+// ---- Return (iade) requests; official/invoiced return flow, dealer- or
+// staff-initiated. Return invoice mirrors ProformaInvoice but is a sibling
+// model (different buyer/seller semantics, own IAD-YYYY-NNNNN sequence) —
+// this is a DAHILI (internal) record, not a real e-Fatura/GİB submission. ----
+
+enum ReturnRequestStatus {
+  OLUSTURULDU
+  INCELENIYOR
+  ONAYLANDI
+  REDDEDILDI
+  URUN_TESLIM_ALINDI
+  KONTROL_EDILDI
+  FATURALANDI
+  KAPANDI
+  IPTAL
+}
+
+enum ReturnReason {
+  HATALI_URUN
+  HASARLI_GELDI
+  YANLIS_URUN
+  SKT_YAKIN_GECMIS
+  BAYI_FAZLA_SIPARIS
+  MUSTERI_IADESI
+  DIGER
+}
+
+enum ShippingCostResponsibility {
+  YETIS
+  BAYI
+}
+
+model ReturnRequest {
+  id                         String                      @id @default(cuid())
+  returnNo                   String                      @unique
+  dealerId                   String
+  dealer                     Dealer                      @relation(fields: [dealerId], references: [id])
+  orderId                    String
+  order                      Order                       @relation(fields: [orderId], references: [id])
+  createdByUserId            String
+  createdByUser              User                        @relation("ReturnRequestCreatedBy", fields: [createdByUserId], references: [id])
+  createdByRole              RequestInitiator
+  status                     ReturnRequestStatus         @default(OLUSTURULDU)
+  rejectReason               String?
+  shippingCostResponsibility ShippingCostResponsibility?
+  shippingCostKurus          Int?
+  /// Bookkeeping flag only — no real payment-rail integration in this codebase.
+  cashRefundNeeded           Boolean                     @default(false)
+  cashRefundNote             String?
+  requestedAt                DateTime                    @default(now())
+  approvedAt                 DateTime?
+  acceptedAt                 DateTime?
+  invoicedAt                 DateTime?
+  closedAt                   DateTime?
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+
+  items         ReturnRequestItem[]
+  events        ReturnRequestEvent[]
+  invoice       ReturnInvoice?
+  ledgerEntries LedgerEntry[]
+
+  @@index([dealerId, createdAt])
+  @@index([orderId])
+  @@index([status])
+  @@map("return_request")
+}
+
+model ReturnRequestItem {
+  id                     String         @id @default(cuid())
+  returnRequestId        String
+  returnRequest          ReturnRequest  @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  orderLineId            String
+  orderLine              OrderLine      @relation(fields: [orderLineId], references: [id])
+  variantId              String
+  variant                ProductVariant @relation(fields: [variantId], references: [id])
+  lotNumber              String?
+  expirationDate         DateTime?
+  requestedQty           Int
+  approvedQty            Int?
+  acceptedGoodQty        Int?
+  acceptedDamagedQty     Int?
+  reason                 ReturnReason
+  photoUrls              String[]       @default([])
+  /// Snapshot from the ORIGINAL OrderLine — never the current/list price.
+  unitPriceKurus         Int
+  vatRateBasisPoints     Int
+  note                   String?
+  goodStockMovementId    String?        @unique
+  goodStockMovement      StockMovement? @relation("ReturnGoodMovement", fields: [goodStockMovementId], references: [id])
+  damagedStockMovementId String?        @unique
+  damagedStockMovement   StockMovement? @relation("ReturnDamagedMovement", fields: [damagedStockMovementId], references: [id])
+
+  @@index([returnRequestId])
+  @@index([orderLineId])
+  @@map("return_request_item")
+}
+
+/// Audit trail mirroring OrderEvent / SampleRequestEvent.
+model ReturnRequestEvent {
+  id              String              @id @default(cuid())
+  returnRequestId String
+  returnRequest   ReturnRequest       @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  status          ReturnRequestStatus
+  note            String?
+  actorUserId     String?
+  createdAt       DateTime            @default(now())
+
+  @@map("return_request_event")
+}
+
+/// Internal record only — mirrors ProformaInvoice's shape, NOT a real e-Fatura/GİB submission.
+model ReturnInvoice {
+  id                    String        @id @default(cuid())
+  returnRequestId       String        @unique
+  returnRequest         ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  number                String        @unique
+  buyerUnvan            String
+  buyerVergiNo          String?
+  buyerVergiDairesi     String?
+  /// Snapshot of Dealer.eFaturaMukellefi at issue time.
+  buyerEFaturaMukellefi Boolean
+  sellerName            String
+  subtotalKurus         Int
+  vatKurus              Int
+  totalKurus            Int
+  note                  String?
+  pdfPath               String?
+  issuedAt              DateTime      @default(now())
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  lines ReturnInvoiceLine[]
+
+  @@map("return_invoice")
+}
+
+model ReturnInvoiceLine {
+  id                 String        @id @default(cuid())
+  returnInvoiceId    String
+  returnInvoice      ReturnInvoice @relation(fields: [returnInvoiceId], references: [id], onDelete: Cascade)
+  description        String
+  quantity           Int
+  unitPriceKurus     Int
+  vatRateBasisPoints Int
+  lineTotalKurus     Int
+  sortOrder          Int           @default(0)
+
+  @@map("return_invoice_line")
+}
+
+/// Admin-configurable, mirrors PaymentSettings/SampleLimitSettings singleton pattern.
+model ReturnSettings {
+  id                  String   @id @default("singleton")
+  returnWindowDays    Int      @default(14)
+  returnRatioAlertBps Int      @default(1000)
+  updatedAt           DateTime @updatedAt
+
+  @@map("return_settings")
 }
 
 // ---- WhatsApp outbox (mock provider only; idempotent, per-message cost/status tracked) ----

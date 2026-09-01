@@ -13,6 +13,26 @@ import {
   isOrderStatusEmailWorthy,
 } from "@/domain/notifications/messages";
 import type { OrderStatus } from "@/domain/order/state-machine";
+import {
+  sampleRequestCreatedNotifications,
+  sampleRequestStatusChangedNotification,
+  sampleRequestStatusLabel,
+} from "@/domain/sample/notifications";
+import type { SampleRequestStatus } from "@/domain/sample/state-machine";
+import {
+  returnRequestCreatedNotifications,
+  returnRequestStatusChangedNotification,
+  returnRequestStatusLabel,
+} from "@/domain/return/notifications";
+import type { ReturnRequestStatus } from "@/domain/return/state-machine";
+import {
+  sampleRequestCreatedStaffEmail,
+  sampleRequestCreatedDealerEmail,
+  sampleRequestStatusChangedDealerEmail,
+  returnRequestCreatedStaffEmail,
+  returnRequestCreatedDealerEmail,
+  returnRequestStatusChangedDealerEmail,
+} from "@/infra/email/templates";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { getSiteUrl, SITE } from "@/lib/site";
@@ -119,6 +139,187 @@ export async function notifyOrderStatusChanged(input: {
     }
   } catch (err) {
     console.error("[notifications] notifyOrderStatusChanged failed:", err);
+  }
+}
+
+/** Same never-throw contract as notifyOrderCreated: best-effort side channel. */
+export async function notifySampleRequestCreated(input: {
+  requestId: string;
+  requestNo: string;
+  dealerId: string;
+  dealerName: string;
+  dealerEmail: string | null;
+  itemCount: number;
+}) {
+  try {
+    const { staff, dealer } = sampleRequestCreatedNotifications({
+      requestId: input.requestId,
+      requestNo: input.requestNo,
+      dealerName: input.dealerName,
+      itemCount: input.itemCount,
+    });
+
+    await Promise.all([
+      createNotification({ audience: "STAFF", type: "SAMPLE_REQUEST_CREATED", ...staff }),
+      createNotification({
+        audience: "DEALER",
+        dealerId: input.dealerId,
+        type: "SAMPLE_REQUEST_CREATED",
+        ...dealer,
+      }),
+    ]);
+
+    const siteUrl = getSiteUrl();
+    const emailJobs = [
+      sendEmail({
+        to: env.NOTIFICATIONS_STAFF_EMAIL || SITE.email,
+        ...sampleRequestCreatedStaffEmail({
+          dealerName: input.dealerName,
+          requestNo: input.requestNo,
+          itemCount: input.itemCount,
+          siteUrl,
+        }),
+      }),
+    ];
+    if (input.dealerEmail) {
+      emailJobs.push(
+        sendEmail({
+          to: input.dealerEmail,
+          ...sampleRequestCreatedDealerEmail({
+            dealerName: input.dealerName,
+            requestNo: input.requestNo,
+            siteUrl,
+          }),
+        }),
+      );
+    }
+    await Promise.allSettled(emailJobs);
+  } catch (err) {
+    console.error("[notifications] notifySampleRequestCreated failed:", err);
+  }
+}
+
+export async function notifySampleRequestStatusChanged(input: {
+  requestNo: string;
+  dealerId: string;
+  dealerName: string;
+  dealerEmail: string | null;
+  status: SampleRequestStatus;
+}) {
+  try {
+    const draft = sampleRequestStatusChangedNotification({
+      requestNo: input.requestNo,
+      status: input.status,
+    });
+    await createNotification({
+      audience: "DEALER",
+      dealerId: input.dealerId,
+      type: "SAMPLE_REQUEST_STATUS_CHANGED",
+      ...draft,
+    });
+
+    if (input.dealerEmail) {
+      await sendEmail({
+        to: input.dealerEmail,
+        ...sampleRequestStatusChangedDealerEmail({
+          dealerName: input.dealerName,
+          requestNo: input.requestNo,
+          statusLabel: sampleRequestStatusLabel(input.status),
+          siteUrl: getSiteUrl(),
+        }),
+      });
+    }
+  } catch (err) {
+    console.error("[notifications] notifySampleRequestStatusChanged failed:", err);
+  }
+}
+
+export async function notifyReturnRequestCreated(input: {
+  returnNo: string;
+  dealerId: string;
+  dealerName: string;
+  dealerEmail: string | null;
+  itemCount: number;
+}) {
+  try {
+    const { staff, dealer } = returnRequestCreatedNotifications({
+      returnNo: input.returnNo,
+      dealerName: input.dealerName,
+      itemCount: input.itemCount,
+    });
+
+    await Promise.all([
+      createNotification({ audience: "STAFF", type: "RETURN_REQUEST_CREATED", ...staff }),
+      createNotification({
+        audience: "DEALER",
+        dealerId: input.dealerId,
+        type: "RETURN_REQUEST_CREATED",
+        ...dealer,
+      }),
+    ]);
+
+    const siteUrl = getSiteUrl();
+    const emailJobs = [
+      sendEmail({
+        to: env.NOTIFICATIONS_STAFF_EMAIL || SITE.email,
+        ...returnRequestCreatedStaffEmail({
+          dealerName: input.dealerName,
+          returnNo: input.returnNo,
+          itemCount: input.itemCount,
+          siteUrl,
+        }),
+      }),
+    ];
+    if (input.dealerEmail) {
+      emailJobs.push(
+        sendEmail({
+          to: input.dealerEmail,
+          ...returnRequestCreatedDealerEmail({
+            dealerName: input.dealerName,
+            returnNo: input.returnNo,
+            siteUrl,
+          }),
+        }),
+      );
+    }
+    await Promise.allSettled(emailJobs);
+  } catch (err) {
+    console.error("[notifications] notifyReturnRequestCreated failed:", err);
+  }
+}
+
+export async function notifyReturnRequestStatusChanged(input: {
+  returnNo: string;
+  dealerId: string;
+  dealerName: string;
+  dealerEmail: string | null;
+  status: ReturnRequestStatus;
+}) {
+  try {
+    const draft = returnRequestStatusChangedNotification({
+      returnNo: input.returnNo,
+      status: input.status,
+    });
+    await createNotification({
+      audience: "DEALER",
+      dealerId: input.dealerId,
+      type: "RETURN_REQUEST_STATUS_CHANGED",
+      ...draft,
+    });
+
+    if (input.dealerEmail) {
+      await sendEmail({
+        to: input.dealerEmail,
+        ...returnRequestStatusChangedDealerEmail({
+          dealerName: input.dealerName,
+          returnNo: input.returnNo,
+          statusLabel: returnRequestStatusLabel(input.status),
+          siteUrl: getSiteUrl(),
+        }),
+      });
+    }
+  } catch (err) {
+    console.error("[notifications] notifyReturnRequestStatusChanged failed:", err);
   }
 }
 

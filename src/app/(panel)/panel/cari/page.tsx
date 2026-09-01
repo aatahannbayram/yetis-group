@@ -25,6 +25,7 @@ export default async function AdminLedgerPage() {
       description: e.description,
       createdAt: e.createdAt.toISOString(),
       reversesId: e.reversesId,
+      returnRequestId: e.returnRequestId,
     })),
   }));
 

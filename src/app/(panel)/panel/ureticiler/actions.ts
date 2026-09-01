@@ -62,7 +62,9 @@ export async function uploadProducerImageAction(formData: FormData) {
 export async function deleteProducerAction(formData: FormData) {
   await requireStaff();
   const id = String(formData.get("id") ?? "");
+  const reassignToId = String(formData.get("reassignToId") ?? "").trim() || undefined;
   if (!id) throw new Error("id gerekli");
-  await deleteProducer(id);
+  await deleteProducer(id, reassignToId ? { reassignToId } : undefined);
   revalidatePath("/panel/ureticiler");
+  revalidatePath("/panel/urunler");
 }

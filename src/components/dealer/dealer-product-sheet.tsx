@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { CalendarClock, Loader2, MapPin, Snowflake } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, FlaskConical, Loader2, MapPin, Snowflake } from "lucide-react";
 import { catalogFallbackImage } from "@/content/catalog-images";
 import { ProductGallery } from "@/components/store/product-gallery";
 import type { DealerCatalogProduct, DealerCatalogVariant } from "@/infra/db/dealer-catalog";
@@ -258,6 +259,13 @@ export function DealerProductSheet({
                   Maks. {maxQty} {salesUnitLabel(variant.packagingType)} ({formatKg(stockKg)} kg)
                 </p>
               ) : null}
+              <Link
+                href={`/bayi/numune?variantId=${variant.id}`}
+                className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-[var(--panel-ink-muted)] hover:text-[var(--primary-text)]"
+              >
+                <FlaskConical className="size-3.5" aria-hidden />
+                Numune iste
+              </Link>
               {notice ? (
                 <p className="text-xs font-medium text-[var(--primary-text)]">{notice}</p>
               ) : null}

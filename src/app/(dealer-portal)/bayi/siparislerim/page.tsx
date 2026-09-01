@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, ClipboardList, Package } from "lucide-react";
+import { ArrowRight, ClipboardList, Package, Undo2 } from "lucide-react";
 import { auth } from "@/infra/auth/server";
 import { getUserDealerId, isStaffUser } from "@/infra/db/users";
 import { IMPERSONATE_COOKIE, parseImpersonationCookie } from "@/lib/impersonation";
@@ -186,6 +186,15 @@ export default async function BayiSiparislerimPage({
                 <div className="flex shrink-0 items-center gap-3">
                   {DEALER_CANCELABLE_STATUSES.has(order.status) ? (
                     <DealerCancelOrderButton orderId={order.id} />
+                  ) : null}
+                  {order.status === "DELIVERED" ? (
+                    <Link
+                      href={`/bayi/iade?orderId=${order.id}`}
+                      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[var(--panel-border)] px-3 text-sm font-medium text-[var(--panel-ink-muted)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--panel-ink)]"
+                    >
+                      <Undo2 className="size-3.5" aria-hidden />
+                      İade et
+                    </Link>
                   ) : null}
                   <p className="text-right text-base font-semibold tabular-nums text-[var(--panel-ink)]">
                     {formatMoney(money(order.totalKurus))}

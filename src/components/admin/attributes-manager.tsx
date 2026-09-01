@@ -191,9 +191,31 @@ export function AttributesManager({ attributes }: { attributes: AttributeListIte
                         ) {
                           return;
                         }
-                        const fd = new FormData();
-                        fd.set("id", attr.id);
-                        run(() => deleteAttributeAction(fd));
+                        setError(null);
+                        startTransition(async () => {
+                          const fd = new FormData();
+                          fd.set("id", attr.id);
+                          try {
+                            await deleteAttributeAction(fd);
+                          } catch (e) {
+                            const message = e instanceof Error ? e.message : "İşlem başarısız.";
+                            if (
+                              message.includes("kullanılıyor") &&
+                              window.confirm(`${message}\n\nYine de silmek istiyor musunuz?`)
+                            ) {
+                              const forceFd = new FormData();
+                              forceFd.set("id", attr.id);
+                              forceFd.set("force", "true");
+                              try {
+                                await deleteAttributeAction(forceFd);
+                              } catch (e2) {
+                                setError(e2 instanceof Error ? e2.message : "İşlem başarısız.");
+                              }
+                            } else if (!message.includes("kullanılıyor")) {
+                              setError(message);
+                            }
+                          }
+                        });
                       }}
                     >
                       <Trash2 className="size-3.5" />

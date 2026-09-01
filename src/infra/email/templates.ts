@@ -108,3 +108,109 @@ export function orderStatusChangedDealerEmail(input: {
     }),
   };
 }
+
+export function sampleRequestCreatedStaffEmail(input: {
+  dealerName: string;
+  requestNo: string;
+  itemCount: number;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Yeni numune talebi: ${input.dealerName} (${input.requestNo})`,
+    html: emailShell({
+      preheader: `${input.dealerName} yeni bir numune talebi açtı.`,
+      heading: "Yeni numune talebi",
+      bodyHtml: `<p style="margin:0 0 8px;"><strong style="color:${INK};">${input.dealerName}</strong> ${input.requestNo} numaralı talepte ${input.itemCount} ürün istedi.</p>`,
+      ctaLabel: "Talebi incele",
+      ctaUrl: `${input.siteUrl}/panel/numuneler`,
+    }),
+  };
+}
+
+export function sampleRequestCreatedDealerEmail(input: {
+  dealerName: string;
+  requestNo: string;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Numune talebiniz alındı (${input.requestNo})`,
+    html: emailShell({
+      preheader: `${input.requestNo} numaralı numune talebiniz alındı.`,
+      heading: "Numune talebiniz alındı",
+      bodyHtml: `<p style="margin:0 0 8px;">Merhaba ${input.dealerName},</p><p style="margin:0;">${input.requestNo} numaralı numune talebiniz tarafımıza ulaştı, inceleniyor.</p>`,
+      ctaLabel: "Taleplerimi gör",
+      ctaUrl: `${input.siteUrl}/bayi/numune`,
+    }),
+  };
+}
+
+export function sampleRequestStatusChangedDealerEmail(input: {
+  dealerName: string;
+  requestNo: string;
+  statusLabel: string;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Numune talebi ${input.requestNo}: ${input.statusLabel}`,
+    html: emailShell({
+      preheader: `${input.requestNo} numaralı numune talebinizin durumu güncellendi.`,
+      heading: "Numune talebi güncellendi",
+      bodyHtml: `<p style="margin:0 0 8px;">Merhaba ${input.dealerName},</p><p style="margin:0;">${input.requestNo} numaralı numune talebinizin durumu <strong style="color:${INK};">"${input.statusLabel}"</strong> olarak güncellendi.</p>`,
+      ctaLabel: "Taleplerimi gör",
+      ctaUrl: `${input.siteUrl}/bayi/numune`,
+    }),
+  };
+}
+
+export function returnRequestCreatedStaffEmail(input: {
+  dealerName: string;
+  returnNo: string;
+  itemCount: number;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Yeni iade talebi: ${input.dealerName} (${input.returnNo})`,
+    html: emailShell({
+      preheader: `${input.dealerName} yeni bir iade talebi açtı.`,
+      heading: "Yeni iade talebi",
+      bodyHtml: `<p style="margin:0 0 8px;"><strong style="color:${INK};">${input.dealerName}</strong> ${input.returnNo} numaralı talepte ${input.itemCount} kalem iade istedi.</p>`,
+      ctaLabel: "Talebi incele",
+      ctaUrl: `${input.siteUrl}/panel/iadeler`,
+    }),
+  };
+}
+
+export function returnRequestCreatedDealerEmail(input: {
+  dealerName: string;
+  returnNo: string;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `İade talebiniz alındı (${input.returnNo})`,
+    html: emailShell({
+      preheader: `${input.returnNo} numaralı iade talebiniz alındı.`,
+      heading: "İade talebiniz alındı",
+      bodyHtml: `<p style="margin:0 0 8px;">Merhaba ${input.dealerName},</p><p style="margin:0;">${input.returnNo} numaralı iade talebiniz tarafımıza ulaştı, inceleniyor.</p>`,
+      ctaLabel: "İadelerimi gör",
+      ctaUrl: `${input.siteUrl}/bayi/iade`,
+    }),
+  };
+}
+
+export function returnRequestStatusChangedDealerEmail(input: {
+  dealerName: string;
+  returnNo: string;
+  statusLabel: string;
+  siteUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `İade talebi ${input.returnNo}: ${input.statusLabel}`,
+    html: emailShell({
+      preheader: `${input.returnNo} numaralı iade talebinizin durumu güncellendi.`,
+      heading: "İade talebi güncellendi",
+      bodyHtml: `<p style="margin:0 0 8px;">Merhaba ${input.dealerName},</p><p style="margin:0;">${input.returnNo} numaralı iade talebinizin durumu <strong style="color:${INK};">"${input.statusLabel}"</strong> olarak güncellendi.</p>`,
+      ctaLabel: "İadelerimi gör",
+      ctaUrl: `${input.siteUrl}/bayi/iade`,
+    }),
+  };
+}

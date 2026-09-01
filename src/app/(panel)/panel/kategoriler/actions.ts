@@ -94,10 +94,10 @@ export async function moveCategoryAction(input: {
   revalidatePath("/urunler");
 }
 
-export async function deleteCategoryAction(id: string) {
+export async function deleteCategoryAction(id: string, reassignToId?: string) {
   await requireStaff();
   if (!id) throw new Error("id gerekli");
-  await deleteCategory(id);
+  await deleteCategory(id, reassignToId ? { reassignToId } : undefined);
   revalidatePath("/panel/kategoriler");
   revalidateStoreCatalog();
   revalidatePath("/urunler");

@@ -8,6 +8,7 @@ import {
   BellRing,
   CircleDollarSign,
   FileStack,
+  FlaskConical,
   Headphones,
   History,
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
   ShoppingBag,
   Store,
   Truck,
+  Undo2,
   Warehouse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -51,6 +53,8 @@ const nav: {
   { href: "/bayi/siparislerim", label: "Geçmiş", icon: History, primary: true },
   { href: "/bayi/teslimat", label: "Teslimat", icon: Truck },
   { href: "/bayi/cari", label: "Cari", icon: CircleDollarSign, primary: true },
+  { href: "/bayi/numune", label: "Numune", icon: FlaskConical },
+  { href: "/bayi/iade", label: "İade", icon: Undo2 },
   { href: "/bayi/belgeler", label: "Belgeler", icon: FileStack },
   { href: "/bayi/firsatlar", label: "Fırsatlar", icon: BadgePercent },
   { href: "/bayi/adreslerim", label: "Adresler", icon: MapPinned },

@@ -18,6 +18,7 @@ import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
 import { listAttributeDefinitions, listPackagingOptions, isProductFacingAttribute } from "@/infra/db/attributes";
 import { getGroupPricesForVariants } from "@/infra/db/pricing";
+import { ProductArchiveToggle } from "@/components/admin/product-archive-toggle";
 import { ProductStockTab } from "@/components/admin/product-stock-tab";
 import { ProductGallery } from "@/components/admin/product-gallery";
 import { ProductVariantPricing } from "@/components/admin/product-variant-pricing";
@@ -183,6 +184,7 @@ export default async function AdminProductDetailPage({
               Mağazada gör
               <ExternalLink className="size-3" aria-hidden />
             </a>
+            <ProductArchiveToggle productId={product.id} slug={slug} active={product.active} />
           </div>
         </div>
       </div>

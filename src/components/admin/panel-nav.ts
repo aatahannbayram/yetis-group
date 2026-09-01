@@ -30,6 +30,8 @@ import {
   ClipboardCheck,
   Bell,
   Receipt,
+  FlaskConical,
+  Undo2,
 } from "lucide-react";
 import {
   canAccessPanelPath,
@@ -87,6 +89,8 @@ export const PANEL_NAV_GROUPS: PanelNavGroup[] = [
         status: "ready",
       },
       { href: "/panel/teklifler", label: "Teklifler", icon: FileText, status: "ready" },
+      { href: "/panel/numuneler", label: "Numuneler", icon: FlaskConical, status: "ready" },
+      { href: "/panel/iadeler", label: "İadeler", icon: Undo2, status: "ready" },
       { href: "/panel/kampanyalar", label: "Duyurular", icon: Megaphone, status: "ready" },
     ],
   },

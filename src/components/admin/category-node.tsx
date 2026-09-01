@@ -52,6 +52,8 @@ export function CategoryNode({
     .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "tr"));
   const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [needsReassign, setNeedsReassign] = useState(false);
+  const [reassignToId, setReassignToId] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const { activeId, overId, zone } = useCategoryDrag();
@@ -108,11 +110,32 @@ export function CategoryNode({
         await deleteCategoryAction(category.id);
         toast.success("Kategori silindi");
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Silinemedi");
-        setConfirmingDelete(false);
+        const message = e instanceof Error ? e.message : "Silinemedi";
+        if (message.includes("bağlı ürünler var")) {
+          setNeedsReassign(true);
+        } else {
+          toast.error(message);
+          setConfirmingDelete(false);
+        }
       }
     });
   }
+
+  function reassignAndDelete() {
+    if (!reassignToId) return;
+    startTransition(async () => {
+      try {
+        await deleteCategoryAction(category.id, reassignToId);
+        toast.success("Ürünler taşındı, kategori silindi");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Silinemedi");
+      }
+    });
+  }
+
+  const reassignOptions = all
+    .filter((c) => c.id !== category.id)
+    .sort((a, b) => a.name.localeCompare(b.name, "tr"));
 
   return (
     <div className={depth > 0 ? "border-l border-border/60" : undefined} style={{ marginLeft: depth > 0 ? 10 : 0 }}>
@@ -167,7 +190,44 @@ export function CategoryNode({
           </div>
         </div>
 
-        {confirmingDelete ? (
+        {needsReassign ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-caption text-muted-foreground">
+              Bağlı ürünler var, taşınacak kategoriyi seçin:
+            </span>
+            <select
+              value={reassignToId}
+              onChange={(e) => setReassignToId(e.target.value)}
+              className="h-8 rounded-md border border-input bg-transparent px-2 text-caption"
+            >
+              <option value="">Kategori seçin…</option>
+              {reassignOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={isPending || !reassignToId}
+              onClick={reassignAndDelete}
+            >
+              Taşı ve sil
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={isPending}
+              onClick={() => {
+                setNeedsReassign(false);
+                setConfirmingDelete(false);
+              }}
+            >
+              Vazgeç
+            </Button>
+          </div>
+        ) : confirmingDelete ? (
           <div className="flex items-center gap-2">
             <span className="text-caption text-muted-foreground">Emin misiniz?</span>
             <Button size="sm" variant="destructive" disabled={isPending} onClick={confirmDelete}>

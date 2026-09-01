@@ -199,14 +199,18 @@ const fieldClass =
 
 function ProducerForm({
   producer,
+  allProducers,
   onDone,
 }: {
   producer: ProducerRow | null;
+  allProducers: ProducerRow[];
   onDone: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [imageUrl, setImageUrl] = useState(producer?.imageUrl ?? "");
+  const [reassignToId, setReassignToId] = useState("");
+  const reassignOptions = allProducers.filter((p) => p.id !== producer?.id);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -233,6 +237,9 @@ function ProducerForm({
     setError(null);
     const formData = new FormData();
     formData.set("id", producer.id);
+    if (producer.productCount > 0 && reassignToId) {
+      formData.set("reassignToId", reassignToId);
+    }
     startTransition(async () => {
       try {
         await deleteProducerAction(formData);
@@ -319,12 +326,27 @@ function ProducerForm({
       </div>
 
       {producer && producer.productCount > 0 ? (
-        <p className="text-xs text-[var(--text-muted)]">
-          {producer.productCount} ürüne bağlı ·{" "}
-          <Link href="/panel/urunler" className="font-medium text-[var(--primary-text)] hover:underline">
-            ürünleri gör
-          </Link>
-        </p>
+        <div className="space-y-1.5 rounded-lg bg-[var(--warning-subtle)] px-3 py-2.5 text-xs text-[var(--warning-text)]">
+          <p>
+            {producer.productCount} ürüne bağlı ·{" "}
+            <Link href="/panel/urunler" className="font-medium underline">
+              ürünleri gör
+            </Link>
+          </p>
+          <p>Silmek için ürünleri başka bir üreticiye taşıyın:</p>
+          <select
+            value={reassignToId}
+            onChange={(e) => setReassignToId(e.target.value)}
+            className={cn(fieldClass, "h-8 text-xs")}
+          >
+            <option value="">Hedef üretici seçin…</option>
+            {reassignOptions.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </div>
       ) : null}
 
       {error ? (
@@ -339,13 +361,17 @@ function ProducerForm({
           <Button
             type="button"
             variant="outline"
-            disabled={isPending || producer.productCount > 0}
+            disabled={isPending || (producer.productCount > 0 && !reassignToId)}
             onClick={handleDelete}
-            title={producer.productCount > 0 ? "Önce bağlı ürünleri taşıyın" : undefined}
+            title={
+              producer.productCount > 0 && !reassignToId
+                ? "Silmek için önce hedef üretici seçin"
+                : undefined
+            }
             className="h-10 gap-1.5 text-[var(--danger-text)] hover:text-[var(--danger-text)]"
           >
             <Trash2 className="size-3.5" />
-            Sil
+            {producer.productCount > 0 ? "Taşı ve sil" : "Sil"}
           </Button>
         ) : null}
         <Button type="submit" disabled={isPending} className="h-10 flex-1 rounded-xl">
@@ -484,8 +510,12 @@ export function ProducerListSheet({ producers }: { producers: ProducerRow[] }) {
                 : "Üretici bilgilerini düzenleyin."}
             </SheetDescription>
           </SheetHeader>
-          {mode === "create" ? <ProducerForm producer={null} onDone={close} /> : null}
-          {mode === "detail" && selected ? <ProducerForm producer={selected} onDone={close} /> : null}
+          {mode === "create" ? (
+            <ProducerForm producer={null} allProducers={producers} onDone={close} />
+          ) : null}
+          {mode === "detail" && selected ? (
+            <ProducerForm producer={selected} allProducers={producers} onDone={close} />
+          ) : null}
         </SheetContent>
       </Sheet>
     </div>

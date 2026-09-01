@@ -12,6 +12,7 @@ import { getVariantStockSummary } from "@/infra/db/inventory";
 import { releaseOrderStockTx, reserveOrderStockTx } from "@/infra/db/order-stock";
 import { compare, fromCases } from "@/domain/weight";
 import { createShipment } from "@/infra/db/shipments";
+import { matchAndRecordSampleConversions } from "@/infra/db/samples";
 import type { OrderPaymentMethod } from "@/generated/prisma";
 
 const OPEN_ORDER_STATUSES: OrderStatus[] = [
@@ -422,6 +423,15 @@ export async function transitionOrder(
       dealerName: order.dealer.unvan,
       dealerEmail: order.dealer.email,
       status: to,
+    });
+  }
+
+  if (to === "CONFIRMED" && order.status !== "CONFIRMED") {
+    await matchAndRecordSampleConversions({
+      dealerId: order.dealerId,
+      orderId: order.id,
+      orderCreatedAt: order.createdAt,
+      variantIds: order.lines.map((l) => l.variantId),
     });
   }
 

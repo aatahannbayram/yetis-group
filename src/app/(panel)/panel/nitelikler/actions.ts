@@ -70,7 +70,8 @@ export async function updateAttributeAction(formData: FormData) {
 export async function deleteAttributeAction(formData: FormData) {
   await requireStaff();
   const id = String(formData.get("id") ?? "").trim();
+  const force = formData.get("force") === "true";
   if (!id) throw new Error("Nitelik gerekli");
-  await deleteAttributeDefinition(id);
+  await deleteAttributeDefinition(id, { force });
   revalidateCatalog();
 }

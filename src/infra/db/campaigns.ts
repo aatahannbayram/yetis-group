@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/infra/db/client";
 import { isPublishedAnnouncement, safeSiteHref, type SiteAnnouncement } from "@/domain/campaigns/live";
 import type { CampaignKind } from "@/generated/prisma";
@@ -97,5 +98,15 @@ export async function updateCampaign(
 }
 
 export async function deleteCampaign(id: string) {
-  return prisma.campaign.delete({ where: { id } });
+  try {
+    return await prisma.campaign.delete({ where: { id } });
+  } catch (e) {
+    if (
+      e instanceof Prisma.PrismaClientKnownRequestError &&
+      (e.code === "P2003" || e.code === "P2014")
+    ) {
+      throw new Error("Bu kampanya başka bir kayda bağlı olduğu için silinemedi.");
+    }
+    throw e;
+  }
 }

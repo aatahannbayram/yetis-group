@@ -41,6 +41,7 @@ export type LedgerEntryRow = {
   description: string;
   createdAt: string;
   reversesId: string | null;
+  returnRequestId: string | null;
 };
 
 export type DealerBalanceRow = {
@@ -372,7 +373,16 @@ export function DealerLedgerBoard({ dealers }: { dealers: DealerBalanceRow[] }) 
                       >
                         <div className="min-w-0">
                           <p className="text-sm text-stone-900 dark:text-zinc-50">
-                            {entry.description}
+                            {entry.returnRequestId ? (
+                              <a
+                                href={`/panel/iadeler?open=${entry.returnRequestId}`}
+                                className="underline decoration-dotted underline-offset-2 hover:text-[#1B5E3A] dark:hover:text-emerald-400"
+                              >
+                                {entry.description}
+                              </a>
+                            ) : (
+                              entry.description
+                            )}
                           </p>
                           <p className="text-xs text-stone-500">
                             {new Date(entry.createdAt).toLocaleString("tr-TR")}

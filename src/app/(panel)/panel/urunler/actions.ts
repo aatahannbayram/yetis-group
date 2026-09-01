@@ -19,6 +19,7 @@ import {
   createProduct,
   createVariant,
   deactivateVariant,
+  setProductActive,
   updateProductDescription,
   updateVariantPackaging,
 } from "@/infra/db/products";
@@ -164,6 +165,16 @@ export async function deactivateVariantAction(variantId: string, slug?: string) 
   }
   revalidatePath("/panel/urunler");
   revalidatePath("/panel/fiyat-listeleri");
+  revalidateStoreCatalog();
+  revalidatePath("/urunler");
+}
+
+export async function setProductActiveAction(productId: string, slug: string, active: boolean) {
+  await requireStaff();
+  await setProductActive(productId, active);
+  revalidatePath(`/panel/urunler/${slug}`);
+  revalidatePath(`/urunler/${slug}`);
+  revalidatePath("/panel/urunler");
   revalidateStoreCatalog();
   revalidatePath("/urunler");
 }

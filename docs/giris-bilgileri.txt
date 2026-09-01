@@ -40,6 +40,11 @@ DEMO HESAPLAR
    Şifre:   YetisDemo1!
    Giriş sonrası: /bayi
 
+4) Personel (plasiyer)
+   E-posta: plasiyer@yetisgrup.test
+   Şifre:   YetisDemo1!
+   Giriş sonrası: /panel (plasiyer menü)
+
 
 NOT
 ---

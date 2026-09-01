@@ -157,7 +157,7 @@ export async function moveCategory(input: {
   ]);
 }
 
-export async function deleteCategory(id: string) {
+export async function deleteCategory(id: string, opts?: { reassignToId?: string }) {
   const category = await prisma.category.findUniqueOrThrow({
     where: { id },
     include: {
@@ -169,8 +169,37 @@ export async function deleteCategory(id: string) {
   if (category.children.length > 0) {
     throw new Error("Bu kategorinin alt kategorileri var. Önce onları silin veya taşıyın.");
   }
-  if (category._count.primaryProducts > 0 || category._count.productLinks > 0) {
+
+  const hasProducts = category._count.primaryProducts > 0 || category._count.productLinks > 0;
+  if (hasProducts && !opts?.reassignToId) {
     throw new Error("Bu kategoriye bağlı ürünler var. Önce onları başka bir kategoriye taşıyın.");
+  }
+
+  if (hasProducts && opts?.reassignToId) {
+    const targetId = opts.reassignToId;
+    if (targetId === id) {
+      throw new Error("Hedef kategori, silinecek kategoriyle aynı olamaz.");
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.product.updateMany({
+        where: { primaryCategoryId: id },
+        data: { primaryCategoryId: targetId },
+      });
+      // Move secondary links; drop any that would collide with an existing link to the target.
+      const links = await tx.productCategory.findMany({ where: { categoryId: id } });
+      for (const link of links) {
+        const duplicate = await tx.productCategory.findUnique({
+          where: { productId_categoryId: { productId: link.productId, categoryId: targetId } },
+        });
+        if (duplicate) {
+          await tx.productCategory.delete({ where: { id: link.id } });
+        } else {
+          await tx.productCategory.update({ where: { id: link.id }, data: { categoryId: targetId } });
+        }
+      }
+      await tx.category.delete({ where: { id } });
+    });
+    return;
   }
 
   await prisma.category.delete({ where: { id } });

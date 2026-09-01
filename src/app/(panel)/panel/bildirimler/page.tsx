@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CheckCheck, Inbox, PackagePlus, RefreshCw } from "lucide-react";
+import { Bell, CheckCheck, FlaskConical, Inbox, PackagePlus, RefreshCw, Undo2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listStaffNotifications, countUnreadStaff } from "@/infra/db/notifications";
@@ -11,6 +11,10 @@ import { markStaffNotificationReadAction, markAllStaffNotificationsReadAction } 
 const TYPE_ICON = {
   ORDER_CREATED: PackagePlus,
   ORDER_STATUS_CHANGED: RefreshCw,
+  SAMPLE_REQUEST_CREATED: FlaskConical,
+  SAMPLE_REQUEST_STATUS_CHANGED: FlaskConical,
+  RETURN_REQUEST_CREATED: Undo2,
+  RETURN_REQUEST_STATUS_CHANGED: Undo2,
 } as const;
 
 export default async function AdminNotificationsPage() {

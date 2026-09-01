@@ -186,12 +186,26 @@ export async function updateAttributeDefinition(input: {
   });
 }
 
-export async function deleteAttributeDefinition(id: string) {
+export async function deleteAttributeDefinition(id: string, opts?: { force?: boolean }) {
   const attr = await prisma.attributeDefinition.findUnique({ where: { id } });
   if (!attr) throw new Error("Nitelik bulunamadı");
   if (attr.key === PACKAGING_ATTRIBUTE_KEY) {
     throw new Error("Ambalaj sistemi niteliği silinemez; seçenekleri düzenleyebilirsiniz");
   }
+
+  if (!opts?.force) {
+    const [valueCount, categoryLinkCount] = await Promise.all([
+      prisma.productAttributeValue.count({ where: { attributeId: id } }),
+      prisma.categoryAttribute.count({ where: { attributeId: id } }),
+    ]);
+    const usageCount = valueCount + categoryLinkCount;
+    if (usageCount > 0) {
+      throw new Error(
+        `Bu nitelik ${usageCount} yerde kullanılıyor (ürün değeri veya kategori bağlantısı). Silerseniz bu veriler de silinir.`,
+      );
+    }
+  }
+
   return prisma.attributeDefinition.delete({ where: { id } });
 }
 

@@ -411,6 +411,15 @@ export async function deactivateVariant(variantId: string) {
   });
 }
 
+/**
+ * Ürünü mağazadan/panel listelerinden gizler (arşivler). Gerçek silme değil:
+ * geçmiş sipariş/lot verisi bozulmasın diye Category/Producer gibi ürün de
+ * hard-delete edilmez, yalnızca pasife alınır.
+ */
+export async function setProductActive(productId: string, active: boolean) {
+  return prisma.product.update({ where: { id: productId }, data: { active } });
+}
+
 export type ProductWithVariants = NonNullable<Awaited<ReturnType<typeof getProductBySlug>>>;
 
 export function defaultVariant(product: ProductWithVariants) {

@@ -1,52 +1,11 @@
-import { money, type Money } from "@/domain/money";
+import { computeInvoiceTotals, type InvoiceLineInput, type InvoiceTotals } from "@/domain/invoicing/totals";
 
-export type ProformaLineInput = {
-  description: string;
-  quantity: number;
-  unitPriceKurus: number;
-  /** e.g. 100 = %1, 1000 = %10, 2000 = %20 */
-  vatRateBasisPoints: number;
-  /** Gross line total (VAT-inclusive) as stored on order lines today */
-  lineTotalKurus: number;
-};
+export type ProformaLineInput = InvoiceLineInput & { description: string };
+export type ProformaTotals = InvoiceTotals;
 
-export type ProformaTotals = {
-  subtotalKurus: Money;
-  vatKurus: Money;
-  totalKurus: Money;
-};
-
-/**
- * Order line totals are VAT-inclusive (unit × qty).
- * Split into net + VAT using integer kuruş math (no float).
- */
+/** @deprecated Use computeInvoiceTotals from @/domain/invoicing/totals directly. */
 export function computeProformaTotals(lines: readonly ProformaLineInput[]): ProformaTotals {
-  let netSum = 0;
-  let vatSum = 0;
-  let grossSum = 0;
-
-  for (const line of lines) {
-    const gross = line.lineTotalKurus;
-    const rate = line.vatRateBasisPoints;
-    if (!Number.isInteger(gross) || gross < 0) {
-      throw new Error(`Geçersiz satır tutarı: ${gross}`);
-    }
-    if (!Number.isInteger(rate) || rate < 0) {
-      throw new Error(`Geçersiz KDV oranı: ${rate}`);
-    }
-    // net = gross * 10000 / (10000 + rate) — integer division
-    const net = Math.floor((gross * 10000) / (10000 + rate));
-    const vat = gross - net;
-    netSum += net;
-    vatSum += vat;
-    grossSum += gross;
-  }
-
-  return {
-    subtotalKurus: money(netSum),
-    vatKurus: money(vatSum),
-    totalKurus: money(grossSum),
-  };
+  return computeInvoiceTotals(lines);
 }
 
 export function formatProformaNumber(year: number, seq: number): string {

@@ -19,6 +19,7 @@ export const PLASIYER_PANEL_PREFIXES = [
   "/panel/rotalar",
   "/panel/rota",
   "/panel/ziyaretler",
+  "/panel/numuneler",
 ] as const;
 
 export function effectiveStaffRole(

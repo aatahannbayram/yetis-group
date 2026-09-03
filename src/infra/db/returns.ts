@@ -456,7 +456,9 @@ async function issueReturnInvoiceTx(tx: DbTx, returnRequestId: string) {
     .filter((l): l is NonNullable<typeof l> => l !== null);
 
   if (creditableLines.length === 0) {
-    throw new Error("Kredilendirilebilir kalem yok; fatura kesilemez");
+    throw new Error(
+      "Kredilendirilebilir kalem yok; fatura kesilemez. \"Depo kabulünü kaydet\" adımında sağlam/hasarlı adet girildiğinden emin olun — hasarlı/imha adet yalnızca nedeni Yetiş kaynaklıysa (hatalı ürün, hasarlı geldi, yanlış ürün, SKT) kredilendirilir.",
+    );
   }
 
   const totals = computeInvoiceTotals(creditableLines);

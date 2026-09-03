@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Wand2 } from "lucide-react";
+import { Check, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { slugifyTr } from "@/domain/catalog/slug";
-import { updateCategoryDetailsAction } from "@/app/(panel)/panel/kategoriler/actions";
+import {
+  loadCategoryAttributeConfigAction,
+  setCategoryAttributesAction,
+  updateCategoryDetailsAction,
+} from "@/app/(panel)/panel/kategoriler/actions";
 import type { CatRow } from "@/components/admin/category-node";
+import { cn } from "@/lib/utils";
 
 const fieldClass =
   "h-10 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 text-sm outline-none transition-shadow focus-visible:border-[var(--primary-solid)] focus-visible:ring-4 focus-visible:ring-[var(--primary-solid)]/15";
@@ -130,7 +135,108 @@ function CategoryEditForm({
           {isPending ? "Kaydediliyor…" : "Kaydet"}
         </Button>
       </div>
+
+      <CategoryAttributesSection categoryId={category.id} />
     </form>
+  );
+}
+
+function CategoryAttributesSection({ categoryId }: { categoryId: string }) {
+  const [state, setState] = useState<{ all: { id: string; name: string }[]; selectedIds: string[] } | null>(
+    null,
+  );
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    let cancelled = false;
+    loadCategoryAttributeConfigAction(categoryId)
+      .then((res) => {
+        if (cancelled) return;
+        setState(res);
+        setSelected(new Set(res.selectedIds));
+      })
+      .catch(() => {
+        if (!cancelled) toast.error("Nitelikler yüklenemedi");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleSave() {
+    startTransition(async () => {
+      try {
+        await setCategoryAttributesAction(categoryId, [...selected]);
+        toast.success("Nitelik seti güncellendi");
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Güncellenemedi");
+      }
+    });
+  }
+
+  const dirty = state ? state.selectedIds.length !== selected.size || state.selectedIds.some((id) => !selected.has(id)) : false;
+
+  return (
+    <div className="space-y-2 border-t border-[var(--border)] pt-5">
+      <Label>Bu kategoride gösterilecek nitelikler</Label>
+      <p className="text-caption text-muted-foreground">
+        Hiçbiri seçilmezse ürün düzenleme ekranında tüm nitelikler gösterilir. En az bir seçim
+        yapıldığında yalnızca burada işaretlenenler görünür (ör. şarküteride &quot;süt tipi&quot;
+        değil &quot;et türü&quot;).
+      </p>
+      {loading ? (
+        <p className="py-3 text-caption text-muted-foreground">Yükleniyor…</p>
+      ) : state && state.all.length > 0 ? (
+        <div className="flex flex-wrap gap-2 pt-1" role="group" aria-label="Nitelikler">
+          {state.all.map((attr) => {
+            const checked = selected.has(attr.id);
+            return (
+              <label
+                key={attr.id}
+                className={cn(
+                  "group inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-sm transition-colors",
+                  checked
+                    ? "border-[var(--primary-solid)] bg-[var(--primary-subtle)] text-[var(--primary-text)]"
+                    : "border-[var(--border)] bg-[var(--surface)] text-muted-foreground",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(attr.id)}
+                  className="sr-only"
+                />
+                <Check className={cn("size-3.5", checked ? "opacity-100" : "opacity-0")} aria-hidden />
+                {attr.name}
+              </label>
+            );
+          })}
+        </div>
+      ) : (
+        <p className="py-3 text-caption text-muted-foreground">Henüz nitelik tanımlanmamış.</p>
+      )}
+      {!loading && state && state.all.length > 0 ? (
+        <div className="flex justify-end pt-2">
+          <Button type="button" size="sm" variant="outline" onClick={handleSave} disabled={isPending || !dirty}>
+            {isPending ? "Kaydediliyor…" : "Nitelik setini kaydet"}
+          </Button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 

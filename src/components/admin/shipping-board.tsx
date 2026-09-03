@@ -159,20 +159,26 @@ function VariantCard({ row }: { row: ShippingRow }) {
         ))}
       </div>
 
-      <div className="mt-4 flex items-center gap-2 border-t border-border/60 pt-4">
-        <Input
-          value={requiredKg}
-          onChange={(e) => setRequiredKg(e.target.value)}
-          type="number"
-          step="0.001"
-          min="0"
-          placeholder="Kaç kg?"
-          className="h-9"
-        />
-        <Button type="button" size="sm" onClick={suggest} className="shrink-0 gap-1.5">
-          <Sparkles className="size-3.5" />
-          Partileri hesapla
-        </Button>
+      <div className="mt-4 border-t border-border/60 pt-4">
+        <p className="mb-2 text-caption text-muted-foreground">
+          Sevk edilecek miktarı girin; SKT&apos;si en yakın partiden başlayarak (FEFO) hangi
+          partilerden ne kadar çekileceğini hesaplar.
+        </p>
+        <div className="flex items-center gap-2">
+          <Input
+            value={requiredKg}
+            onChange={(e) => setRequiredKg(e.target.value)}
+            type="number"
+            step="0.001"
+            min="0"
+            placeholder="Kaç kg sevk edilecek?"
+            className="h-9"
+          />
+          <Button type="button" size="sm" onClick={suggest} className="shrink-0 gap-1.5">
+            <Sparkles className="size-3.5" />
+            Partileri hesapla
+          </Button>
+        </div>
       </div>
 
       <AnimatePresence>

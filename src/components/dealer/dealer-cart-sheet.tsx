@@ -135,7 +135,7 @@ export function DealerCartSheet({
       window.setTimeout(() => {
         close();
         resetCheckout();
-        router.push(`/bayi/siparislerim?yeni=${res.orderId}`);
+        router.push(`/bayi/teslimat?yeni=${res.orderId}`);
         router.refresh();
       }, 1100);
     });

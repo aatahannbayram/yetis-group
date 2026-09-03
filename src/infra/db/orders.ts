@@ -338,6 +338,7 @@ export async function listOrdersForDealer(dealerId: string) {
         },
       },
       events: { orderBy: { createdAt: "desc" }, take: 1 },
+      shipments: { select: { id: true } },
     },
   });
 }

@@ -12,6 +12,11 @@ import {
   moveCategory,
   updateCategory,
 } from "@/infra/db/categories";
+import {
+  getCategoryAttributeIds,
+  listAttributeDefinitions,
+  setCategoryAttributes,
+} from "@/infra/db/attributes";
 
 async function requireStaff() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -79,6 +84,28 @@ export async function getCategoryProductsAction(categoryId: string) {
   await requireStaff();
   if (!categoryId) throw new Error("id gerekli");
   return getCategoryProducts(categoryId);
+}
+
+export async function loadCategoryAttributeConfigAction(categoryId: string) {
+  await requireStaff();
+  if (!categoryId) throw new Error("id gerekli");
+  const [all, selectedIds] = await Promise.all([
+    listAttributeDefinitions(),
+    getCategoryAttributeIds(categoryId),
+  ]);
+  return {
+    all: all.map((a) => ({ id: a.id, name: a.name })),
+    selectedIds,
+  };
+}
+
+export async function setCategoryAttributesAction(categoryId: string, attributeIds: string[]) {
+  await requireStaff();
+  if (!categoryId) throw new Error("id gerekli");
+  await setCategoryAttributes(categoryId, attributeIds);
+  revalidatePath("/panel/kategoriler");
+  revalidatePath("/(panel)/panel/urunler/[slug]", "layout");
+  revalidatePath("/(store)/urunler/[slug]", "layout");
 }
 
 export async function moveCategoryAction(input: {

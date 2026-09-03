@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { getProductBySlug, defaultVariant } from "@/infra/db/products";
 import { getLotsForVariant, getProductStockSummary } from "@/infra/db/inventory";
-import { listAttributeDefinitions, listPackagingOptions, isProductFacingAttribute } from "@/infra/db/attributes";
+import {
+  listAttributeDefinitionsForCategory,
+  listPackagingOptions,
+  isProductFacingAttribute,
+} from "@/infra/db/attributes";
 import { getGroupPricesForVariants } from "@/infra/db/pricing";
 import { ProductArchiveToggle } from "@/components/admin/product-archive-toggle";
 import { ProductStockTab } from "@/components/admin/product-stock-tab";
@@ -28,6 +32,7 @@ import {
   ProductDetailEditor,
   TrackedForm,
 } from "@/components/admin/product-detail-editor";
+import { AttributeOptionPicker } from "@/components/admin/attribute-option-picker";
 import { formatMoney } from "@/lib/format/money";
 import { money } from "@/domain/money";
 import { cinsLine, packLabel } from "@/lib/format/packaging";
@@ -75,7 +80,7 @@ export default async function AdminProductDetailPage({
       }),
     ),
     getProductStockSummary(product.id),
-    listAttributeDefinitions(),
+    listAttributeDefinitionsForCategory(product.primaryCategoryId),
     getGroupPricesForVariants(product.variants.map((v) => v.id)),
     listPackagingOptions(),
   ]);
@@ -384,47 +389,13 @@ export default async function AdminProductDetailPage({
                         </label>
                       ) : null}
                       {(attr.type === "SELECT" || attr.type === "MULTI_SELECT") && (
-                        <div
-                          className="mt-3 flex flex-wrap gap-2"
-                          role={attr.type === "SELECT" ? "radiogroup" : "group"}
-                          aria-label={attr.name}
-                        >
-                          {attr.options.map((opt) =>
-                            attr.type === "SELECT" ? (
-                              <label
-                                key={opt.id}
-                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-stone-200 bg-white px-3.5 text-sm text-stone-700 transition-colors has-[:checked]:border-[#1B5E3A] has-[:checked]:bg-[#1B5E3A] has-[:checked]:text-white has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300"
-                              >
-                                <input
-                                  type="radio"
-                                  name="optionIds"
-                                  value={opt.id}
-                                  defaultChecked={selected.has(opt.id)}
-                                  className="sr-only"
-                                />
-                                {opt.label}
-                              </label>
-                            ) : (
-                              <label
-                                key={opt.id}
-                                className="group inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3.5 text-sm text-stone-700 transition-colors has-[:checked]:border-green-600 has-[:checked]:bg-green-50 has-[:checked]:text-green-700 has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-[#1B5E3A]/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300 dark:has-[:checked]:border-green-600 dark:has-[:checked]:bg-green-950/40 dark:has-[:checked]:text-green-400"
-                              >
-                                <input
-                                  type="checkbox"
-                                  name="optionIds"
-                                  value={opt.id}
-                                  defaultChecked={selected.has(opt.id)}
-                                  className="sr-only"
-                                />
-                                <Check
-                                  className="size-3.5 opacity-0 group-has-[:checked]:opacity-100"
-                                  aria-hidden
-                                />
-                                {opt.label}
-                              </label>
-                            ),
-                          )}
-                        </div>
+                        <AttributeOptionPicker
+                          type={attr.type}
+                          name="optionIds"
+                          groupLabel={attr.name}
+                          options={attr.options.map((opt) => ({ id: opt.id, label: opt.label }))}
+                          defaultSelectedIds={[...selected]}
+                        />
                       )}
                     </TrackedForm>
                   );

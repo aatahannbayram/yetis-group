@@ -19,6 +19,46 @@ export async function listAttributeDefinitions() {
 }
 
 /**
+ * Kategoriye özel nitelik seti henüz tanımlanmadıysa (categoryAttribute
+ * kaydı yok) tüm nitelikler gösterilir; geriye dönük uyumluluk için varsayılan
+ * budur. Bir kategoriye en az bir nitelik atandığı andan itibaren o kategori
+ * yalnızca atanmış nitelikleri gösterir (ör. şarküteride "süt tipi" yok).
+ */
+export async function listAttributeDefinitionsForCategory(categoryId: string) {
+  const [all, links] = await Promise.all([
+    listAttributeDefinitions(),
+    prisma.categoryAttribute.findMany({ where: { categoryId }, select: { attributeId: true } }),
+  ]);
+  if (links.length === 0) return all;
+  const allowed = new Set(links.map((l) => l.attributeId));
+  return all.filter((a) => allowed.has(a.id));
+}
+
+export async function getCategoryAttributeIds(categoryId: string) {
+  const links = await prisma.categoryAttribute.findMany({
+    where: { categoryId },
+    select: { attributeId: true },
+  });
+  return links.map((l) => l.attributeId);
+}
+
+/** Boş liste = kısıtlamayı kaldır (kategori yeniden "tüm nitelikler" moduna döner). */
+export async function setCategoryAttributes(categoryId: string, attributeIds: string[]) {
+  await prisma.$transaction([
+    prisma.categoryAttribute.deleteMany({
+      where: { categoryId, attributeId: { notIn: attributeIds } },
+    }),
+    ...attributeIds.map((attributeId) =>
+      prisma.categoryAttribute.upsert({
+        where: { categoryId_attributeId: { categoryId, attributeId } },
+        create: { categoryId, attributeId },
+        update: {},
+      }),
+    ),
+  ]);
+}
+
+/**
  * Ensures AttributeDefinition `ambalaj` exists, then returns its options.
  * Falls back to PACKAGING_OPTIONS if the row cannot be created.
  */

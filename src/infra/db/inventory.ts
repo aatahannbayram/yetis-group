@@ -335,14 +335,20 @@ export async function createLot(input: {
   expirationDate: Date;
   initialKg: number;
 }) {
+  if (!Number.isFinite(input.initialKg) || input.initialKg < 0) {
+    throw new Error("Geçerli kg girin (stok sonra eklenecekse 0 yazın)");
+  }
   return prisma.lot.create({
     data: {
       variantId: input.variantId,
       lotNumber: input.lotNumber,
       expirationDate: input.expirationDate,
-      movements: {
-        create: { type: "GIRIS", quantityKg: input.initialKg, note: "İlk stok girişi" },
-      },
+      movements:
+        input.initialKg > 0
+          ? {
+              create: { type: "GIRIS", quantityKg: input.initialKg, note: "İlk stok girişi" },
+            }
+          : undefined,
     },
   });
 }

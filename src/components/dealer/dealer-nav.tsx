@@ -53,8 +53,8 @@ const nav: {
   { href: "/bayi/teslimat", label: "Teslimat", icon: Truck, primary: true },
   { href: "/bayi/siparislerim", label: "Geçmiş", icon: History },
   { href: "/bayi/cari", label: "Cari", icon: CircleDollarSign, primary: true },
-  { href: "/bayi/numune", label: "Numune", icon: FlaskConical },
   { href: "/bayi/iade", label: "İade", icon: Undo2 },
+  { href: "/bayi/numune", label: "Numune", icon: FlaskConical },
   { href: "/bayi/belgeler", label: "Belgeler", icon: FileStack },
   { href: "/bayi/firsatlar", label: "Fırsatlar", icon: BadgePercent },
   { href: "/bayi/adreslerim", label: "Adresler", icon: MapPinned },
@@ -247,8 +247,8 @@ export function DealerNav({
           </div>
         </div>
 
-        <div className="hidden md:block">
-          <div className="mx-auto flex max-w-6xl gap-1.5 overflow-x-auto px-3 pb-3 sm:px-4">
+        <div className="border-t border-[var(--panel-border)]/60 md:border-t-0">
+          <div className="mx-auto flex max-w-6xl gap-1.5 overflow-x-auto px-3 py-2 sm:px-4 md:pb-3 md:pt-0">
             {nav.slice(6).map((item) => {
               const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (

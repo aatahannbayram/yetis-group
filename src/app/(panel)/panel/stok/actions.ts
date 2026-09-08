@@ -47,12 +47,15 @@ export async function createLotFromStockAction(formData: FormData) {
   const variantId = String(formData.get("variantId") ?? "").trim();
   const lotNumber = String(formData.get("lotNumber") ?? "").trim();
   const expirationDate = String(formData.get("expirationDate") ?? "").trim();
-  const initialKg = Number(String(formData.get("initialKg") ?? "").replace(",", "."));
+  const initialRaw = String(formData.get("initialKg") ?? "").trim();
+  const initialKg = initialRaw === "" ? 0 : Number(initialRaw.replace(",", "."));
 
   if (!variantId) throw new Error("Varyant gerekli");
   if (!lotNumber) throw new Error("Lot no gerekli");
   if (!expirationDate) throw new Error("SKT gerekli");
-  if (!Number.isFinite(initialKg) || initialKg <= 0) throw new Error("Geçerli kg girin");
+  if (!Number.isFinite(initialKg) || initialKg < 0) {
+    throw new Error("Geçerli kg girin (şimdilik stoksuz lot için 0)");
+  }
 
   await createLot({
     variantId,

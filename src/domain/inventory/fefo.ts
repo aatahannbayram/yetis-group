@@ -56,7 +56,9 @@ export function suggestFefoShipment(
   }
 
   if (compare(remaining, zeroKg) > 0) {
-    throw new InventoryError(`Yeterli stok yok: ${remaining.toString()} kg eksik.`);
+    throw new InventoryError(
+      `Yeterli sevk edilebilir stok yok (${remaining.toString()} kg eksik). Lot/stok girişi yapılmamış olabilir.`,
+    );
   }
 
   return allocations;

@@ -19,6 +19,7 @@ import {
   loadReturnableOrderLinesAction,
   uploadReturnPhotoAction,
 } from "@/app/(dealer-portal)/bayi/iade/actions";
+import { normalizeImageFile } from "@/lib/image/normalize-upload";
 
 const STATUS_LABEL: Record<ReturnRequestStatus, string> = {
   OLUSTURULDU: "Oluşturuldu",
@@ -78,7 +79,7 @@ export function DealerReturnRequests({
           type="button"
           onClick={() => setSheetOpen(true)}
           disabled={deliveredOrders.length === 0}
-          className="gap-1.5"
+          className="h-11 w-full gap-1.5 sm:h-9 sm:w-auto"
         >
           <Plus className="size-4" aria-hidden />
           Yeni iade talebi
@@ -178,6 +179,15 @@ function NewReturnRequestSheet({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -233,11 +243,16 @@ function NewReturnRequestSheet({
   async function handlePhotoUpload(orderLineId: string, file: File) {
     setUploadingFor(orderLineId);
     try {
+      const jpeg = await normalizeImageFile(file);
       const formData = new FormData();
-      formData.set("file", file);
-      const url = await uploadReturnPhotoAction(formData);
+      formData.set("file", jpeg);
+      const result = await uploadReturnPhotoAction(formData);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
       updateDraft(orderLineId, {
-        photoUrls: [...(drafts[orderLineId]?.photoUrls ?? []), url],
+        photoUrls: [...(drafts[orderLineId]?.photoUrls ?? []), result.url],
       });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Fotoğraf yüklenemedi");
@@ -267,24 +282,24 @@ function NewReturnRequestSheet({
       }
     }
     startTransition(async () => {
-      try {
-        const result = await createReturnRequestAction({
-          orderId,
-          items: items.map((i) => ({
-            orderLineId: i.orderLineId,
-            quantity: i.quantity,
-            reason: i.reason,
-            lotNumber: i.lotNumber || undefined,
-            photoUrls: i.photoUrls,
-            note: i.note || undefined,
-          })),
-        });
-        toast.success(`${result.returnNo} numaralı iade talebiniz alındı.`);
-        reset();
-        onOpenChange(false);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Talep gönderilemedi");
+      const result = await createReturnRequestAction({
+        orderId,
+        items: items.map((i) => ({
+          orderLineId: i.orderLineId,
+          quantity: i.quantity,
+          reason: i.reason,
+          lotNumber: i.lotNumber || undefined,
+          photoUrls: i.photoUrls,
+          note: i.note || undefined,
+        })),
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
+      toast.success(`${result.returnNo} numaralı iade talebiniz alındı.`);
+      reset();
+      onOpenChange(false);
     });
   }
 
@@ -305,13 +320,17 @@ function NewReturnRequestSheet({
         onOpenChange(next);
       }}
     >
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetHeader>
+      <SheetContent
+        side={isMobile ? "bottom" : "right"}
+        overlayClassName="z-[80]"
+        className="z-[80] flex h-[min(92dvh,100%)] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl data-[side=bottom]:h-[min(92dvh,100%)] data-[side=bottom]:max-h-[92dvh]"
+      >
+        <SheetHeader className="shrink-0 pr-14">
           <SheetTitle>Yeni iade talebi</SheetTitle>
           <SheetDescription>Teslim edilmiş bir sipariş seçin, iade edilecek ürünleri işaretleyin.</SheetDescription>
         </SheetHeader>
 
-        <div className="space-y-4 px-4 pb-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-4">
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-[var(--text-muted)]">Sipariş</label>
             <select
@@ -403,21 +422,39 @@ function NewReturnRequestSheet({
                         />
                         {isPhotoRequired(draft.reason) ? (
                           <div className="space-y-1.5">
-                            <label className="flex w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[var(--panel-border)] px-3 py-1.5 text-caption text-muted-foreground hover:bg-muted">
-                              <Upload className="size-3.5" />
-                              {uploadingFor === line.orderLineId ? "Yükleniyor…" : "Fotoğraf ekle (zorunlu)"}
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                disabled={uploadingFor === line.orderLineId}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) void handlePhotoUpload(line.orderLineId, file);
-                                  e.target.value = "";
-                                }}
-                              />
-                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              <label className="flex min-h-11 w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[var(--panel-border)] px-3 py-2 text-caption text-muted-foreground hover:bg-muted">
+                                <Upload className="size-3.5" />
+                                {uploadingFor === line.orderLineId ? "Yükleniyor…" : "Galeriden fotoğraf"}
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  disabled={uploadingFor === line.orderLineId}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void handlePhotoUpload(line.orderLineId, file);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                              <label className="flex min-h-11 w-fit cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[var(--panel-border)] px-3 py-2 text-caption text-muted-foreground hover:bg-muted sm:hidden">
+                                <Upload className="size-3.5" />
+                                Kamera
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  capture="environment"
+                                  className="hidden"
+                                  disabled={uploadingFor === line.orderLineId}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void handlePhotoUpload(line.orderLineId, file);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
                             {draft.photoUrls.length > 0 ? (
                               <div className="flex gap-1.5">
                                 {draft.photoUrls.map((url) => (
@@ -436,13 +473,15 @@ function NewReturnRequestSheet({
             </ul>
           ) : null}
 
+        </div>
+
+        <div className="shrink-0 space-y-2 border-t border-[var(--panel-border)] bg-[var(--panel-surface)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {error ? (
             <p className="rounded-lg bg-[var(--danger-subtle)] px-3 py-2 text-xs text-[var(--danger-text)]">
               {error}
             </p>
           ) : null}
-
-          <Button type="button" onClick={handleSubmit} disabled={isPending} className="h-10 w-full rounded-xl">
+          <Button type="button" onClick={handleSubmit} disabled={isPending} className="h-11 w-full rounded-xl">
             {isPending ? "Gönderiliyor…" : "İade talebini gönder"}
           </Button>
         </div>

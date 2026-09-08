@@ -46,12 +46,21 @@ export async function reserveOrderStockTx(
     );
   }
 
+  const variantMeta = await tx.productVariant.findMany({
+    where: { id: { in: [...new Set(variantIds)] } },
+    select: { id: true, sku: true, product: { select: { name: true } } },
+  });
+  const labelByVariant = new Map(
+    variantMeta.map((v) => [v.id, `${v.product.name} (${v.sku})`]),
+  );
+
   const allocations = allocateOrderLinesFefo(
     lotsByVariant,
     order.lines.map((line) => ({
       orderLineId: line.id,
       variantId: line.variantId,
       requiredKg: fromCases(line.quantity, line.variant.unitFactor.toString()),
+      label: labelByVariant.get(line.variantId),
     })),
   );
 

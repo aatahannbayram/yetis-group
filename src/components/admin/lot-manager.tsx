@@ -77,12 +77,13 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!lotNumber || !expirationDate || !initialKg) return;
+    if (!lotNumber || !expirationDate) return;
     startTransition(async () => {
+      const kg = initialKg.trim() === "" ? 0 : Number(initialKg.replace(",", "."));
       await createLotAction(variantId, slug, {
         lotNumber,
         expirationDate,
-        initialKg: Number(initialKg.replace(",", ".")),
+        initialKg: Number.isFinite(kg) ? kg : 0,
       });
       setLotNumber("");
       setExpirationDate("");
@@ -116,14 +117,13 @@ function NewLotForm({ variantId, slug }: { variantId: string; slug: string }) {
         />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor={initialKgId}>Giriş Miktarı (kg)</Label>
+        <Label htmlFor={initialKgId}>Giriş miktarı (kg, opsiyonel)</Label>
       <Input
         id={initialKgId}
         inputMode="decimal"
         value={initialKg}
         onChange={(e) => setInitialKg(e.target.value)}
-        placeholder="17,5"
-        required
+        placeholder="Boş bırakılırsa 0"
       />
       </div>
       <Button type="submit" disabled={isPending} className="gap-1.5">

@@ -15,11 +15,16 @@ export async function loadReturnableOrderLinesAction(orderId: string) {
   return getReturnableOrderLines(orderId);
 }
 
-export async function uploadReturnPhotoAction(formData: FormData) {
-  await requireDealerPortal();
-  const file = formData.get("file");
-  if (!(file instanceof File)) throw new Error("Dosya gerekli");
-  return saveUploadedImage(file, "iade");
+export async function uploadReturnPhotoAction(formData: FormData): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  try {
+    await requireDealerPortal();
+    const file = formData.get("file");
+    if (!(file instanceof File)) return { ok: false, error: "Dosya gerekli" };
+    const url = await saveUploadedImage(file, "iade");
+    return { ok: true, url };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Fotoğraf yüklenemedi" };
+  }
 }
 
 export async function createReturnRequestAction(input: {
@@ -32,21 +37,25 @@ export async function createReturnRequestAction(input: {
     photoUrls?: string[];
     note?: string;
   }[];
-}) {
-  const ctx = await requireDealerPortal();
-  if (
-    !can("return:create", { isStaff: false, staffRole: null, userId: ctx.userId, dealerId: ctx.dealerId })
-  ) {
-    throw new Error("Yetkisiz");
+}): Promise<{ ok: true; returnNo: string } | { ok: false; error: string }> {
+  try {
+    const ctx = await requireDealerPortal();
+    if (
+      !can("return:create", { isStaff: false, staffRole: null, userId: ctx.userId, dealerId: ctx.dealerId })
+    ) {
+      return { ok: false, error: "Yetkisiz" };
+    }
+    const request = await createReturnRequest({
+      dealerId: ctx.dealerId,
+      orderId: input.orderId,
+      createdByUserId: ctx.userId,
+      createdByRole: "BAYI",
+      items: input.items,
+    });
+    revalidatePath("/bayi/iade");
+    revalidatePath("/panel/iadeler");
+    return { ok: true, returnNo: request.returnNo };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Talep gönderilemedi" };
   }
-  const request = await createReturnRequest({
-    dealerId: ctx.dealerId,
-    orderId: input.orderId,
-    createdByUserId: ctx.userId,
-    createdByRole: "BAYI",
-    items: input.items,
-  });
-  revalidatePath("/bayi/iade");
-  revalidatePath("/panel/iadeler");
-  return { returnNo: request.returnNo };
 }

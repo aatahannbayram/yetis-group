@@ -11,6 +11,7 @@ import { captureMockPayment } from "@/infra/payments/mock-provider";
 import { getVariantStockSummary } from "@/infra/db/inventory";
 import { releaseOrderStockTx, reserveOrderStockTx } from "@/infra/db/order-stock";
 import { compare, fromCases } from "@/domain/weight";
+import { stockShortageMessage } from "@/domain/inventory/stock-copy";
 import { createShipment } from "@/infra/db/shipments";
 import { matchAndRecordSampleConversions } from "@/infra/db/samples";
 import type { OrderPaymentMethod } from "@/generated/prisma";
@@ -159,7 +160,12 @@ export async function createOrder(input: {
       const { shippableKg } = await getVariantStockSummary(line.variantId);
       const requestedKg = fromCases(line.quantity, unitFactor.toString());
       if (compare(requestedKg, shippableKg) > 0) {
-        throw new Error("Stok yetersiz");
+        const variant = await prisma.productVariant.findUnique({
+          where: { id: line.variantId },
+          select: { sku: true, product: { select: { name: true } } },
+        });
+        const label = variant ? `${variant.product.name} (${variant.sku})` : "Ürün";
+        throw new Error(stockShortageMessage({ label, requestedKg, shippableKg }));
       }
       const lineTotalKurus = unitPriceKurus * line.quantity;
       return {

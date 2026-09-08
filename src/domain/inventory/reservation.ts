@@ -1,10 +1,11 @@
 import { subtract, type Kg } from "@/domain/weight";
-import { suggestFefoShipment, type LotSummary } from "@/domain/inventory/fefo";
+import { InventoryError, suggestFefoShipment, type LotSummary } from "@/domain/inventory/fefo";
 
 export type OrderLineDemand = {
   orderLineId: string;
   variantId: string;
   requiredKg: Kg;
+  label?: string;
 };
 
 export type OrderStockAllocation = {
@@ -35,7 +36,18 @@ export function allocateOrderLinesFefo(
   const out: OrderStockAllocation[] = [];
   for (const line of lines) {
     const lots = remaining.get(line.variantId) ?? [];
-    const picks = suggestFefoShipment(lots, line.requiredKg, asOf);
+    let picks;
+    try {
+      picks = suggestFefoShipment(lots, line.requiredKg, asOf);
+    } catch (err) {
+      if (err instanceof InventoryError) {
+        const who = line.label?.trim() || line.variantId;
+        throw new InventoryError(
+          `${who}: stok girilmemiş veya yetersiz (${line.requiredKg.toString()} kg istendi). ${err.message}`,
+        );
+      }
+      throw err;
+    }
     for (const pick of picks) {
       out.push({
         orderLineId: line.orderLineId,

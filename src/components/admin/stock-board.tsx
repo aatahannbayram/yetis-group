@@ -472,13 +472,12 @@ function CreateLotPanel({
         <Input id="expirationDate" name="expirationDate" type="date" required />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="initialKg">İlk giriş (kg)</Label>
+        <Label htmlFor="initialKg">İlk giriş (kg, opsiyonel)</Label>
         <Input
           id="initialKg"
           name="initialKg"
-          required
           inputMode="decimal"
-          placeholder="17,5"
+          placeholder="Boş lot için boş bırakın"
         />
       </div>
       <div className="flex items-end gap-2 sm:col-span-2 lg:col-span-5">

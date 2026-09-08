@@ -3,6 +3,7 @@ import { prisma } from "@/infra/db/client";
 import { getVariantUnitPrice } from "@/infra/db/pricing";
 import { getVariantStockSummary } from "@/infra/db/inventory";
 import { compare, fromCases } from "@/domain/weight";
+import { stockShortageMessage } from "@/domain/inventory/stock-copy";
 
 const GUEST_COOKIE = "yetis_cart_guest";
 
@@ -10,7 +11,12 @@ async function assertStockAvailable(variantId: string, unitFactor: string, quant
   const { shippableKg } = await getVariantStockSummary(variantId);
   const requestedKg = fromCases(quantity, unitFactor);
   if (compare(requestedKg, shippableKg) > 0) {
-    throw new Error("Stok yetersiz");
+    const variant = await prisma.productVariant.findUnique({
+      where: { id: variantId },
+      select: { sku: true, product: { select: { name: true } } },
+    });
+    const label = variant ? `${variant.product.name} (${variant.sku})` : "Ürün";
+    throw new Error(stockShortageMessage({ label, requestedKg, shippableKg }));
   }
 }
 

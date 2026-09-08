@@ -214,11 +214,12 @@ export async function createLotAction(
   input: { lotNumber: string; expirationDate: string; initialKg: number },
 ) {
   await requireStaff();
+  const initialKg = Number.isFinite(input.initialKg) ? input.initialKg : 0;
   await createLot({
     variantId,
     lotNumber: input.lotNumber,
     expirationDate: new Date(input.expirationDate),
-    initialKg: input.initialKg,
+    initialKg,
   });
   revalidatePath(`/panel/urunler/${slug}`);
   revalidatePath("/panel/stok");

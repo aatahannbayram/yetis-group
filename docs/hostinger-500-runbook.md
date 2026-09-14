@@ -34,32 +34,58 @@ Bu doküman 2026-09-14'teki olayın kök nedenini ve tanı adımlarını kayıt 
 
 ## 2026-09-14 olayı: kök neden
 
-`@swc/helpers`, Next.js'in kendi `package.json`'ında bağımlılık olarak tanımlı ama bizim
-`package.json`'ımızda **doğrudan bağımlılık değildi** — sadece `next`'in transitive
-bağımlılığı olarak `node_modules/.pnpm/@swc+helpers@.../` içinde duruyordu.
+`@swc/helpers`, Next.js'in kendi `package.json`'ında bağımlılık olarak tanımlı. pnpm normalde
+bunu `node_modules/.pnpm/@swc+helpers@.../` içine koyup gerektiği yerlere **symlink** olarak
+bağlar (next'in kendi iç node_modules'ı dahil) — bu symlink'ler sayesinde Next'in derlenmiş
+kodu `require("@swc/helpers/...")` ile bunu bulabiliyor, **local'de ve normal koşullarda**.
 
-`scripts/prepare-swc-wasm.mjs` içindeki not zaten bunu işaret ediyor: Hostinger'ın build
-sandbox'ı bazen `pnpm`'i düzgün çözemiyor ve kurulum farklı bir hoisting davranışına
-düşüyor. Bu durumda Next'in derlenmiş çıktısının `require("@swc/helpers/...")` ile beklediği
-üst-seviye `node_modules/@swc/helpers` sembolik bağı oluşmuyor. Sonuç: **her** request'te
-(health check dahil) modül bulunamıyor, `uncaughtException` fırlıyor,
-`src/instrumentation.ts` süreci `process.exit(1)` ile kapatıyor, Hostinger yeniden
-başlatmaya çalışsa da (veya başlatmasa da) aynı bozuk `node_modules` ile aynı hatayı
-tekrar üretiyor → sürekli 500.
+Hostinger her deploy'u yeni bir versiyon dizinine kopyalıyor
+(`hbuilds/versions/<uuid>/nodejs/...`). Bu kopyalama adımı pnpm'in symlink yapısını sağlam
+tutmuyor: `next`'in kendi `@swc/helpers` symlink'i (ki bu her zaman vardı, bizim
+`package.json`'ımızda doğrudan bağımlılık olsun olmasın) kopyalama sonrası kırık/eksik
+kalıyor. Sonuç: **her** request'te (health check dahil) modül bulunamıyor,
+`uncaughtException` fırlıyor, `src/instrumentation.ts` süreci `process.exit(1)` ile
+kapatıyor, yeniden başlayan process aynı bozuk kopyayla aynı hatayı tekrar üretiyor →
+sürekli 500.
 
-## Uygulanan fix
+## Denenip işe yaramayan adımlar (öğretici, sırayla)
 
-`package.json`'a `next`'in kullandığı sürümle birebir aynı pin ile doğrudan bağımlılık eklendi:
+1. **`@swc/helpers`'ı `package.json`'a doğrudan bağımlılık olarak ekle** (commit `4c5207d`).
+   Mantık: "belki sadece transitive bağımlılık olduğu için hoisting'e girmiyor." Yanlış
+   çıktı — next zaten kendi `@swc/helpers`'ını symlink'liyordu, sorun *hangi* package.json'ın
+   onu bağımlılık saydığı değil, symlink'in deploy kopyasında kırılmasıydı. Deploy sonrası
+   runtime log'da **aynı hata birebir tekrar etti**.
 
-```json
-"@swc/helpers": "0.5.15"
+2. **`.npmrc`'ye `node-linker=hoisted` ekle** (commit `65ee9e74`). Mantık: pnpm'i tamamen
+   düz/symlink'siz `node_modules` üretmeye zorlamak, kopyalamanın kırabileceği hiçbir şey
+   bırakmamak. Lokalde pnpm 9.15.9 ile doğrulandı, çalıştı. **Ama Hostinger'ın build günlüğü
+   pnpm'i v11.9.0 olarak çalıştırdığını gösterdi** (`packageManager` alanımızdaki 9.15.9'u
+   yoksayarak - "Corepack invoked pnpm with this version, and pnpm does not switch versions
+   when running under corepack"). pnpm 11.9.0 ile lokalde tekrar test edildiğinde: proje
+   `.npmrc`'sindeki `node-linker=hoisted` **sessizce yoksayılıyor** (`node_modules/@swc/helpers`
+   yine symlink kalıyor). Yalnızca açık `--config.node-linker=hoisted` CLI bayrağı veya
+   `PNPM_CONFIG_NODE_LINKER` ortam değişkeni işe yarıyor.
+
+## Gerçek fix
+
+Hostinger panelinde **Ortam Değişkenleri**'ne şu değişken eklendi:
+
+```
+PNPM_CONFIG_NODE_LINKER=hoisted
 ```
 
-Bu, hangi paket yöneticisi/hoisting davranışı kullanılırsa kullanılsın `@swc/helpers`'ın
-proje kökü `node_modules/@swc/helpers` altına gelmesini garantiler — Next'in derlenmiş
-kodunun `require()` ile aradığı yer tam olarak burası.
+Sonra **Dağıtımlar → Ayarlar ve yeniden dağıtma → Kaydet ve yeniden dağıt** ile yeni bir
+build tetiklendi. Bu build'in günlüğünde artık `@swc/helpers` hatası yok; site 200
+dönüyor.
 
-Commit: `4c5207d` — "Fix production 500: pin @swc/helpers as a direct dependency"
+**Önemli:** Bu değişken repo'da değil, yalnızca Hostinger panelinde duruyor. Repo `.npmrc`
+dosyası (`node-linker=hoisted`) kalsın — zararsız, ve pnpm'in gelecekte bu ayarı `.npmrc`'den
+okuyacağı bir sürüme dönmesi ihtimaline karşı belgeleyici. Ama **asıl etkili olan Hostinger
+ortam değişkenidir.** Website silinip yeniden oluşturulursa veya bu değişken yanlışlıkla
+silinirse, sorun aynen geri gelir.
+
+Commit'ler: `4c5207d`, `65ee9e74` (ikisi de gerekli zemin ama tek başına yetersizdi),
+gerçek düzeltme Hostinger panelinde (`PNPM_CONFIG_NODE_LINKER=hoisted` ortam değişkeni).
 
 ## Deploy sonrası elle kontrol listesi
 
@@ -67,11 +93,14 @@ Commit: `4c5207d` — "Fix production 500: pin @swc/helpers as a direct dependen
 2. `curl -sI https://yetisgrup.com/` → `200`/`307` bekleniyor, `500` değil.
 3. Runtime log'da yeni "Cannot find module" hatası **olmamalı**.
 4. Eğer hâlâ 500 alıyorsan:
+   - Önce Hostinger panelinde **Ortam Değişkenleri**'nde `PNPM_CONFIG_NODE_LINKER=hoisted`
+     hâlâ duruyor mu kontrol et (silinmiş/kaybolmuş olabilir).
    - Runtime log'u tekrar oku — farklı bir hata mı (örn. `DATABASE_URL`, Prisma migration
      eksikliği) yoksa aynı `@swc/helpers` hatası mı tekrar mı ediyor.
-   - Aynı hata tekrar ediyorsa Hostinger'ın eski build'i cache'lemiş/temizlememiş olabilir —
-     "Clean install" / "Rebuild" seçeneğini dene (varsa), yoksa `node_modules`'ı
-     temizleyip yeniden deploy tetiklemesini iste.
+   - Aynı `@swc/helpers` hatası tekrar ediyorsa: env değişkeni ekli olsa bile yeni bir build
+     tetiklenmemiş olabilir — sadece env değişkeni eklemek deploy'u tetiklemez, **Dağıtımlar
+     → Ayarlar ve yeniden dağıtma → Kaydet ve yeniden dağıt** ile açıkça yeni bir build
+     başlatmak gerekir.
    - Prisma migration'ları prod DB'ye gitmiş mi kontrol et:
      ```bash
      DATABASE_URL="<prod-url>" pnpm prisma migrate status
@@ -82,8 +111,11 @@ Commit: `4c5207d` — "Fix production 500: pin @swc/helpers as a direct dependen
 
 ## Genel ders
 
-Bu proje pnpm ile geliştiriliyor ama Hostinger'ın build ortamı pnpm'i her zaman güvenilir
-şekilde çözemiyor (bkz. `scripts/prepare-swc-wasm.mjs` yorumu). Bu yüzden: **bir paketin
-çalışma zamanında gerekli olduğu ama sadece bir üst bağımlılığın (`next`, vb.) transitive
-bağımlılığı olarak geldiği her durumda**, o paketi doğrudan `package.json`'a eklemek,
-farklı paket yöneticisi/hoisting davranışlarına karşı en ucuz sigorta.
+Bu proje pnpm ile geliştiriliyor ama Hostinger'ın build ortamı hem `packageManager` alanımızda
+kilitlediğimiz pnpm sürümünü yoksayıp kendi sürümünü (bu olayda v11.9.0) kullanıyor, hem de
+proje `.npmrc`'sindeki bazı ayarları (en azından `node-linker`) sessizce yoksayabiliyor.
+Repo içi dosyalarla (`.npmrc`, `package.json`) Hostinger'ın build davranışını değiştirmeye
+güvenme — **doğrulanmış, çalışan tek yol Hostinger'ın kendi Ortam Değişkenleri panelinden
+`PNPM_CONFIG_*` / `npm_config_*` türü env değişkenleri geçmek.** Yeni bir "pnpm ayarı
+değiştirmem lazım" ihtiyacı çıkarsa, önce lokalde Hostinger'ın kullandığı pnpm sürümüyle
+(`corepack pnpm@<sürüm> install`) test et, `.npmrc`'nin gerçekten okunduğunu varsayma.

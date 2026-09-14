@@ -1,0 +1,43 @@
+name: Production health check
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every 15 minutes, independent of deploys (catches crashes, DB outages,
+    # cert issues - anything that happens between pushes).
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Hostinger deploy, then verify the site is up
+        run: |
+          URL="https://yetisgrup.com/api/health"
+          # On a push, give Hostinger's build+deploy time to land before the
+          # first check; a scheduled/manual run checks immediately.
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "Push detected, waiting 90s for Hostinger's build to start..."
+            sleep 90
+          fi
+
+          attempts=10
+          delay=30
+          for i in $(seq 1 "$attempts"); do
+            code=$(curl -s -o /tmp/body.txt -w "%{http_code}" --max-time 15 "$URL" || echo "000")
+            echo "Attempt $i/$attempts: HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "Site is healthy."
+              exit 0
+            fi
+            if [ "$i" -lt "$attempts" ]; then
+              sleep "$delay"
+            fi
+          done
+
+          echo "Site did not return 200 after $attempts attempts."
+          echo "--- last response body ---"
+          cat /tmp/body.txt || true
+          exit 1
